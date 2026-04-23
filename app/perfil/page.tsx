@@ -132,10 +132,10 @@ export default function PerfilPage() {
          {exerciseLevels.length > 0 && (
            <div>
              <p className="text-slate-300 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-             <div class="space-y-2">
+             <div className="space-y-2">
                {exerciseLevels.map((ex) => (
-                 <div key={ex.exercise} class="flex justify-between items-center py-3 border-b border-slate-700/50 rounded-lg px-3 hover:bg-slate-800/30 transition-colors">
-                   <span class="font-light text-slate-200">{ex.exercise}</span>
+                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-slate-700/50 rounded-lg px-3 hover:bg-slate-800/30 transition-colors">
+                   <span className="font-light text-slate-200">{ex.exercise}</span>
                    <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
                  </div>
                ))}
