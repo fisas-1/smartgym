@@ -7,38 +7,6 @@ import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, Work
 
 type CustomExercises = string[]
 
-type RoutineExercise = {
-  id: string
-  routine_id: string
-  exercise: Exercise
-  sets_target: number
-  reps_min: number
-  reps_max: number
-  order_index: number
-}
-
-type RoutineSet = {
-  id: string
-  routine_exercise_id: string
-  workout_log_id?: string
-  set_number: number
-  completed: boolean
-  notes?: string
-  completed_at?: string
-  created_at: string
-}
-
-type WorkoutLog = {
-  id: string
-  user_id: string
-  exercise: string
-  weight: number
-  reps: number
-  rir: number
-  one_rm: number
-  created_at: string
-}
-
 export default function RutinesPage() {
   const { user } = useAuth()
   const [routines, setRoutines] = useState<Routine[]>([])
