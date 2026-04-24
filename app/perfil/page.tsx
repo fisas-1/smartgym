@@ -81,23 +81,19 @@ export default function PerfilPage() {
         })
 
         const levels: ExerciseLevel[] = Object.entries(best).map(([ex, d]) => {
-          const std = STRENGTH_STANDARDS[ex]
-          if (!std) return null
-          const ratio = d.oneRM / w
-          const stdg = gender === 'm' ? std.m : std.f
-          let level = 'novice', pct = 0
-           // @ts-ignore
-           if (ratio >= (stdg as any).worldclass) { level = 'worldclass'; pct = 100 }
-           // @ts-ignore
-           else if (ratio >= (stdg as any).elite) { level = 'elite'; pct = 85 }
-           // @ts-ignore
-           else if (ratio >= (stdg as any).advanced) { level = 'advanced'; pct = 70 }
-           // @ts-ignore
-           else if (ratio >= (stdg as any).intermediate) { level = 'intermediate'; pct = 55 }
-           // @ts-ignore
-           else if (ratio >= (stdg as any).beginner) { level = 'beginner'; pct = 40 }
-           // @ts-ignore
-           else if (ratio >= (stdg as any).novice) { level = 'novice'; pct = 25 }
+           const std = STRENGTH_STANDARDS[ex]
+           if (!std) return null
+           const ratio = d.oneRM / w
+           const stdg = gender === 'm' 
+             ? { worldclass: std.worldclass.m, elite: std.elite.m, advanced: std.advanced.m, intermediate: std.intermediate.m, beginner: std.beginner.m, novice: std.novice.m }
+             : { worldclass: std.worldclass.f, elite: std.elite.f, advanced: std.advanced.f, intermediate: std.intermediate.f, beginner: std.beginner.f, novice: std.novice.f }
+            let level = 'novice'
+            if (ratio >= stdg.worldclass) level = 'worldclass'
+            else if (ratio >= stdg.elite) level = 'elite'
+            else if (ratio >= stdg.advanced) level = 'advanced'
+            else if (ratio >= stdg.intermediate) level = 'intermediate'
+            else if (ratio >= stdg.beginner) level = 'beginner'
+            // novice is the default level, no check needed
           const lv = LEVELS.find(l => l.key === level)
           return { exercise: ex, level, levelLabel: lv?.label || level, levelColor: lv?.color || '#666', oneRM: d.oneRM }
         }).filter(Boolean) as ExerciseLevel[]
@@ -147,13 +143,15 @@ export default function PerfilPage() {
           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Dades</p>
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-               <input
-                 type="number"
-                 value={age}
-                 onChange={(e) => setAge(e.target.value)}
-                 placeholder="Edat"
-                 className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-               />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  placeholder="Edat"
+                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
+                />
                <div className="flex gap-2">
                  <button
                    onClick={() => setGender('m')}
@@ -170,28 +168,33 @@ export default function PerfilPage() {
                </div>
              </div>
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-               <input
-                 type="number"
-                 value={height}
-                 onChange={(e) => setHeight(e.target.value)}
-                 placeholder="Altura (cm)"
-                 className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-               />
-               <input
-                 type="number"
-                 value={weight}
-                 onChange={(e) => setWeight(e.target.value)}
-                 placeholder="Pes (kg)"
-                 className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-               />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  placeholder="Altura (cm)"
+                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="Pes (kg)"
+                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
+                />
              </div>
           </div>
-          <button
-            onClick={saveProfile}
-            className="w-full mt-4 py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors"
-          >
-            {saved ? 'Guardat' : 'Guardar'}
-          </button>
+           <button
+             type="button"
+             onClick={saveProfile}
+             className="w-full mt-4 py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors"
+           >
+             {saved ? 'Guardat' : 'Guardar'}
+           </button>
         </div>
 
         {exerciseLevels.length > 0 && (
