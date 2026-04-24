@@ -3,7 +3,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
+
+type Routine = {
+  id: string
+  user_id: string
+  name: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
 
 type CustomExercises = string[]
 
@@ -61,6 +70,7 @@ export default function RutinesPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -81,6 +91,15 @@ export default function RutinesPage() {
   useEffect(() => {
     if (selectedRoutine && routineExercises.length > 0) {
       loadRoutineSets(selectedRoutine.id)
+    }
+  }, [selectedRoutine, routineExercises])
+
+  // Assegurar que cada exercici té les sèries inicialitzades
+  useEffect(() => {
+    if (selectedRoutine && routineExercises.length > 0) {
+      routineExercises.forEach(ex => {
+        initializeExerciseSets(ex.id, ex.sets_target)
+      })
     }
   }, [selectedRoutine, routineExercises])
 
@@ -265,7 +284,7 @@ export default function RutinesPage() {
     ))
   }
 
-  // Obtenir recomanció de pel per a un exercici
+  // Obtenir recomanció de pes per a un exercici
   async function getWeightRecommendation(exerciseName: string, targetReps: number) {
     if (!user) return null
 
@@ -282,42 +301,43 @@ export default function RutinesPage() {
 
   // Inicialitzar series per a un exercici (auto-checkout inicial)
   async function initializeExerciseSets(exerciseId: string, setsTarget: number) {
-    const existingSets = routineSets[exerciseId] || []
-    if (existingSets.length >= setsTarget) return
+    if (!exerciseId) return
+    
+    try {
+      // Obtenir sets existents de la DB
+      const { data: existingSets } = await supabase
+        .from('routine_sets')
+        .select('*')
+        .eq('routine_exercise_id', exerciseId)
+      
+      const currentCount = existingSets?.length || 0
+      if (currentCount >= setsTarget) return
 
-    const countToAdd = setsTarget - existingSets.length
-    const newSets: RoutineSet[] = []
-    for (let i = existingSets.length + 1; i <= setsTarget; i++) {
-      newSets.push({
-        id: crypto.randomUUID(),
-        routine_exercise_id: exerciseId,
-        set_number: i,
-        completed: false,
-        created_at: new Date().toISOString()
-      })
-    }
+      const newSets: RoutineSet[] = []
+      for (let i = currentCount + 1; i <= setsTarget; i++) {
+        newSets.push({
+          id: crypto.randomUUID(),
+          routine_exercise_id: exerciseId,
+          set_number: i,
+          completed: false,
+          created_at: new Date().toISOString()
+        })
+      }
 
-    // Insereix a la base de dades
-    const setsToInsert = newSets.map(s => ({
-      routine_exercise_id: s.routine_exercise_id,
-      set_number: s.set_number,
-      completed: false
-    }))
+      const setsToInsert = newSets.map(s => ({
+        routine_exercise_id: s.routine_exercise_id,
+        set_number: s.set_number,
+        completed: false
+      }))
 
-    const { error } = await supabase
-      .from('routine_sets')
-      .insert(setsToInsert)
-
-    if (error) {
+      await supabase.from('routine_sets').insert(setsToInsert)
+      setRoutineSets(prev => ({
+        ...prev,
+        [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
+      }))
+    } catch (error) {
       console.error('Error initializing sets:', error)
-      return
     }
-
-    // Actualitza l'estat local
-    setRoutineSets(prev => ({
-      ...prev,
-      [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
-    }))
   }
 
   // Marcar/desmarcar série com a completada
