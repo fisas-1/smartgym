@@ -309,14 +309,15 @@ export default function RutinesPage() {
       return
     }
 
-    setRoutineSets(prev => ({
-      ...prev,
-      [exerciseId]: prev[exerciseId].map(s => 
+    setRoutineSets(prev => {
+      const current = prev[exerciseId] || []
+      const updated = current.map(s => 
         s.set_number === setNumber 
-          ? { ...s, completed, completed_at: completed ? new Date().toISOString() : null }
+          ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
           : s
       )
-    }))
+      return { ...prev, [exerciseId]: updated }
+    })
   }
 
   // Auto-completar totes les series d'un exercici (un cop acabades)
@@ -325,10 +326,11 @@ export default function RutinesPage() {
     const allCompleted = sets.every(s => s.completed)
     
     if (allCompleted) {
-      setRoutineSets(prev => ({
-        ...prev,
-        [exerciseId]: prev[exerciseId].map(s => ({ ...s, completed: false }))
-      }))
+      setRoutineSets(prev => {
+        const current = prev[exerciseId] || []
+        const updated = current.map(s => ({ ...s, completed: false }))
+        return { ...prev, [exerciseId]: updated }
+      })
     }
   }
 

@@ -52,11 +52,11 @@ export interface RoutineExercise {
 export interface RoutineSet {
   id: string
   routine_exercise_id: string
-  workout_log_id?: string
+  workout_log_id?: string | null
   set_number: number
   completed: boolean
-  notes?: string
-  completed_at?: string
+  notes?: string | null
+  completed_at?: string | null
   created_at: string
 }
 
