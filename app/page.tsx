@@ -92,19 +92,23 @@ export default function HomePage() {
     if (data) setSavedSets(data)
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    const w = parseFloat(weight), r = parseFloat(reps)
-    if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+   async function handleSave(e: React.FormEvent) {
+     e.preventDefault()
+     const w = parseFloat(weight), r = parseFloat(reps)
+     if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
 
-    setLoading(true)
-    await supabase.from('workout_logs').insert({
-      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
-    })
-    setLoading(false)
-    setWeight(''); setReps(''); setRir('0')
-    loadSavedSets()
-  }
+     setLoading(true)
+     const { error } = await supabase.from('workout_logs').insert({
+       exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
+     }).select()
+     setLoading(false)
+     if (error) {
+       console.error('Error saving set:', error)
+       return
+     }
+     setWeight(''); setReps(''); setRir('0')
+     loadSavedSets()
+   }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
