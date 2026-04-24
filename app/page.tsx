@@ -83,36 +83,38 @@ export default function HomePage() {
   useEffect(() => { loadSavedSets() }, [])
   useEffect(() => { if (exercise) analyzeOverload(exercise).then(setSuggestion) }, [exercise])
 
-   async function loadSavedSets() {
-     const { data, error } = await supabase
-       .from('workout_logs')
-       .select('*')
-       .order('created_at', { ascending: false })
-       .limit(8)
-     if (error) {
-       console.error('Error loading saved sets:', error)
-       return
-     }
-     if (data) setSavedSets(data)
-   }
-
-    async function handleSave(e: React.FormEvent) {
-      e.preventDefault()
-      const w = parseFloat(weight), r = parseFloat(reps)
-      if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
-
-      setLoading(true)
-      const { data, error } = await supabase.from('workout_logs').insert({
-        exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
-      }).select()
-      setLoading(false)
-      if (error) {
-        console.error('Error saving set:', error)
-        return
-      }
-      setWeight(''); setReps(''); setRir('0')
-      await loadSavedSets()
+  async function loadSavedSets() {
+    const { data, error } = await supabase
+      .from('workout_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(8)
+    if (error) {
+      console.error('Error loading saved sets:', error)
+      return
     }
+    if (data) setSavedSets(data)
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    const w = parseFloat(weight), r = parseFloat(reps)
+    if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+
+    setLoading(true)
+    setErrorMsg(null)
+    const { data, error } = await supabase.from('workout_logs').insert({
+      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
+    }).select().maybeSingle()
+    setLoading(false)
+    if (error) {
+      console.error('Error saving set:', error)
+      setErrorMsg('Error al guardar: ' + error.message)
+      return
+    }
+    setWeight(''); setReps(''); setRir('0')
+    await loadSavedSets()
+  }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
@@ -153,6 +155,12 @@ export default function HomePage() {
         {suggestion && (
           <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
             <p className="text-zinc-300 text-sm">{suggestion}</p>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="px-4 py-3 bg-red-900/50 border border-red-800 rounded-2xl">
+            <p className="text-red-400 text-sm">{errorMsg}</p>
           </div>
         )}
 

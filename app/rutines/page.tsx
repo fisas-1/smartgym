@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-const DAYS_OF_WEEK = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte', 'Diumenge']
+const DAYS_OF_WEEK = ['1', '2', '3', '4', '5', '6', '7']
 
 const MUSCLE_GROUPS = [
   { id: 'pit', label: 'Pit' },
