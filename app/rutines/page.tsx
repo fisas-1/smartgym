@@ -3,27 +3,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
-
-type Routine = {
-  id: string
-  user_id: string
-  name: string
-  description?: string
-  created_at: string
-  updated_at: string
-}
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
 
 type CustomExercises = string[]
-
-type Routine = {
-  id: string
-  user_id: string
-  name: string
-  description?: string
-  created_at: string
-  updated_at: string
-}
 
 type RoutineExercise = {
   id: string
@@ -43,10 +25,12 @@ type RoutineSet = {
   completed: boolean
   notes?: string
   completed_at?: string
+  created_at: string
 }
 
 type WorkoutLog = {
   id: string
+  user_id: string
   exercise: string
   weight: number
   reps: number
@@ -69,7 +53,6 @@ export default function RutinesPage() {
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
