@@ -83,32 +83,36 @@ export default function HomePage() {
   useEffect(() => { loadSavedSets() }, [])
   useEffect(() => { if (exercise) analyzeOverload(exercise).then(setSuggestion) }, [exercise])
 
-  async function loadSavedSets() {
-    const { data } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(8)
-    if (data) setSavedSets(data)
-  }
-
-   async function handleSave(e: React.FormEvent) {
-     e.preventDefault()
-     const w = parseFloat(weight), r = parseFloat(reps)
-     if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
-
-     setLoading(true)
-     const { error } = await supabase.from('workout_logs').insert({
-       exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
-     }).select()
-     setLoading(false)
+   async function loadSavedSets() {
+     const { data, error } = await supabase
+       .from('workout_logs')
+       .select('*')
+       .order('created_at', { ascending: false })
+       .limit(8)
      if (error) {
-       console.error('Error saving set:', error)
+       console.error('Error loading saved sets:', error)
        return
      }
-     setWeight(''); setReps(''); setRir('0')
-     loadSavedSets()
+     if (data) setSavedSets(data)
    }
+
+    async function handleSave(e: React.FormEvent) {
+      e.preventDefault()
+      const w = parseFloat(weight), r = parseFloat(reps)
+      if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+
+      setLoading(true)
+      const { data, error } = await supabase.from('workout_logs').insert({
+        exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
+      }).select()
+      setLoading(false)
+      if (error) {
+        console.error('Error saving set:', error)
+        return
+      }
+      setWeight(''); setReps(''); setRir('0')
+      await loadSavedSets()
+    }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
