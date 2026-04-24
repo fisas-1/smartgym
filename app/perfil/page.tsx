@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 
 type UserProfile = {
   age: number | null
@@ -35,6 +36,7 @@ const LEVELS = [
 type ExerciseLevel = { exercise: string; level: string; levelLabel: string; levelColor: string; oneRM: number }
 
 export default function PerfilPage() {
+  const { user } = useAuth()
   const [age, setAge] = useState<string>('')
   const [height, setHeight] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
@@ -44,7 +46,7 @@ export default function PerfilPage() {
   const [overallLevel, setOverallLevel] = useState<string>('')
 
   useEffect(() => { loadProfile() }, [])
-  useEffect(() => { if (weight) calculateLevels() }, [weight, gender])
+  useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
 
   function loadProfile() {
     const saved = localStorage.getItem('user_profile')
@@ -69,8 +71,10 @@ export default function PerfilPage() {
   }
 
   function calculateLevels() {
+    if (!user) return
     const w = parseFloat(weight) || 70
     supabase.from('workout_logs').select('exercise, weight, reps, one_rm')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false }).then(({ data: logs }) => {
         if (!logs) return
         const best: Record<string, { weight: number; reps: number; oneRM: number }> = {}
@@ -81,19 +85,18 @@ export default function PerfilPage() {
         })
 
         const levels: ExerciseLevel[] = Object.entries(best).map(([ex, d]) => {
-           const std = STRENGTH_STANDARDS[ex]
-           if (!std) return null
-           const ratio = d.oneRM / w
-           const stdg = gender === 'm' 
-             ? { worldclass: std.worldclass.m, elite: std.elite.m, advanced: std.advanced.m, intermediate: std.intermediate.m, beginner: std.beginner.m, novice: std.novice.m }
-             : { worldclass: std.worldclass.f, elite: std.elite.f, advanced: std.advanced.f, intermediate: std.intermediate.f, beginner: std.beginner.f, novice: std.novice.f }
-            let level = 'novice'
-            if (ratio >= stdg.worldclass) level = 'worldclass'
-            else if (ratio >= stdg.elite) level = 'elite'
-            else if (ratio >= stdg.advanced) level = 'advanced'
-            else if (ratio >= stdg.intermediate) level = 'intermediate'
-            else if (ratio >= stdg.beginner) level = 'beginner'
-            // novice is the default level, no check needed
+          const std = STRENGTH_STANDARDS[ex]
+          if (!std) return null
+          const ratio = d.oneRM / w
+          const stdg = gender === 'm' 
+            ? { worldclass: std.worldclass.m, elite: std.elite.m, advanced: std.advanced.m, intermediate: std.intermediate.m, beginner: std.beginner.m, novice: std.novice.m }
+            : { worldclass: std.worldclass.f, elite: std.elite.f, advanced: std.advanced.f, intermediate: std.intermediate.f, beginner: std.beginner.f, novice: std.novice.f }
+          let level = 'novice'
+          if (ratio >= stdg.worldclass) level = 'worldclass'
+          else if (ratio >= stdg.elite) level = 'elite'
+          else if (ratio >= stdg.advanced) level = 'advanced'
+          else if (ratio >= stdg.intermediate) level = 'intermediate'
+          else if (ratio >= stdg.beginner) level = 'beginner'
           const lv = LEVELS.find(l => l.key === level)
           return { exercise: ex, level, levelLabel: lv?.label || level, levelColor: lv?.color || '#666', oneRM: d.oneRM }
         }).filter(Boolean) as ExerciseLevel[]
@@ -118,60 +121,72 @@ export default function PerfilPage() {
                      overallLevel === 'Intermedi' ? '#3b82f6' :
                      overallLevel === 'Principiant' ? '#22c55e' : '#666'
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center px-6">
+        <div className="text-center">
+          <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
+          <p className="text-zinc-500 mb-8">Inicia sessió per veure el teu perfil</p>
+          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
+            Entrar
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
        <div className="px-6 pt-8 pb-6">
-         <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
-       </div>
+          <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
+        </div>
 
-    <div className="px-6 space-y-6">
-         {exerciseLevels.length > 0 && (
-           <div>
-             <p className="text-slate-300 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-             <div className="space-y-2">
-               {exerciseLevels.map((ex) => (
-                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-slate-700/50 rounded-lg px-3 hover:bg-slate-800/30 transition-colors">
-                   <span className="font-light text-slate-200">{ex.exercise}</span>
-                   <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
-                 </div>
-               ))}
-             </div>
-           </div>
-         )}
+     <div className="px-6 space-y-6">
+          {exerciseLevels.length > 0 && (
+            <div>
+              <p className="text-slate-300 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
+              <div className="space-y-2">
+                {exerciseLevels.map((ex) => (
+                  <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-slate-700/50 rounded-lg px-3 hover:bg-slate-800/30 transition-colors">
+                    <span className="font-light text-slate-200">{ex.exercise}</span>
+                    <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-        <div>
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Dades</p>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+         <div>
+           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Dades</p>
+           <div className="space-y-3">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   placeholder="Edat"
                   className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
                 />
-               <div className="flex gap-2">
-                 <button
-                   onClick={() => setGender('m')}
-                   className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'm' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
-                 >
-                   Home
-                 </button>
-                 <button
-                   onClick={() => setGender('f')}
-                   className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'f' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
-                 >
-                   Dona
-                 </button>
-               </div>
-             </div>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setGender('m')}
+                    className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'm' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
+                  >
+                    Home
+                  </button>
+                  <button
+                    onClick={() => setGender('f')}
+                    className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'f' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
+                  >
+                    Dona
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
                   placeholder="Altura (cm)"
@@ -180,50 +195,49 @@ export default function PerfilPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   placeholder="Pes (kg)"
                   className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
                 />
-             </div>
-          </div>
+              </div>
+           </div>
            <button
-             type="button"
              onClick={saveProfile}
+             type="button"
              className="w-full mt-4 py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors"
            >
              {saved ? 'Guardat' : 'Guardar'}
            </button>
-        </div>
+         </div>
 
-        {exerciseLevels.length > 0 && (
-          <div>
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-            <div className="space-y-2">
-              {exerciseLevels.map((ex) => (
-                <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-zinc-900">
-                  <span className="font-light">{ex.exercise}</span>
-                  <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+         {exerciseLevels.length > 0 && (
+           <div>
+             <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
+             <div className="space-y-2">
+               {exerciseLevels.map((ex) => (
+                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-zinc-900">
+                   <span className="font-light">{ex.exercise}</span>
+                   <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
+                 </div>
+               ))}
+             </div>
+           </div>
+         )}
 
-        <div>
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Escala</p>
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((l) => (
-              <span key={l.key} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: l.color + '22', color: l.color }}>
-                {l.label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+         <div>
+           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Escala</p>
+           <div className="flex flex-wrap gap-2">
+             {LEVELS.map((l) => (
+               <span key={l.key} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: l.color + '22', color: l.color }}>
+                 {l.label}
+               </span>
+             ))}
+           </div>
+         </div>
+       </div>
 
-      <div className="h-20" />
-    </div>
+       <div className="h-20" />
+     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from './contexts/AuthContext'
 
 type Exercise =
   | 'Press Banca'
@@ -53,6 +54,7 @@ async function analyzeOverload(exerciseName: string): Promise<string | null> {
 }
 
 export default function HomePage() {
+  const { user } = useAuth()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
@@ -80,13 +82,18 @@ export default function HomePage() {
     }
   }, [weight, reps])
 
-  useEffect(() => { loadSavedSets() }, [])
+  useEffect(() => { loadSavedSets() }, [user])
   useEffect(() => { if (exercise) analyzeOverload(exercise).then(setSuggestion) }, [exercise])
 
   async function loadSavedSets() {
+    if (!user) {
+      setSavedSets([])
+      return
+    }
     const { data, error } = await supabase
       .from('workout_logs')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(8)
     if (error) {
@@ -104,7 +111,8 @@ export default function HomePage() {
     setLoading(true)
     setErrorMsg(null)
     const { data, error } = await supabase.from('workout_logs').insert({
-      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM
+      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM,
+      user_id: user?.id
     }).select().maybeSingle()
     setLoading(false)
     if (error) {
@@ -136,6 +144,20 @@ export default function HomePage() {
   }
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-light mb-2">gym.</h1>
+          <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
+          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
+            Entrar
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
