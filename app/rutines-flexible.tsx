@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
+import { supabase } from '../lib/supabase/index'
+import { useAuth } from '../app/contexts/AuthContext'
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog } from '@/types'
 
 type CustomExercises = string[]
 
@@ -168,8 +168,8 @@ export default function RutinesPage() {
       const currentCount = existingSets?.length || 0
       if (currentCount >= setsTarget) return
 
-      const newSets = []
-      const setsToInsert = []
+      const newSets: RoutineSet[] = []
+      const setsToInsert: any[] = []
       
       for (let i = currentCount + 1; i <= setsTarget; i++) {
         const newSet = {
