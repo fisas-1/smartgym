@@ -1,36 +1,163 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartGym 💪
 
-## Getting Started
+Sistema de gestió d'entrenaments i rutines amb Next.js i Supabase.
 
-First, run the development server:
+## Setup Inicial ⚠️
+
+**IMPORTANT**: Abans d'arrancar l'aplicació, cal configurar la base de dades:
+
+### 1. Configurar Supabase
+
+L'aplicació usa Supabase amb les següents variables d'entorn (ja configurades a `.env.local`):
+- `NEXT_PUBLIC_SUPABASE_URL`: https://ronzmensezcuszabqfbz.supabase.co
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: *(ja configurat)*
+
+### 2. Configurar Base de Dades
+
+L'aplicació requereix columnes i taules addicionals a la base de dades. 
+
+**Cal executar l'SQL al Supabase Dashboard:**
+1. Obre: https://ronzmensezcuszabqfbz.supabase.co
+2. Ves a **SQL Editor** (icona de base de dades)
+3. Clica **New query**
+4. Copia el contingut de `deploy-schema.sql`
+5. Clica **Run** (Ctrl+Enter)
+
+Veure `SOLUZIONE.md` o `FIX_DATABASE.md` per més detalls.
+
+### 3. Arrancar el Desenvolupament
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Obrir [http://localhost:3000](http://localhost:3000) amb el navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Funcionalitats 🚀
 
-## Learn More
+### Pàgina Principal (/)
+- Registra entrenaments (pes, reps, RIR)
+- Càlcul automàtic de 1RM
+- Recomanacions de pes segons l'historial
+- Gràfics de progressió
 
-To learn more about Next.js, take a look at the following resources:
+### Rutines (/rutines)
+- Crea i gestiona rutines personals
+- Afegir exercicis amb objectius de sèries/reps
+- Marcar sèries com a completades
+- Recomanació de pes per a cada exercici
+- Reset diari per a nova sessió
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estructura del Projecte
 
-## Deploy on Vercel
+```
+smartgym/
+├── app/                      # Next.js App Router
+│   ├── page.tsx             # Pàgina principal (entrenaments)
+│   ├── rutines/page.tsx     # Gestor de rutines
+│   ├── contexts/            # Context d'autenticació
+│   └── lib/supabase/        # Configuració Supabase
+├── supabase/                # Migracions SQL
+│   └── migrations/
+│       ├── 20250424_add_routines_schema.sql
+│       └── FIX_add_exercise_columns.sql
+├── types/                   # Tipus TypeScript
+│   └── index.ts
+├── deploy-schema.sql        # SQL complet per deploy
+└── verify-fix.js            # Script de verificació
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts Disponibles
+
+```bash
+# Desenvolupament
+npm run dev          # Arranca el servidor (localhost:3000)
+
+# Verificació
+node verify-fix.js   # Comprova l'estat de la base de dades
+node check-schema.js # Comprova columnes de workout_logs
+
+# Deploy
+# Executar deploy-schema.sql a Supabase SQL Editor
+```
+
+---
+
+## Base de Dades (Supabase)
+
+### Taules Principals
+
+#### `workout_logs` - Registre d'entrenaments
+- `exercise` (TEXT) - Nom de l'exercici
+- `weight` (NUMERIC) - Pes sollevat
+- `reps` (INTEGER) - Repeticions
+- `rir` (NUMERIC) - Repeticions en reserva
+- `one_rm` (NUMERIC) - 1RM calculat
+
+#### `routines` - Rutines d'entrenament
+- `name` (TEXT) - Nom de la rutina
+- `user_id` (UUID) - Propietari
+
+#### `routine_exercises` - Exercicis de cada rutina
+- `routine_id` (UUID) - Rutina pare
+- `exercise` (TEXT) - Nom exercici
+- `sets_target` (INTEGER) - Series objectiu
+- `reps_min/max` (INTEGER) - Rang de reps
+
+#### `routine_sets` - Series completades
+- `routine_exercise_id` (UUID) - Exercici
+- `set_number` (INTEGER) - Número de sèrie
+- `completed` (BOOLEAN) - Completada?
+
+### Funcions
+
+#### `get_weight_recommendation()`
+Retorna la recomanació de pes per a un exercici i nombre de reps objectiu, basat en l'historial de l'usuari.
+
+---
+
+## Troubleshooting 🔧
+
+### Error: "Could not find the 'exercise' column"
+**Solució**: Executar l'SQL a Supabase (veure pas 2 del Setup)
+
+### Error: "Could not find the table 'routines'"
+**Solució**: L'SQL de les taules no s'ha executat. Copiar `deploy-schema.sql` a Supabase.
+
+### Error de CORS o API
+**Solució**: Verificar que les variables d'entorn a `.env.local` són correctes.
+
+---
+
+## Seguretat
+
+- **Row Level Security (RLS)** habilitat a totes les taules
+- Cada usuari només pot accedir a les seves pròpies dades
+- Policies d'accés per a SELECT, INSERT, UPDATE, DELETE
+
+---
+
+## Documentació
+
+- `SOLUZIONE.md` - Guia de resolució (italià)
+- `FIX_DATABASE.md` - Documentació detallada (anglès)
+- `RUTINES_INSTALACIO.md` - Instruccions d'instal·lació (català)
+
+---
+
+## Tècnologies
+
+- **Next.js** - Framework React
+- **TypeScript** - Tipatge estricte
+- **Supabase** - Base de dades i autenticació
+- **Tailwind CSS** - Estils
+
+---
+
+*Desenvolupat amb ❤️ per SmartGym*
