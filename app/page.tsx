@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -29,38 +29,28 @@ function calculate1RM(weight: number, reps: number): number {
 }
 
 async function analyzeOverload(exerciseName: string): Promise<string | null> {
-  try {
-    const { data: logs, error } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('exercise', exerciseName)
-      .order('created_at', { ascending: false })
-      .limit(14)
+  const { data: logs } = await supabase
+    .from('workout_logs')
+    .select('*')
+    .eq('exercise', exerciseName)
+    .order('created_at', { ascending: false })
+    .limit(14)
 
-    if (error) {
-      console.log('analyzeOverload - column exercise may not exist:', error.message)
-      return null
-    }
-    
-    if (!logs || logs.length < 2) return null
+  if (!logs || logs.length < 2) return null
 
-    const recentLogs = logs.slice(0, 7)
-    const previousLogs = logs.slice(7, 14)
-    if (previousLogs.length === 0) return null
+  const recentLogs = logs.slice(0, 7)
+  const previousLogs = logs.slice(7, 14)
+  if (previousLogs.length === 0) return null
 
-    const avgRecent = recentLogs.reduce((sum, l) => sum + ((l as any).one_rm || 0), 0) / recentLogs.length
-    const avgPrevious = previousLogs.reduce((sum, l) => sum + ((l as any).one_rm || 0), 0) / previousLogs.length
+  const avgRecent = recentLogs.reduce((sum, l) => sum + (l.one_rm || 0), 0) / recentLogs.length
+  const avgPrevious = previousLogs.reduce((sum, l) => sum + (l.one_rm || 0), 0) / previousLogs.length
 
-    if (avgRecent <= avgPrevious) return null
+  if (avgRecent <= avgPrevious) return null
 
-    const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
-    const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
+  const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
+  const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
 
-    return `Avui: ${targetWeight}kg (${Math.round(improvement)}%↑)`
-  } catch (err) {
-    console.log('analyzeOverload error:', err)
-    return null
-  }
+  return `Avui: ${targetWeight}kg (${Math.round(improvement)}%↑)`
 }
 
 export default function HomePage() {
@@ -77,7 +67,6 @@ export default function HomePage() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<string | null>(null)
-  const [isSchemaFixed, setIsSchemaFixed] = useState<boolean | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
@@ -93,64 +82,25 @@ export default function HomePage() {
     }
   }, [weight, reps])
 
-  useEffect(() => { 
-    if (user) {
-      loadSavedSets()
-      checkSchema()
-    }
-  }, [user])
-  
-  useEffect(() => { 
-    if (exercise && isSchemaFixed) {
-      analyzeOverload(exercise).then(setSuggestion)
-    } else {
-      setSuggestion(null)
-    }
-  }, [exercise, isSchemaFixed])
-
-  async function checkSchema() {
-    try {
-      // Prova si la columna 'exercise' existe
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .select('exercise')
-        .limit(1)
-      
-      if (error && error.message.includes('column')) {
-        setIsSchemaFixed(false)
-        console.log('⚠️ Schema not fixed: exercise column missing')
-      } else {
-        setIsSchemaFixed(true)
-        console.log('✅ Schema is fixed')
-      }
-    } catch (err) {
-      setIsSchemaFixed(false)
-    }
-  }
+  useEffect(() => { loadSavedSets() }, [user])
+  useEffect(() => { if (exercise) analyzeOverload(exercise).then(setSuggestion) }, [exercise])
 
   async function loadSavedSets() {
     if (!user) {
       setSavedSets([])
       return
     }
-    try {
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(8)
-      
-      if (error) {
-        console.error('Error loading saved sets (may be schema issue):', error.message)
-        setErrorMsg('Error carregant dades. Comprova que el schema estigui configurat.')
-        return
-      }
-      
-      if (data) setSavedSets(data)
-    } catch (err) {
-      console.error('Error loading sets:', err)
+    const { data, error } = await supabase
+      .from('workout_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(8)
+    if (error) {
+      console.error('Error loading saved sets:', error)
+      return
     }
+    if (data) setSavedSets(data)
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -160,55 +110,29 @@ export default function HomePage() {
 
     setLoading(true)
     setErrorMsg(null)
-    
-    const insertData: any = {
-      exercise,
-      weight: w,
-      reps: r,
-      rir: parseFloat(rir),
+    const { data, error } = await supabase.from('workout_logs').insert({
+      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM,
       user_id: user?.id
-    }
-    
-    // Només afegim one_rm si el schema està fixat
-    if (isSchemaFixed && oneRM > 0) {
-      insertData.one_rm = oneRM
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .insert(insertData)
-        .select()
-        .maybeSingle()
-      
-      setLoading(false)
-      
-      if (error) {
-        console.error('Error saving set:', error)
-        
-        if (error.message.includes('column')) {
-          setErrorMsg('Error: Cal configurar el schema de la base de dades. Executa deploy-schema.sql')
-        } else {
-          setErrorMsg('Error al guardar: ' + error.message)
-        }
-        return
+    }).select().maybeSingle()
+    setLoading(false)
+    if (error) {
+      console.error('Error saving set:', error)
+      if (error.message.includes('column') || error.message.includes('exercise')) {
+        setErrorMsg('Error: La base de dades necessita configuració. Veure SOLUZIONE.md')
+      } else {
+        setErrorMsg('Error al guardar: ' + error.message)
       }
-      
-      setWeight(''); setReps(''); setRir('0')
-      await loadSavedSets()
-      setErrorMsg(null)
-    } catch (err: any) {
-      setLoading(false)
-      console.error('Error saving:', err)
-      setErrorMsg('Error inesperat. Comprova la configuració de la base de dades.')
+      return
     }
+    setWeight(''); setReps(''); setRir('0')
+    await loadSavedSets()
   }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
     if (!trimmed) { setErrorMsg('Nom requerit'); return }
-    if (DEFAULT_EXERCISES.includes(trimmed as Exercise) || customExercises.includes(trimmed)) { 
-      setErrorMsg('Ja existeix'); return 
+    if (DEFAULT_EXERCISES.includes(trimmed as Exercise) || customExercises.includes(trimmed)) {
+      setErrorMsg('Ja existeix'); return
     }
     const updated = [...customExercises, trimmed]
     setCustomExercises(updated)
@@ -245,27 +169,6 @@ export default function HomePage() {
         <h1 className="text-xl font-medium tracking-tight text-zinc-400">gym.</h1>
       </div>
 
-      {/* Alerta de schema no configurat */}
-      {isSchemaFixed === false && (
-        <div className="px-6 py-3 bg-yellow-900/50 border border-yellow-800 rounded-2xl mb-4">
-          <p className="text-yellow-400 text-sm">
-            ⚠️ El schema de la base de dades no està configurat. Cal executar deploy-schema.sql a Supabase.
-          </p>
-        </div>
-      )}
-
-      {isSchemaFixed === true && suggestion && (
-        <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
-          <p className="text-zinc-300 text-sm">{suggestion}</p>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="px-4 py-3 bg-red-900/50 border border-red-800 rounded-2xl">
-          <p className="text-red-400 text-sm">{errorMsg}</p>
-        </div>
-      )}
-
       <div className="px-6 space-y-6">
         <div className="py-8">
           <p className="text-zinc-500 text-sm mb-1">1RM estimat</p>
@@ -274,6 +177,18 @@ export default function HomePage() {
             <span className="text-zinc-600 text-xl">kg</span>
           </div>
         </div>
+
+        {suggestion && (
+          <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+            <p className="text-zinc-300 text-sm">{suggestion}</p>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="px-4 py-3 bg-red-900/50 border border-red-800 rounded-2xl">
+            <p className="text-red-400 text-sm">{errorMsg}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
@@ -287,54 +202,56 @@ export default function HomePage() {
                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                     exercise === ex
                       ? 'bg-white text-black'
-                      : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {ex}
+                  {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">×</span>
+                  )}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setShowModal(true)}
-                className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-500 border border-dashed border-zinc-800 hover:border-zinc-600"
-              >
-                +
-              </button>
+              <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-400">+</button>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Pes (kg)</label>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Pes</label>
               <input
                 type="number"
+                inputMode="numeric"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                step="0.5"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-zinc-700"
                 placeholder="0"
+                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               />
             </div>
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Reps</label>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Reps</label>
               <input
                 type="number"
+                inputMode="numeric"
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-zinc-700"
                 placeholder="0"
+                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               />
             </div>
-            <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">RIR</label>
-              <input
-                type="number"
-                value={rir}
-                onChange={(e) => setRir(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                placeholder="0"
-              />
+          </div>
+
+          <div>
+            <div className="flex justify-between mb-2">
+              <label className="text-zinc-500 text-xs uppercase tracking-wider">RIR</label>
+              <span className="text-zinc-300 font-light">{rir}</span>
             </div>
+            <input
+              type="range"
+              min="0" max="5"
+              value={rir}
+              onChange={(e) => setRir(e.target.value)}
+              className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            />
           </div>
 
           <button
@@ -345,33 +262,29 @@ export default function HomePage() {
             {loading ? 'Guardant...' : 'Guardar'}
           </button>
         </form>
-      </div>
 
-      {savedSets.length > 0 && (
-        <div className="px-6 py-6">
-          <h2 className="text-lg font-light tracking-tight text-zinc-400 mb-4">Últims entrenaments</h2>
-          <div className="space-y-3">
-            {savedSets.map((set: any) => (
-              <div key={set.id} className="border border-zinc-900 rounded-2xl p-4">
-                <div className="flex justify-between items-start">
+        <div className="pt-4">
+          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Recents</p>
+          {savedSets.length === 0 ? (
+            <p className="text-zinc-600 text-sm">Sense històric</p>
+          ) : (
+            <div className="space-y-2">
+              {savedSets.map((set) => (
+                <div key={set.id} className="flex justify-between items-center py-3 border-b border-zinc-900">
                   <div>
                     <p className="text-white font-light">{set.exercise}</p>
-                    <p className="text-zinc-500 text-sm">
-                      {set.weight}kg × {set.reps} reps {set.rir && `· RIR: ${set.rir}`}
-                    </p>
-                    {set.one_rm && (
-                      <p className="text-green-400 text-xs">1RM: {set.one_rm}kg</p>
-                    )}
+                    <p className="text-zinc-500 text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
-                  <p className="text-zinc-600 text-xs">
-                    {new Date(set.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="text-right">
+                    <p className="text-white font-light">{set.weight}kg × {set.reps}</p>
+                    <p className="text-zinc-600 text-xs">RIR {set.rir}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
@@ -381,12 +294,14 @@ export default function HomePage() {
               type="text"
               value={newExerciseName}
               onChange={(e) => setNewExerciseName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
               placeholder="Nom de l'exercici"
               className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               autoFocus
             />
+            {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
             <div className="flex gap-3">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+              <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel</button>
               <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Afegir</button>
             </div>
           </div>

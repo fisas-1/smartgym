@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
 
 type CustomExercises = string[]
