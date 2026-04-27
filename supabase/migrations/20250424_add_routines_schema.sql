@@ -2,6 +2,37 @@
 -- SCHEMA DE RUTINES (Routines)
 -- ============================================
 
+-- ============================================
+-- FIX: Afegir columnes faltants a workout_logs
+-- ============================================
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'workout_logs' 
+      AND column_name = 'exercise'
+      AND table_schema = 'public'
+  ) THEN 
+    ALTER TABLE public.workout_logs ADD COLUMN exercise TEXT;
+  END IF;
+END $$;
+
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'workout_logs' 
+      AND column_name = 'one_rm'
+      AND table_schema = 'public'
+  ) THEN 
+    ALTER TABLE public.workout_logs ADD COLUMN one_rm NUMERIC;
+  END IF;
+END $$;
+
+-- ============================================
+-- Rutines
+-- ============================================
+
 -- Taula de rutines
 CREATE TABLE IF NOT EXISTS public.routines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
