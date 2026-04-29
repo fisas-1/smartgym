@@ -171,21 +171,27 @@ export default function RutinesPage() {
       const newSets: RoutineSet[] = []
       const setsToInsert: any[] = []
       
-      for (let i = currentCount + 1; i <= setsTarget; i++) {
-        const newSet = {
-          id: crypto.randomUUID(),
-          routine_exercise_id: exerciseId,
-          set_number: i,
-          completed: false,
-          created_at: new Date().toISOString()
-        }
-        newSets.push(newSet)
-        setsToInsert.push({
-          routine_exercise_id: exerciseId,
-          set_number: i,
-          completed: false
-        })
-      }
+       for (let i = currentCount + 1; i <= setsTarget; i++) {
+         const newSet = {
+           id: crypto.randomUUID(),
+           routine_exercise_id: exerciseId,
+           set_number: i,
+           completed: false,
+           weight: 0,
+           reps: 0,
+           rir: 0,
+           created_at: new Date().toISOString()
+         }
+         newSets.push(newSet)
+         setsToInsert.push({
+           routine_exercise_id: exerciseId,
+           set_number: i,
+           completed: false,
+           weight: 0,
+           reps: 0,
+           rir: 0
+         })
+       }
 
       const { error } = await supabase.from('routine_sets').insert(setsToInsert)
       

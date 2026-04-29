@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS public.routine_exercises (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   routine_id UUID NOT NULL REFERENCES public.routines(id) ON DELETE CASCADE,
   exercise TEXT NOT NULL,
+  muscle_group TEXT NOT NULL DEFAULT 'Full Body',
   sets_target INTEGER NOT NULL CHECK (sets_target > 0),
   reps_min INTEGER NOT NULL CHECK (reps_min > 0),
   reps_max INTEGER NOT NULL CHECK (reps_max >= reps_min),
@@ -75,6 +76,7 @@ CREATE TABLE IF NOT EXISTS public.routine_exercises (
 );
 
 CREATE INDEX IF NOT EXISTS idx_routine_exercises_routine_id ON public.routine_exercises(routine_id);
+CREATE INDEX IF NOT EXISTS idx_routine_exercises_muscle_group ON public.routine_exercises(muscle_group);
 
 -- Create routine_sets table
 CREATE TABLE IF NOT EXISTS public.routine_sets (
@@ -82,6 +84,9 @@ CREATE TABLE IF NOT EXISTS public.routine_sets (
   routine_exercise_id UUID NOT NULL REFERENCES public.routine_exercises(id) ON DELETE CASCADE,
   workout_log_id UUID REFERENCES public.workout_logs(id) ON DELETE SET NULL,
   set_number INTEGER NOT NULL CHECK (set_number > 0),
+  weight NUMERIC DEFAULT 0,
+  reps INTEGER DEFAULT 0,
+  rir INTEGER DEFAULT 0,
   completed BOOLEAN DEFAULT false NOT NULL,
   notes TEXT,
   completed_at TIMESTAMP WITH TIME ZONE,

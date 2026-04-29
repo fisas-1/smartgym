@@ -3,25 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-
-type Exercise =
-  | 'Press Banca'
-  | 'Lat Pulldown'
-  | 'Sentadilles'
-  | 'Leg Press'
-  | 'Dominades'
-  | 'Press Military'
-  | 'Curl de Bíceps'
-  | 'Extensiones Tricep'
-  | 'French Press'
-  | 'Zancadas'
-  | string
-
-const DEFAULT_EXERCISES: Exercise[] = [
-  'Press Banca', 'Lat Pulldown', 'Sentadilles', 'Leg Press',
-  'Dominades', 'Press Military', 'Curl de Bíceps', 'Extensiones Tricep',
-  'French Press', 'Zancadas',
-]
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog } from '@/types'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0

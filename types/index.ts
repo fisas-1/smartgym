@@ -1,28 +1,91 @@
 // Tipus compartits per a l'aplicació
 
+export type MuscleGroup = 
+  | 'Peitoral'
+  | 'Esquena'
+  | 'Cames'
+  | 'Esquitxos'
+  | 'Braços'
+  | 'Abdominals'
+  | 'Full Body'
+
 export type Exercise = 
   | 'Press Banca'
+  | 'Press Banca - Pes Corporal'
+  | 'Press Banca - Amb Llast'
   | 'Lat Pulldown'
   | 'Sentadilles'
+  | 'Sentadilles - Pes Corporal'
+  | 'Sentadilles - Amb Llast'
   | 'Leg Press'
+  | 'Leg Press - Pes Corporal'
   | 'Dominades'
+  | 'Dominades - Pes Corporal'
   | 'Press Military'
   | 'Curl de Bíceps'
   | 'Extensiones Tricep'
   | 'French Press'
   | 'Zancadas'
+  | 'Zancades - Pes Corporal'
+  | 'Zancades - Amb Llast'
   | string
 
+export interface ExerciseInfo {
+  name: Exercise
+  muscleGroup: MuscleGroup
+  defaultSets: number
+  defaultRepsMin: number
+  defaultRepsMax: number
+  hasBodyweight: boolean
+  hasWeight: boolean
+}
+
 export const DEFAULT_EXERCISES: Exercise[] = [
-  'Press Banca', 'Lat Pulldown', 'Sentadilles', 'Leg Press',
-  'Dominades', 'Press Military', 'Curl de Bíceps', 'Extensiones Tricep',
-  'French Press', 'Zancadas',
+  'Press Banca', 'Press Banca - Pes Corporal', 'Press Banca - Amb Llast',
+  'Lat Pulldown', 'Sentadilles', 'Sentadilles - Pes Corporal', 'Sentadilles - Amb Llast',
+  'Leg Press', 'Leg Press - Pes Corporal', 'Dominades', 'Dominades - Pes Corporal',
+  'Press Military', 'Curl de Bíceps', 'Extensiones Tricep', 'French Press',
+  'Zancades', 'Zancades - Pes Corporal', 'Zancades - Amb Llast',
 ]
+
+export const EXERCISE_INFO: Record<Exercise, ExerciseInfo> = {
+  'Press Banca': { name: 'Press Banca', muscleGroup: 'Peitoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Press Banca - Pes Corporal': { name: 'Press Banca - Pes Corporal', muscleGroup: 'Peitoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 15, hasBodyweight: true, hasWeight: false },
+  'Press Banca - Amb Llast': { name: 'Press Banca - Amb Llast', muscleGroup: 'Peitoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
+  'Lat Pulldown': { name: 'Lat Pulldown', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Sentadilles': { name: 'Sentadilles', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Sentadilles - Pes Corporal': { name: 'Sentadilles - Pes Corporal', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 20, hasBodyweight: true, hasWeight: false },
+  'Sentadilles - Amb Llast': { name: 'Sentadilles - Amb Llast', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
+  'Leg Press': { name: 'Leg Press', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
+  'Leg Press - Pes Corporal': { name: 'Leg Press - Pes Corporal', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 12, defaultRepsMax: 20, hasBodyweight: true, hasWeight: false },
+  'Dominades': { name: 'Dominades', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 5, defaultRepsMax: 8, hasBodyweight: true, hasWeight: true },
+  'Dominades - Pes Corporal': { name: 'Dominades - Pes Corporal', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 6, defaultRepsMax: 12, hasBodyweight: true, hasWeight: false },
+  'Press Military': { name: 'Press Military', muscleGroup: 'Esquitxos', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Curl de Bíceps': { name: 'Curl de Bíceps', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
+  'Extensiones Tricep': { name: 'Extensiones Tricep', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
+  'French Press': { name: 'French Press', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Zancades': { name: 'Zancades', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Zancades - Pes Corporal': { name: 'Zancades - Pes Corporal', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: true, hasWeight: false },
+  'Zancades - Amb Llast': { name: 'Zancades - Amb Llast', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
+} as const
+
+export function getExerciseInfo(exercise: Exercise): ExerciseInfo {
+  return EXERCISE_INFO[exercise] || {
+    name: exercise,
+    muscleGroup: 'Full Body',
+    defaultSets: 3,
+    defaultRepsMin: 8,
+    defaultRepsMax: 12,
+    hasBodyweight: false,
+    hasWeight: true
+  }
+}
 
 export interface WorkoutLog {
   id: string
   user_id: string
   exercise: Exercise
+  muscleGroup?: MuscleGroup
   weight: number
   reps: number
   rir: number
@@ -43,10 +106,12 @@ export interface RoutineExercise {
   id: string
   routine_id: string
   exercise: Exercise
+  muscleGroup: MuscleGroup
   sets_target: number
   reps_min: number
   reps_max: number
   order_index: number
+  editable_sets?: boolean
 }
 
 export interface RoutineSet {
@@ -54,6 +119,9 @@ export interface RoutineSet {
   routine_exercise_id: string
   workout_log_id?: string | null
   set_number: number
+  weight: number
+  reps: number
+  rir: number
   completed: boolean
   notes?: string | null
   completed_at?: string | null

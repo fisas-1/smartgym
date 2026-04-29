@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase/index'
 import { useAuth } from '../../app/contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, getExerciseInfo, MuscleGroup } from '@/types'
 
 type CustomExercises = string[]
 
@@ -23,8 +23,14 @@ export default function RutinesPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isSchemaFixed, setIsSchemaFixed] = useState<boolean | null>(null)
+  const [showMuscleGroupModal, setShowMuscleGroupModal] = useState(false)
+  const [pendingExerciseName, setPendingExerciseName] = useState('')
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null)
+  const [editingSet, setEditingSet] = useState<{exerciseId: string, setNumber: number, weight: number, reps: number, rir: number} | null>(null)
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
+
+  const muscleGroups: MuscleGroup[] = ['Peitoral', 'Esquena', 'Cames', 'Esquitxos', 'Braços', 'Abdominals', 'Full Body']
 
   useEffect(() => {
     if (user) {
@@ -171,21 +177,27 @@ export default function RutinesPage() {
       const newSets: RoutineSet[] = []
       const setsToInsert: any[] = []
       
-      for (let i = currentCount + 1; i <= setsTarget; i++) {
-        const newSet = {
-          id: crypto.randomUUID(),
-          routine_exercise_id: exerciseId,
-          set_number: i,
-          completed: false,
-          created_at: new Date().toISOString()
-        }
-        newSets.push(newSet)
-        setsToInsert.push({
-          routine_exercise_id: exerciseId,
-          set_number: i,
-          completed: false
-        })
-      }
+       for (let i = currentCount + 1; i <= setsTarget; i++) {
+         const newSet = {
+           id: crypto.randomUUID(),
+           routine_exercise_id: exerciseId,
+           set_number: i,
+           completed: false,
+           weight: 0,
+           reps: 0,
+           rir: 0,
+           created_at: new Date().toISOString()
+         }
+         newSets.push(newSet)
+         setsToInsert.push({
+           routine_exercise_id: exerciseId,
+           set_number: i,
+           completed: false,
+           weight: 0,
+           reps: 0,
+           rir: 0
+         })
+       }
 
       const { error } = await supabase.from('routine_sets').insert(setsToInsert)
       
@@ -326,6 +338,25 @@ export default function RutinesPage() {
       return
     }
 
+    // Check if it's a custom exercise that needs muscle group
+    const trimmedName = newExerciseName.trim()
+    const isCustom = !DEFAULT_EXERCISES.includes(trimmedName as Exercise)
+    const exerciseInfo = getExerciseInfo(trimmedName as Exercise)
+    
+    // If custom exercise, show muscle group selector
+    if (isCustom) {
+      setPendingExerciseName(trimmedName)
+      setShowMuscleGroupModal(true)
+      return
+    }
+
+    // For default exercises, use predefined info
+    await saveExerciseToRoutine(trimmedName, exerciseInfo.muscleGroup, exerciseInfo.defaultSets, exerciseInfo.defaultRepsMin, exerciseInfo.defaultRepsMax)
+  }
+
+  async function saveExerciseToRoutine(name: string, muscleGroup: MuscleGroup, sets: number, repsMin: number, repsMax: number) {
+    if (!selectedRoutine) return
+
     if (!isSchemaFixed) {
       setErrorMsg('Error: La taula "routine_exercises" no existeix. Executa deploy-schema.sql a Supabase.')
       return
@@ -339,10 +370,11 @@ export default function RutinesPage() {
         .from('routine_exercises')
         .insert({
           routine_id: selectedRoutine.id,
-          exercise: newExerciseName.trim(),
-          sets_target: 3,
-          reps_min: 8,
-          reps_max: 12,
+          exercise: name,
+          muscle_group: muscleGroup,
+          sets_target: sets,
+          reps_min: repsMin,
+          reps_max: repsMax,
           order_index: routineExercises.length
         })
         .select()
@@ -357,10 +389,22 @@ export default function RutinesPage() {
 
       setNewExerciseName('')
       loadRoutineExercises(selectedRoutine.id)
+      setSuccessMsg('Exercici afegit amb èxit!')
     } catch (err) {
       setLoading(false)
       setErrorMsg('Error inesperat afegint exercici')
     }
+  }
+
+  async function handleSaveExerciseWithMuscleGroup() {
+    if (!selectedRoutine || !pendingExerciseName || !selectedMuscleGroup) return
+    
+    const info = getExerciseInfo(pendingExerciseName as Exercise)
+    await saveExerciseToRoutine(pendingExerciseName, selectedMuscleGroup, info.defaultSets, info.defaultRepsMin, info.defaultRepsMax)
+    
+    setShowMuscleGroupModal(false)
+    setPendingExerciseName('')
+    setSelectedMuscleGroup(null)
   }
 
   function handleSelectRoutine(routine: Routine) {
@@ -448,18 +492,19 @@ export default function RutinesPage() {
           // Ignorar si la funció no existeix
         }
 
-        const { data, error } = await supabase
-          .from('workout_logs')
-          .insert({
-            exercise: exercise.exercise,
-            weight: recommendedWeight || (exercise.reps_min * 5), // Estimació
-            reps: Math.floor((exercise.reps_min + exercise.reps_max) / 2),
-            rir: 0,
-            one_rm: recommendedWeight ? Math.round(recommendedWeight / (1.0278 - 0.0278 * exercise.reps_min)) : 0,
-            user_id: user!.id
-          })
-          .select()
-          .maybeSingle()
+         const { data, error } = await supabase
+           .from('workout_logs')
+           .insert({
+             exercise: exercise.exercise,
+             muscle_group: exercise.muscleGroup,
+             weight: recommendedWeight || (exercise.reps_min * 5), // Estimació
+             reps: Math.floor((exercise.reps_min + exercise.reps_max) / 2),
+             rir: 0,
+             one_rm: recommendedWeight ? Math.round(recommendedWeight / (1.0278 - 0.0278 * exercise.reps_min)) : 0,
+             user_id: user!.id
+           })
+           .select()
+           .maybeSingle()
 
         if (!error && data) {
           // Actualitzar el set amb el workout_log_id
@@ -611,25 +656,25 @@ export default function RutinesPage() {
           const completedSets = sets.filter(s => s.completed).length
           const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
           
-          return (
-            <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <p className="text-white font-light">{exercise.exercise}</p>
-                  <p className="text-zinc-500 text-xs">
-                    {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    const newExercises = routineExercises.filter(re => re.id !== exercise.id)
-                    setRoutineExercises(newExercises)
-                  }}
-                  className="text-zinc-500 hover:text-red-400 text-lg px-2"
-                >
-                  ×
-                </button>
-              </div>
+           return (
+             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
+               <div className="flex justify-between items-start">
+                 <div className="flex-1">
+                   <p className="text-white font-light">{exercise.exercise}</p>
+                   <p className="text-zinc-600 text-xs">
+                     {exercise.muscleGroup || 'Full Body'} • {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
+                   </p>
+                 </div>
+                 <button
+                   onClick={() => {
+                     const newExercises = routineExercises.filter(re => re.id !== exercise.id)
+                     setRoutineExercises(newExercises)
+                   }}
+                   className="text-zinc-500 hover:text-red-400 text-lg px-2"
+                 >
+                   ×
+                 </button>
+               </div>
 
               <button
                 onClick={async () => {
@@ -648,35 +693,50 @@ export default function RutinesPage() {
                 💡 Recomanar Pes
               </button>
 
-              {sets.map((set, idx) => (
-                <div 
-                  key={set.id || idx}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    set.completed 
-                      ? 'bg-green-900/30 border-green-800' 
-                      : 'bg-zinc-900 border-zinc-800'
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
-                    disabled={!isSchemaFixed}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      set.completed
-                        ? 'bg-green-500 border-green-500 text-black'
-                        : 'border-zinc-600 hover:border-zinc-400'
-                    } disabled:opacity-50`}
-                  >
-                    {set.completed && '✓'}
-                  </button>
-                  <span className="text-zinc-400 text-sm">Sèrie {set.set_number}</span>
-                  
-                  {set.completed ? (
-                    <span className="text-green-400 text-xs ml-auto">Completada</span>
-                  ) : (
-                    <span className="text-zinc-600 text-xs ml-auto">Pendent</span>
-                  )}
-                </div>
-              ))}
+               {sets.map((set, idx) => (
+                 <div 
+                   key={set.id || idx}
+                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                     set.completed 
+                       ? 'bg-green-900/30 border-green-800' 
+                       : 'bg-zinc-900 border-zinc-800'
+                   }`}
+                 >
+                   <button
+                     onClick={() => {
+                       if (set.completed) {
+                         toggleSetCompletion(exercise.id, set.set_number, false)
+                       } else {
+                         toggleSetCompletion(exercise.id, set.set_number, true)
+                       }
+                     }}
+                     disabled={!isSchemaFixed}
+                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                       set.completed
+                         ? 'bg-green-500 border-green-500 text-black'
+                         : 'border-zinc-600 hover:border-zinc-400'
+                     } disabled:opacity-50`}
+                   >
+                     {set.completed && '✓'}
+                   </button>
+                   <span className="text-zinc-400 text-sm">Sèrie {set.set_number}</span>
+                   
+                   <button
+                     onClick={() => setEditingSet({exerciseId: exercise.id, setNumber: set.set_number, weight: 0, reps: exercise.reps_min, rir: 0})}
+                     disabled={!isSchemaFixed}
+                     className={`text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300 hover:bg-zinc-700 ml-2 disabled:opacity-50 flex items-center gap-1`}
+                   >
+                     <span>📝</span>
+                     {set.completed ? 'Editar' : 'Fer'}
+                   </button>
+                   
+                   {set.completed ? (
+                     <span className="text-green-400 text-xs ml-auto">Completada</span>
+                   ) : (
+                     <span className="text-zinc-600 text-xs ml-auto">Pendent</span>
+                   )}
+                 </div>
+               ))}
 
               {allCompleted && (
                 <button
@@ -718,26 +778,65 @@ export default function RutinesPage() {
           💾 Guardar Entrenament
         </button>
 
-        {showExerciseModal && (
+         {showExerciseModal && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={handleCloseExerciseModal}>
             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
               
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {allExercises.map(ex => (
-                  <button
-                    key={ex}
-                    onClick={() => {
-                      setNewExerciseName(ex)
-                      handleAddExercise()
-                    }}
-                    className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                      newExerciseName === ex 
+                {allExercises.map(ex => {
+                  const info = getExerciseInfo(ex)
+                  return (
+                    <button
+                      key={ex}
+                      onClick={() => {
+                        setNewExerciseName(ex)
+                        handleAddExercise()
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm text-left ${newExerciseName === ex 
                         ? 'bg-white text-black' 
                         : 'bg-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      <span className="font-medium">{ex}</span>
+                      <span className="text-xs text-zinc-500 ml-2">({info.muscleGroup})</span>
+                    </button>
+                  )
+                })}
+              </div>
+              
+              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+              
+              <div className="flex gap-3">
+                <button onClick={handleCloseExerciseModal} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Muscle Group Selection Modal for Custom Exercises */}
+        {showMuscleGroupModal && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => {
+            setShowMuscleGroupModal(false)
+            setPendingExerciseName('')
+            setSelectedMuscleGroup(null)
+          }}>
+            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-light text-white mb-2">Nou Exercici</h3>
+              <p className="text-zinc-400 text-sm mb-4">{pendingExerciseName}</p>
+              
+              <p className="text-zinc-500 text-sm mb-3">Grup muscular:</p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {muscleGroups.map(group => (
+                  <button
+                    key={group}
+                    onClick={() => setSelectedMuscleGroup(group)}
+                    className={`px-3 py-2 rounded-xl text-sm ${selectedMuscleGroup === group
+                      ? 'bg-white text-black'
+                      : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                     }`}
                   >
-                    {ex}
+                    {group}
                   </button>
                 ))}
               </div>
@@ -745,7 +844,120 @@ export default function RutinesPage() {
               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
               
               <div className="flex gap-3">
-                <button onClick={handleCloseExerciseModal} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+                <button 
+                  onClick={() => {
+                    setShowMuscleGroupModal(false)
+                    setPendingExerciseName('')
+                    setSelectedMuscleGroup(null)
+                  }} 
+                  className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light"
+                >
+                  Cancel·lar
+                </button>
+                <button 
+                  onClick={handleSaveExerciseWithMuscleGroup}
+                  disabled={!selectedMuscleGroup}
+                  className="flex-1 py-3 rounded-2xl bg-white text-black font-light disabled:opacity-50"
+                >
+                  Afegir
+                </button>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Set Edit Modal */}
+        {editingSet && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setEditingSet(null)}>
+            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-light text-white mb-4">Detalls de la Sèrie {editingSet.setNumber}</h3>
+              
+              <div className="space-y-4 mb-4">
+                <div>
+                  <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Pes (kg)</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={editingSet.weight}
+                    onChange={(e) => setEditingSet({...editingSet, weight: parseFloat(e.target.value) || 0})}
+                    placeholder="0"
+                    className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                  />
+                </div>
+                <div>
+                  <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Repeticions</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={editingSet.reps}
+                    onChange={(e) => setEditingSet({...editingSet, reps: parseInt(e.target.value) || 0})}
+                    placeholder="0"
+                    className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-zinc-500 text-xs uppercase tracking-wider">RIR</label>
+                    <span className="text-zinc-300 font-light">{editingSet.rir}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0" max="5"
+                    value={editingSet.rir}
+                    onChange={(e) => setEditingSet({...editingSet, rir: parseInt(e.target.value)})}
+                    className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setEditingSet(null)}
+                  className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light"
+                >
+                  Cancel·lar
+                </button>
+                <button
+                  onClick={async () => {
+                    const sets = routineSets[editingSet.exerciseId] || []
+                    const set = sets.find(s => s.set_number === editingSet.setNumber)
+                    if (set && isSchemaFixed) {
+                      try {
+                        const { error } = await supabase
+                          .from('routine_sets')
+                          .update({
+                            weight: editingSet.weight,
+                            reps: editingSet.reps,
+                            rir: editingSet.rir,
+                            completed: true,
+                            completed_at: new Date().toISOString()
+                          })
+                          .eq('id', set.id)
+
+                        if (!error) {
+                          setRoutineSets(prev => {
+                            const current = prev[editingSet.exerciseId] || []
+                            const updated = current.map(s =>
+                              s.set_number === editingSet.setNumber
+                                ? ({ ...s, weight: editingSet.weight, reps: editingSet.reps, rir: editingSet.rir, completed: true, completed_at: new Date().toISOString() } as RoutineSet)
+                                : s
+                            )
+                            return { ...prev, [editingSet.exerciseId]: updated }
+                          })
+                          setSuccessMsg('Sèrie guardada!')
+                        } else {
+                          setErrorMsg('Error al guardar la sèrie')
+                        }
+                      } catch (err) {
+                        setErrorMsg('Error inesperat')
+                      }
+                    }
+                    setEditingSet(null)
+                  }}
+                  className="flex-1 py-3 rounded-2xl bg-white text-black font-light"
+                >
+                  Guardar Sèrie
+                </button>
               </div>
             </div>
           </div>
