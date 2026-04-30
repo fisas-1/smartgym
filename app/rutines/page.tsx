@@ -270,6 +270,9 @@ export default function RutinesPage() {
           id: crypto.randomUUID(),
           routine_exercise_id: exerciseId,
           set_number: i,
+          weight: 0,
+          reps: 0,
+          rir: 0,
           completed: false,
           created_at: new Date().toISOString()
         })

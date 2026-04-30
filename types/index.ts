@@ -1,7 +1,7 @@
 // Tipus compartits per a l'aplicacio
 
 export type MuscleGroup =
-  | 'Peitoral'
+  | 'Pectoral'
   | 'Esquena'
   | 'Cames'
   | 'Esquitxos'
@@ -46,8 +46,8 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 ]
 
 export const EXERCISE_INFO: Record<Exercise, ExerciseInfo> = {
-  'Press Banca': { name: 'Press Banca', muscleGroup: 'Peitoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
-  'Press Banca - Pes Corporal': { name: 'Press Banca - Pes Corporal', muscleGroup: 'Peitoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 15, hasBodyweight: true, hasWeight: false },
+  'Press Banca': { name: 'Press Banca', muscleGroup: 'Pectoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
+  'Press Banca - Pes Corporal': { name: 'Press Banca - Pes Corporal', muscleGroup: 'Pectoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 15, hasBodyweight: true, hasWeight: false },
   'Lat Pulldown': { name: 'Lat Pulldown', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Sentadilles': { name: 'Sentadilles', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
   'Sentadilles - Pes Corporal': { name: 'Sentadilles - Pes Corporal', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 20, hasBodyweight: true, hasWeight: false },
