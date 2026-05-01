@@ -14,11 +14,20 @@ export default function RutinesPage() {
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([])
   const [routineSets, setRoutineSets] = useState<Record<string, RoutineSet[]>>({})
   const [customExercises, setCustomExercises] = useState<CustomExercises>([])
-  const [showExerciseModal, setShowExerciseModal] = useState(false)
-  const [newExerciseName, setNewExerciseName] = useState('')
-  const [showRoutineModal, setShowRoutineModal] = useState(false)
-  const [newRoutineName, setNewRoutineName] = useState('')
-  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
+   const [showExerciseModal, setShowExerciseModal] = useState(false)
+   const [newExerciseName, setNewExerciseName] = useState('')
+   const [showRoutineModal, setShowRoutineModal] = useState(false)
+   const [newRoutineName, setNewRoutineName] = useState('')
+   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
+   const [editRoutineName, setEditRoutineName] = useState('')
+   const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
+   const [editingExercise, setEditingExercise] = useState<RoutineExercise | null>(null)
+   const [showEditExerciseModal, setShowEditExerciseModal] = useState(false)
+   const [editSetsTarget, setEditSetsTarget] = useState<number>(3)
+   const [editRepsMin, setEditRepsMin] = useState<number>(8)
+   const [editRepsMax, setEditRepsMax] = useState<number>(12)
+   const [editRoutineName, setEditRoutineName] = useState('')
+   const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -45,14 +54,14 @@ export default function RutinesPage() {
     }
   }, [selectedRoutine, routineExercises])
 
-  // Assegurar que cada exercici té les sèries inicialitzades
-  useEffect(() => {
-    if (selectedRoutine && routineExercises.length > 0) {
-      routineExercises.forEach(ex => {
-        initializeExerciseSets(ex.id, ex.sets_target)
-      })
-    }
-  }, [selectedRoutine, routineExercises])
+   // Assegurar que cada exercici té les sèries inicialitzades / sincronitzades
+   useEffect(() => {
+     if (selectedRoutine && routineExercises.length > 0) {
+       routineExercises.forEach(ex => {
+         syncExerciseSets(ex.id, ex.sets_target)
+       })
+     }
+   }, [selectedRoutine, routineExercises])
 
   // Càrrega de rutines des de Supabase
   async function loadRoutines() {
@@ -70,45 +79,46 @@ export default function RutinesPage() {
     if (data) setRoutines(data)
   }
 
-  // Càrrega d'exercicis d'una rutina
-  async function loadRoutineExercises(routineId: string) {
-    const { data, error } = await supabase
-      .from('routine_exercises')
-      .select('*')
-      .eq('routine_id', routineId)
-      .order('order_index', { ascending: true })
-    
-    if (error) {
-      console.error('Error loading routine exercises:', error)
-      return
-    }
-    if (data) setRoutineExercises(data)
-  }
+   // Càrrega d'exercicis d'una rutina
+   async function loadRoutineExercises(routineId: string): Promise<RoutineExercise[]> {
+     const { data, error } = await supabase
+       .from('routine_exercises')
+       .select('*')
+       .eq('routine_id', routineId)
+       .order('order_index', { ascending: true })
+     
+     if (error) {
+       console.error('Error loading routine exercises:', error)
+       return []
+     }
+     if (data) setRoutineExercises(data)
+     return data || []
+   }
 
-  // Càrrega de series completades d'una rutina
-  async function loadRoutineSets(routineId: string) {
-    const exerciseIds = routineExercises.map(re => re.id)
-    if (exerciseIds.length === 0) return
+   // Càrrega de series completades d'una rutina
+   async function loadRoutineSets(routineId: string, exerciseIds?: string[]) {
+     const ids = exerciseIds || routineExercises.map(re => re.id)
+     if (ids.length === 0) return
 
-    const { data, error } = await supabase
-      .from('routine_sets')
-      .select('*')
-      .in('routine_exercise_id', exerciseIds)
-      .order('created_at', { ascending: true })
-    
-    if (error) {
-      console.error('Error loading routine sets:', error)
-      return
-    }
-    
-    // Agrupar per exercici
-    const grouped: Record<string, RoutineSet[]> = {}
-    data?.forEach(set => {
-      if (!grouped[set.routine_exercise_id]) grouped[set.routine_exercise_id] = []
-      grouped[set.routine_exercise_id].push(set)
-    })
-    setRoutineSets(grouped)
-  }
+     const { data, error } = await supabase
+       .from('routine_sets')
+       .select('*')
+       .in('routine_exercise_id', ids)
+       .order('created_at', { ascending: true })
+     
+     if (error) {
+       console.error('Error loading routine sets:', error)
+       return
+     }
+     
+     // Agrupar per exercici
+     const grouped: Record<string, RoutineSet[]> = {}
+     data?.forEach(set => {
+       if (!grouped[set.routine_exercise_id]) grouped[set.routine_exercise_id] = []
+       grouped[set.routine_exercise_id].push(set)
+     })
+     setRoutineSets(grouped)
+   }
 
   // Càrrega d'exercicis personalitzats
   function loadCustomExercises() {
@@ -150,10 +160,91 @@ export default function RutinesPage() {
     loadRoutines()
   }
 
-  // Seleccionar rutina
-  function handleSelectRoutine(routine: Routine) {
-    setSelectedRoutine(routine)
-  }
+   // Seleccionar rutina
+   function handleSelectRoutine(routine: Routine) {
+     setSelectedRoutine(routine)
+   }
+
+   // Obrir modal edició rutina
+   function handleOpenEditRoutine(routine: Routine) {
+     setEditingRoutine(routine)
+     setEditRoutineName(routine.name)
+     setShowEditRoutineModal(true)
+   }
+
+   // Actualitzar nom de rutina
+   async function handleUpdateRoutine() {
+     if (!editingRoutine || !editRoutineName.trim()) return
+
+     setLoading(true)
+     setErrorMsg(null)
+
+     const { error } = await supabase
+       .from('routines')
+       .update({ name: editRoutineName.trim() })
+       .eq('id', editingRoutine.id)
+
+     setLoading(false)
+
+     if (error) {
+       setErrorMsg('Error en actualitzar: ' + error.message)
+       return
+     }
+
+     setShowEditRoutineModal(false)
+     setEditingRoutine(null)
+     setEditRoutineName('')
+     loadRoutines()
+     if (selectedRoutine?.id === editingRoutine.id) {
+       setSelectedRoutine(prev => prev ? { ...prev, name: editRoutineName.trim() } : null)
+     }
+     setSuccessMsg('Rutina actualitzada')
+   }
+
+   // Obrir modal edició exercici
+   function handleOpenEditExercise(exercise: RoutineExercise) {
+     setEditingExercise(exercise)
+     setEditSetsTarget(exercise.sets_target)
+     setEditRepsMin(exercise.reps_min)
+     setEditRepsMax(exercise.reps_max)
+     setShowEditExerciseModal(true)
+   }
+
+   // Actualitzar exercici
+   async function handleUpdateExercise() {
+     if (!editingExercise || !selectedRoutine) return
+     if (editSetsTarget <= 0 || editRepsMin <= 0 || editRepsMax <= 0 || editRepsMin > editRepsMax) {
+       setErrorMsg('Valors no vàlids')
+       return
+     }
+
+     setLoading(true)
+     setErrorMsg(null)
+
+     const { error } = await supabase
+       .from('routine_exercises')
+       .update({
+         sets_target: editSetsTarget,
+         reps_min: editRepsMin,
+         reps_max: editRepsMax
+       })
+       .eq('id', editingExercise.id)
+
+     setLoading(false)
+
+     if (error) {
+       setErrorMsg('Error en actualitzar: ' + error.message)
+       return
+     }
+
+     setShowEditExerciseModal(false)
+     setEditingExercise(null)
+     setSuccessMsg('Exercici actualitzat')
+
+     // Recarregar exercicis i sets per reflectir canvis
+     const exercises = await loadRoutineExercises(selectedRoutine.id)
+     await loadRoutineSets(selectedRoutine.id, exercises)
+   }
 
   // Tornar a la llista de rutines
   function handleBackToList() {
@@ -202,21 +293,29 @@ export default function RutinesPage() {
     setSuccessMsg('Exercici afegit')
   }
 
-  // Eliminar exercici de la rutina
-  async function handleRemoveExercise(exerciseId: string) {
-    const { error } = await supabase
-      .from('routine_exercises')
-      .delete()
-      .eq('id', exerciseId)
+   // Eliminar exercici de la rutina
+   async function handleRemoveExercise(exerciseId: string) {
+     // Eliminar sets associats primer
+     await supabase.from('routine_sets').delete().eq('routine_exercise_id', exerciseId)
 
-    if (error) {
-      setErrorMsg('Error al eliminar exercici')
-      return
-    }
+     const { error } = await supabase
+       .from('routine_exercises')
+       .delete()
+       .eq('id', exerciseId)
 
-    setRoutineExercises(prev => prev.filter(re => re.id !== exerciseId))
-    setSuccessMsg('Exercici eliminat')
-  }
+     if (error) {
+       setErrorMsg('Error al eliminar exercici')
+       return
+     }
+
+     setRoutineExercises(prev => prev.filter(re => re.id !== exerciseId))
+     setRoutineSets(prev => {
+       const next = { ...prev }
+       delete next[exerciseId]
+       return next
+     })
+     setSuccessMsg('Exercici eliminat')
+   }
 
   // Actualitzar paràmetres de l'exercici
   async function updateExercise(exerciseId: string, field: string, value: number) {
@@ -250,49 +349,60 @@ export default function RutinesPage() {
     return data[0]
   }
 
-  // Inicialitzar series per a un exercici (auto-checkout inicial)
-  async function initializeExerciseSets(exerciseId: string, setsTarget: number) {
-    if (!exerciseId) return
-    
-    try {
-      // Obtenir sets existents de la DB
-      const { data: existingSets } = await supabase
-        .from('routine_sets')
-        .select('*')
-        .eq('routine_exercise_id', exerciseId)
-      
-      const currentCount = existingSets?.length || 0
-      if (currentCount >= setsTarget) return
+   // Funció per sincronitzar els sets d'un exercici amb el seu sets_target
+   async function syncExerciseSets(exerciseId: string, setsTarget: number) {
+     if (!exerciseId) return
 
-      const newSets: RoutineSet[] = []
-      for (let i = currentCount + 1; i <= setsTarget; i++) {
-        newSets.push({
-          id: crypto.randomUUID(),
-          routine_exercise_id: exerciseId,
-          set_number: i,
-          weight: 0,
-          reps: 0,
-          rir: 0,
-          completed: false,
-          created_at: new Date().toISOString()
-        })
-      }
+     try {
+       const { data: existingSets } = await supabase
+         .from('routine_sets')
+         .select('*')
+         .eq('routine_exercise_id', exerciseId)
+         .order('set_number', { ascending: true })
 
-      const setsToInsert = newSets.map(s => ({
-        routine_exercise_id: s.routine_exercise_id,
-        set_number: s.set_number,
-        completed: false
-      }))
+       const currentCount = existingSets?.length || 0
 
-      await supabase.from('routine_sets').insert(setsToInsert)
-      setRoutineSets(prev => ({
-        ...prev,
-        [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
-      }))
-    } catch (error) {
-      console.error('Error initializing sets:', error)
-    }
-  }
+       if (currentCount < setsTarget) {
+         // Afegir sets faltants
+         const newSets: RoutineSet[] = []
+         for (let i = currentCount + 1; i <= setsTarget; i++) {
+           newSets.push({
+             id: crypto.randomUUID(),
+             routine_exercise_id: exerciseId,
+             set_number: i,
+             weight: 0,
+             reps: 0,
+             rir: 0,
+             completed: false,
+             created_at: new Date().toISOString()
+           })
+         }
+         const setsToInsert = newSets.map(s => ({
+           routine_exercise_id: s.routine_exercise_id,
+           set_number: s.set_number,
+           completed: false
+         }))
+         await supabase.from('routine_sets').insert(setsToInsert)
+         setRoutineSets(prev => ({
+           ...prev,
+           [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
+         }))
+       } else if (currentCount > setsTarget) {
+         // Eliminar sets sobrants (els més alts)
+         const setsToRemove = (existingSets || []).slice(setsTarget).map(s => s.id)
+         if (setsToRemove.length > 0) {
+           await supabase.from('routine_sets').delete().in('id', setsToRemove)
+           const newSets = (existingSets || []).slice(0, setsTarget)
+           setRoutineSets(prev => ({
+             ...prev,
+             [exerciseId]: newSets
+           }))
+         }
+       }
+     } catch (error) {
+       console.error('Error syncing sets:', error)
+     }
+   }
 
   // Marcar/desmarcar série com a completada
   async function toggleSetCompletion(exerciseId: string, setNumber: number, completed: boolean) {
@@ -365,23 +475,33 @@ export default function RutinesPage() {
           <h1 className="text-xl font-medium tracking-tight text-zinc-400">rutines.</h1>
         </div>
 
-        <div className="px-6 space-y-4">
-          {routines.length === 0 ? (
-            <p className="text-zinc-500 text-sm">No tens cap rutina creada</p>
-          ) : (
-            routines.map(routine => (
-              <div
-                key={routine.id}
-                onClick={() => handleSelectRoutine(routine)}
-                className="border border-zinc-900 rounded-2xl p-4 cursor-pointer hover:bg-zinc-900/50 transition-colors"
-              >
-                <p className="text-white font-light text-lg">{routine.name}</p>
-                <p className="text-zinc-500 text-xs mt-1">
-                  {routineExercises.filter(re => re.routine_id === routine.id).length} exercicis
-                </p>
-              </div>
-            ))
-          )}
+         <div className="px-6 space-y-4">
+           {routines.length === 0 ? (
+             <p className="text-zinc-500 text-sm">No tens cap rutina creada</p>
+           ) : (
+             routines.map(routine => (
+               <div
+                 key={routine.id}
+                 className="border border-zinc-900 rounded-2xl p-4"
+               >
+                 <div 
+                   className="cursor-pointer hover:text-zinc-300"
+                   onClick={() => handleSelectRoutine(routine)}
+                 >
+                   <p className="text-white font-light text-lg">{routine.name}</p>
+                   <p className="text-zinc-500 text-xs mt-1">
+                     {routineExercises.filter(re => re.routine_id === routine.id).length} exercicis
+                   </p>
+                 </div>
+                 <button
+                   onClick={() => handleOpenEditRoutine(routine)}
+                   className="text-zinc-500 hover:text-white text-sm mt-2 px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                 >
+                   ✏️ Editar
+                 </button>
+               </div>
+             ))
+           )}
 
           <button
             onClick={() => setShowRoutineModal(true)}
@@ -391,27 +511,49 @@ export default function RutinesPage() {
           </button>
         </div>
 
-        {/* Modal Nova Rutina */}
-        {showRoutineModal && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowRoutineModal(false)}>
-            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-white mb-4">Nova Rutina</h3>
-              <input
-                type="text"
-                value={newRoutineName}
-                onChange={(e) => setNewRoutineName(e.target.value)}
-                placeholder="Nom de la rutina"
-                className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                autoFocus
-              />
-              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
-              <div className="flex gap-3">
-                <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                <button onClick={handleCreateRoutine} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Crear</button>
-              </div>
-            </div>
-          </div>
-        )}
+         {/* Modal Nova Rutina */}
+         {showRoutineModal && (
+           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowRoutineModal(false)}>
+             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-white mb-4">Nova Rutina</h3>
+               <input
+                 type="text"
+                 value={newRoutineName}
+                 onChange={(e) => setNewRoutineName(e.target.value)}
+                 placeholder="Nom de la rutina"
+                 className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 autoFocus
+               />
+               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               <div className="flex gap-3">
+                 <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+                 <button onClick={handleCreateRoutine} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Crear</button>
+               </div>
+             </div>
+           </div>
+         )}
+
+         {/* Modal Editar Rutina */}
+         {showEditRoutineModal && editingRoutine && (
+           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditRoutineModal(false)}>
+             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-white mb-4">Editar Rutina</h3>
+               <input
+                 type="text"
+                 value={editRoutineName}
+                 onChange={(e) => setEditRoutineName(e.target.value)}
+                 placeholder="Nom de la rutina"
+                 className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 autoFocus
+               />
+               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               <div className="flex gap-3">
+                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+                 <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Guardar</button>
+               </div>
+             </div>
+           </div>
+         )}
 
         {successMsg && (
           <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800 rounded-2xl">
@@ -460,20 +602,30 @@ export default function RutinesPage() {
           
           return (
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                   <p className="text-white font-light">{exercise.name}</p>
-                  <p className="text-zinc-500 text-xs">
-                    {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleRemoveExercise(exercise.id)}
-                  className="text-zinc-500 hover:text-red-400 text-lg px-2"
-                >
-                  ×
-                </button>
-              </div>
+               <div className="flex justify-between items-start">
+                 <div className="flex-1">
+                    <p className="text-white font-light">{exercise.name}</p>
+                   <p className="text-zinc-500 text-xs">
+                     {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
+                   </p>
+                 </div>
+                 <div className="flex gap-1">
+                   <button
+                     onClick={() => handleOpenEditExercise(exercise)}
+                     className="text-zinc-500 hover:text-yellow-400 text-lg px-2"
+                     title="Editar exercici"
+                   >
+                     ✏️
+                   </button>
+                   <button
+                     onClick={() => handleRemoveExercise(exercise.id)}
+                     className="text-zinc-500 hover:text-red-400 text-lg px-2"
+                     title="Eliminar exercici"
+                   >
+                     ×
+                   </button>
+                 </div>
+               </div>
 
               {/* Botó de recomanació de pes */}
               <button
@@ -555,37 +707,87 @@ export default function RutinesPage() {
         </button>
       </div>
 
-      {/* Modal Afegir Exercici */}
-      {showExerciseModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
-          <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
-            
-            <div className="space-y-3 mb-4">
-              {allExercises.map(ex => (
-                <button
-                  key={ex}
-                  onClick={() => {
-                    setNewExerciseName(ex)
-                    handleAddExercise()
-                  }}
-                  className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                    newExerciseName === ex 
-                      ? 'bg-white text-black' 
-                      : 'bg-zinc-800 text-zinc-300'
-                  }`}
-                >
-                  {ex}
-                </button>
-              ))}
-            </div>
+       {/* Modal Afegir Exercici */}
+       {showExerciseModal && (
+         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
+           <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+             <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
+             
+             <div className="space-y-3 mb-4">
+               {allExercises.map(ex => (
+                 <button
+                   key={ex}
+                   onClick={() => {
+                     setNewExerciseName(ex)
+                     handleAddExercise()
+                   }}
+                   className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
+                     newExerciseName === ex 
+                       ? 'bg-white text-black' 
+                       : 'bg-zinc-800 text-zinc-300'
+                   }`}
+                 >
+                   {ex}
+                 </button>
+               ))}
+             </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setShowExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-            </div>
-          </div>
-        </div>
-      )}
+             <div className="flex gap-3">
+               <button onClick={() => setShowExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Modal Editar Exercici */}
+       {showEditExerciseModal && editingExercise && (
+         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditExerciseModal(false)}>
+           <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+             <h3 className="text-lg font-light text-white mb-4">Editar Exercici</h3>
+             <p className="text-zinc-400 text-sm mb-4">{editingExercise.name}</p>
+             
+             <div className="space-y-4">
+               <div>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Sèries objectiu</label>
+                 <input
+                   type="number"
+                   min="1"
+                   value={editSetsTarget}
+                   onChange={(e) => setEditSetsTarget(parseInt(e.target.value) || 1)}
+                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 />
+               </div>
+               <div>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Repeticions mínimes</label>
+                 <input
+                   type="number"
+                   min="1"
+                   value={editRepsMin}
+                   onChange={(e) => setEditRepsMin(parseInt(e.target.value) || 1)}
+                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 />
+               </div>
+               <div>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Repeticions màximes</label>
+                 <input
+                   type="number"
+                   min="1"
+                   value={editRepsMax}
+                   onChange={(e) => setEditRepsMax(parseInt(e.target.value) || 1)}
+                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 />
+               </div>
+             </div>
+
+             {errorMsg && <p className="text-red-400 text-sm mb-3 mt-4">{errorMsg}</p>}
+
+             <div className="flex gap-3 mt-6">
+               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+               <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Guardar</button>
+             </div>
+           </div>
+         </div>
+       )}
 
       {successMsg && (
         <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800 rounded-2xl z-50">
