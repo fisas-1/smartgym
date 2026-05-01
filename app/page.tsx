@@ -109,8 +109,6 @@ async function loadSavedSets() {
     }
     if (data) setSavedSets(data)
   }
-
-  async function loadSavedExercises() {
     if (!user) {
       setSavedExercises([])
       return
