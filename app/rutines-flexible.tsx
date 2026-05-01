@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase/index'
 import { useAuth } from '../app/contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
 
 type CustomExercises = string[]
 
@@ -704,11 +704,14 @@ export default function RutinesPage() {
                   onClick={() => {
                     const updatedSets = [...sets];
                     updatedSets.push({
-                      id: Date.now() + idx,
+                      id: crypto.randomUUID(),
+                      routine_exercise_id: exercise.id,
+                      set_number: sets.length + 1,
                       weight: 0,
                       reps: 0,
                       rir: 0,
-                      completed: false
+                      completed: false,
+                      created_at: new Date().toISOString()
                     });
                     setRoutineSets({
                       ...routineSets,
@@ -723,25 +726,22 @@ export default function RutinesPage() {
               
               {allCompleted && (
                 <button
-                  onClick={async () => {
-                    if (isSchemaFixed) {
-                      setLoading(true);
-                      try {
-                        const exercise = routineExercises.find(re => re.id === exercise.id);
-                        if (!exercise) throw new Error('Exercise not found');
-                        
-                        const { data, error } = await supabase
-                          .from('workout_logs')
-                          .insert({
-                            exercise: exercise.name,
-                            weight: sets.reduce((max, set) => Math.max(max, set.weight), 0),
-                            reps: sets.reduce((max, set) => Math.max(max, set.reps), 0),
-                            rir: 0,
-                            one_rm: sets.reduce((max, set) => Math.max(max, set.one_rm || 0), 0),
-                            user_id: user!.id,
-                            routine_id: selectedRoutine?.id || null,
-                            completed_at: new Date().toISOString()
-                          });
+                   onClick={async () => {
+                     if (isSchemaFixed) {
+                       setLoading(true);
+                       try {
+                         const { data, error } = await supabase
+                           .from('workout_logs')
+                           .insert({
+                             exercise: exercise.name,
+                             weight: sets.reduce((max, set) => Math.max(max, set.weight), 0),
+                             reps: sets.reduce((max, set) => Math.max(max, set.reps), 0),
+                             rir: 0,
+                             one_rm: sets.reduce((max, set) => Math.max(max, calculate1RM(set.weight, set.reps)), 0),
+                             user_id: user!.id,
+                             routine_id: selectedRoutine?.id || null,
+                             completed_at: new Date().toISOString()
+                           });
                         
                         if (error) throw error;
                         
