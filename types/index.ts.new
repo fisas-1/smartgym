@@ -34,7 +34,7 @@ export interface ExerciseInfo {
   hasWeight: boolean
 }
 
-export const DEFAULT_EXERCISES: Exercise[] = [
+export const DEFAULT_EXERCISES: Exercise[] = @(
   'Press Banca',
   'Lat Pulldown',
   'Sentadilles',
@@ -44,21 +44,12 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   'Curl de Bíceps',
   'Extensiones Tricep',
   'French Press',
-  'Zancades',
-]
+  'Zancades'
+)
 
-export const EXERCISE_INFO: Record<Exercise, ExerciseInfo> = {
-  'Press Banca': { name: 'Press Banca', muscleGroup: 'Pectoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
-  'Lat Pulldown': { name: 'Lat Pulldown', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
-  'Sentadilles': { name: 'Sentadilles', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
-  'Leg Press': { name: 'Leg Press', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'Dominades': { name: 'Dominades', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 5, defaultRepsMax: 8, hasBodyweight: true, hasWeight: true },
-  'Press Military': { name: 'Press Military', muscleGroup: 'Esquitxos', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
-  'Curl de Bíceps': { name: 'Curl de Bíceps', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'Extensiones Tricep': { name: 'Extensiones Tricep', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'French Press': { name: 'French Press', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
-  'Zancades': { name: 'Zancades', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
-} as const
+export const EXERCISE_INFO = @{
+  'Press Banca' = @{ name = 'Press Banca'; muscleGroup = 'Pectoral'; defaultSets = 3; defaultRepsMin = 8; defaultRepsMax = 12; hasBodyweight = True; hasWeight = True }
+}
 
 export interface WorkoutLog {
   id: string
