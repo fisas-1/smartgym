@@ -10,6 +10,7 @@ type CustomExercises = string[]
 export default function RutinesPage() {
   const { user } = useAuth()
   const [routines, setRoutines] = useState<Routine[]>([])
+  const [routineExerciseCounts, setRoutineExerciseCounts] = useState<Record<string, number>>({})
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([])
   const [routineSets, setRoutineSets] = useState<Record<string, RoutineSet[]>>({})
@@ -61,21 +62,33 @@ export default function RutinesPage() {
      }
    }, [selectedRoutine, routineExercises])
 
-  // Càrrega de rutines des de Supabase
-  async function loadRoutines() {
-    if (!user) return
-    const { data, error } = await supabase
-      .from('routines')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error loading routines:', error)
-      return
+// Càrrega de rutines des de Supabase
+   async function loadRoutines() {
+      if (!user) return
+      const { data, error } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Error loading routines:', error)
+        return
+      }
+      if (data) {
+        setRoutines(data)
+        // Load exercise counts for each routine
+        const counts: Record<string, number> = {}
+        for (const routine of data) {
+          const { count } = await supabase
+            .from('routine_exercises')
+            .select('*', { count: 'exact', head: true })
+            .eq('routine_id', routine.id)
+          counts[routine.id] = count || 0
+        }
+        setRoutineExerciseCounts(counts)
+      }
     }
-    if (data) setRoutines(data)
-  }
 
    // Càrrega d'exercicis d'una rutina
    async function loadRoutineExercises(routineId: string): Promise<RoutineExercise[]> {
@@ -251,32 +264,33 @@ export default function RutinesPage() {
     setRoutineSets({})
   }
 
-  // Afegir exercici a la rutina
-  async function handleAddExercise() {
-    if (!selectedRoutine || !newExerciseName.trim()) return
+// Afegir exercici a la rutina
+   async function handleAddExercise() {
+     if (!selectedRoutine || !newExerciseName.trim()) return
 
-    setLoading(true)
-    setErrorMsg(null)
+     setLoading(true)
+     setErrorMsg(null)
 
-     const exerciseExists = routineExercises.some(re => re.name === newExerciseName.trim())
-    if (exerciseExists) {
-      setErrorMsg('Aquest exercici ja està a la rutina')
-      setLoading(false)
-      return
-    }
+      const exerciseExists = routineExercises.some(re => re.exercise === newExerciseName.trim())
+     if (exerciseExists) {
+       setErrorMsg('Aquest exercici ja està a la rutina')
+       setLoading(false)
+       return
+     }
 
-    const { data, error } = await supabase
-      .from('routine_exercises')
-      .insert({
-        routine_id: selectedRoutine.id,
-        exercise: newExerciseName.trim(),
-        sets_target: 3,
-        reps_min: 8,
-        reps_max: 12,
-        order_index: routineExercises.length
-      })
-      .select()
-      .single()
+     const { data, error } = await supabase
+       .from('routine_exercises')
+       .insert({
+         routine_id: selectedRoutine.id,
+         exercise: newExerciseName.trim(),
+         muscle_group: 'Full Body',
+         sets_target: 3,
+         reps_min: 8,
+         reps_max: 12,
+         order_index: routineExercises.length
+       })
+       .select()
+       .single()
 
     setLoading(false)
 
@@ -487,9 +501,9 @@ export default function RutinesPage() {
                    onClick={() => handleSelectRoutine(routine)}
                  >
                    <p className="text-white font-light text-lg">{routine.name}</p>
-                   <p className="text-zinc-500 text-xs mt-1">
-                     {routineExercises.filter(re => re.routine_id === routine.id).length} exercicis
-                   </p>
+                    <p className="text-zinc-500 text-xs mt-1">
+                      {routineExerciseCounts[routine.id] || 0} exercicis
+                    </p>
                  </div>
                  <button
                    onClick={() => handleOpenEditRoutine(routine)}
@@ -602,7 +616,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
                <div className="flex justify-between items-start">
                  <div className="flex-1">
-                    <p className="text-white font-light">{exercise.name}</p>
+                    <p className="text-white font-light">{exercise.exercise}</p>
                    <p className="text-zinc-500 text-xs">
                      {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
                    </p>
@@ -626,11 +640,11 @@ export default function RutinesPage() {
                </div>
 
               {/* Botó de recomanació de pes */}
-              <button
-                onClick={async () => {
-                   const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
-                  if (rec) {
-                     setSuccessMsg(`Recomanació per ${exercise.name}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
+<button
+                 onClick={async () => {
+                    const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                   if (rec) {
+                      setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
                   } else {
                     setSuccessMsg('No hi ha historial per a aquest exercici')
                   }

@@ -46,6 +46,7 @@ export default function HomePage() {
   const [savedSets, setSavedSets] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [customExercises, setCustomExercises] = useState<string[]>([])
+  const [savedExercises, setSavedExercises] = useState<string[]>([])
   const [showModal, setShowModal] = useState(false)
   const [newExerciseName, setNewExerciseName] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -55,6 +56,12 @@ export default function HomePage() {
     const saved = localStorage.getItem('custom_exercises')
     if (saved) setCustomExercises(JSON.parse(saved))
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadSavedExercises()
+    }
+  }, [user])
 
   useEffect(() => {
     const w = parseFloat(weight), r = parseFloat(reps)
@@ -85,7 +92,7 @@ export default function HomePage() {
       }
     }, [exercise])
 
-   async function loadSavedSets() {
+async function loadSavedSets() {
     if (!user) {
       setSavedSets([])
       return
@@ -101,6 +108,48 @@ export default function HomePage() {
       return
     }
     if (data) setSavedSets(data)
+  }
+
+  async function loadSavedExercises() {
+    if (!user) {
+      setSavedExercises([])
+      return
+    }
+    const { data, error } = await supabase
+      .from('saved_exercises')
+      .select('exercise')
+      .eq('user_id', user.id)
+    if (error) {
+      console.error('Error loading saved exercises:', error)
+      return
+    }
+    if (data) setSavedExercises(data.map((e: any) => e.exercise))
+  }
+
+  async function toggleSaveExercise(exName: string) {
+    if (!user) return
+
+    setLoading(true)
+    const isSaved = savedExercises.includes(exName)
+
+    if (isSaved) {
+      const { error } = await supabase
+        .from('saved_exercises')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('exercise', exName)
+      if (!error) {
+        setSavedExercises(prev => prev.filter(e => e !== exName))
+      }
+    } else {
+      const { error } = await supabase
+        .from('saved_exercises')
+        .insert({ user_id: user.id, exercise: exName })
+      if (!error) {
+        setSavedExercises(prev => [...prev, exName])
+      }
+    }
+    setLoading(false)
   }
 
     async function handleSave(e: React.FormEvent) {
@@ -206,21 +255,34 @@ export default function HomePage() {
             <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Exercici</label>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {getDisplayExercises().map((ex) => (
-                <button
-                  key={ex}
-                  type="button"
-                  onClick={() => setExercise(ex)}
-                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    exercise === ex
-                      ? 'bg-white text-black'
-                      : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  {ex}
+                <div key={ex} className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setExercise(ex)}
+                    className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                      exercise === ex
+                        ? 'bg-white text-black'
+                        : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    {ex}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleSaveExercise(ex)}
+                    className={`px-2 py-2 rounded-full text-xs ${
+                      savedExercises.includes(ex)
+                        ? 'bg-yellow-500 text-black'
+                        : 'bg-zinc-900 text-zinc-400 hover:text-yellow-400'
+                    }`}
+                    title={savedExercises.includes(ex) ? 'Eliminar de Home' : 'Desar a Home'}
+                  >
+                    {savedExercises.includes(ex) ? '★' : '☆'}
+                  </button>
                   {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">×</span>
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500 cursor-pointer">×</span>
                   )}
-                </button>
+                </div>
               ))}
               <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-400">+</button>
             </div>

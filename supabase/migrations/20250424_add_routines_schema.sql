@@ -3,6 +3,29 @@
 -- ============================================
 
 -- ============================================
+-- Taula d'exercicis desats a Home
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.saved_exercises (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  exercise TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_exercises_user_id ON public.saved_exercises(user_id);
+
+ALTER TABLE public.saved_exercises ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuaris poden veure els seus exercicis desats" ON public.saved_exercises
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuaris poden crear exercicis desats" ON public.saved_exercises
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Usuaris poden eliminar exercicis desats" ON public.saved_exercises
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================
 -- FIX: Afegir columnes faltants a workout_logs
 -- ============================================
 DO $$ 

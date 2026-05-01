@@ -85,7 +85,8 @@ export interface Routine {
 export interface RoutineExercise {
   id: string
   routine_id: string
-  name: string
+  exercise: string
+  name?: string
   muscleGroup: MuscleGroup
   sets_target: number
   reps_min: number
@@ -106,6 +107,13 @@ export interface RoutineSet {
   weightType?: WeightType
   notes?: string | null
   completed_at?: string | null
+  created_at: string
+}
+
+export interface SavedExercise {
+  id: string
+  user_id: string
+  exercise: string
   created_at: string
 }
 
