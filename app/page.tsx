@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, WorkoutLog } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO } from '@/types'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
@@ -66,9 +66,18 @@ export default function HomePage() {
   }, [weight, reps])
 
   useEffect(() => { loadSavedSets() }, [user])
-  useEffect(() => { if (exercise) analyzeOverload(exercise).then(setSuggestion) }, [exercise])
+    useEffect(() => {
+      if (exercise) analyzeOverload(exercise).then(setSuggestion)
+    }, [exercise])
 
-  async function loadSavedSets() {
+   const getDisplayExercises = () => {
+     // Filter exercises to show base versions and custom exercises
+     // For exercises with bodyweight variants, show both base and corporal as separate options in UI logic
+     // But in the exercise selector, we only show base names for default exercises
+     return [...DEFAULT_EXERCISES, ...customExercises]
+   }
+
+   async function loadSavedSets() {
     if (!user) {
       setSavedSets([])
       return
@@ -86,31 +95,40 @@ export default function HomePage() {
     if (data) setSavedSets(data)
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    const w = parseFloat(weight), r = parseFloat(reps)
-    if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+    async function handleSave(e: React.FormEvent) {
+      e.preventDefault()
+      const w = parseFloat(weight), r = parseFloat(reps)
+      if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
 
-    setLoading(true)
-    setErrorMsg(null)
-    const insertData = {
-      exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM,
-      user_id: user?.id, weightType
-    }
-    const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
-    setLoading(false)
-    if (error) {
-      console.error('Error saving set:', error)
-      if (error.message.includes('column') || error.message.includes('exercise')) {
-        setErrorMsg('Error: La base de dades necessita configuraciÃ³. Veure SOLUZIONE.md')
-      } else {
-        setErrorMsg('Error al guardar: ' + error.message)
+      setLoading(true)
+      setErrorMsg(null)
+      
+      // For bodyweight exercises, store with suffix to distinguish in history
+      const exerciseToStore = weightType === "corporal" ? `${exercise} - Corporal` : exercise
+      
+      const insertData = {
+        exercise: exerciseToStore, 
+        weight: weightType === "corporal" ? 0 : w, 
+        reps: r, 
+        rir: parseFloat(rir), 
+        one_rm: oneRM,
+        user_id: user?.id, 
+        weightType
       }
-      return
+      const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
+      setLoading(false)
+      if (error) {
+        console.error('Error saving set:', error)
+        if (error.message.includes('column') || error.message.includes('exercise')) {
+          setErrorMsg('Error: La base de dades necessita configuració. Veure SOLUZIONE.md')
+        } else {
+          setErrorMsg('Error al guardar: ' + error.message)
+        }
+        return
+      }
+      setWeight(''); setReps(''); setRir('0')
+      await loadSavedSets()
     }
-    setWeight(''); setReps(''); setRir('0')
-    await loadSavedSets()
-  }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
@@ -178,7 +196,7 @@ export default function HomePage() {
           <div>
             <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Exercici</label>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {allExercises.map((ex) => (
+              {getDisplayExercises().map((ex) => (
                 <button
                   key={ex}
                   type="button"
@@ -234,7 +252,6 @@ export default function HomePage() {
             </div>
 
             <div>
-            <div>
               <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Reps</label>
               <input
                 type="number"
@@ -245,20 +262,6 @@ export default function HomePage() {
                 className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               />
             </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-zinc-500 text-xs uppercase tracking-wider">RIR</label>
-              <span className="text-zinc-300 font-light">{rir}</span>
-            </div>
-            <input
-              type="range"
-              min="0" max="5"
-              value={rir}
-              onChange={(e) => setRir(e.target.value)}
-              className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-            />
           </div>
 
           <button
