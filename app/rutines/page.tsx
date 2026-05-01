@@ -641,16 +641,16 @@ export default function RutinesPage() {
 
               {/* Botó de recomanació de pes */}
 <button
-                 onClick={async () => {
-                    const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
-                   if (rec) {
-                      setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
-                  } else {
-                    setSuccessMsg('No hi ha historial per a aquest exercici')
-                  }
-                }}
-                className="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              >
+                  onClick={async () => {
+                     const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                    if (rec) {
+                       setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
+                     } else {
+                       setSuccessMsg('No hi ha historial per a aquest exercici')
+                     }
+                  }}
+                  className="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                >
                 💡 Recomanar Pes
               </button>
 
@@ -756,7 +756,7 @@ export default function RutinesPage() {
          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditExerciseModal(false)}>
            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
              <h3 className="text-lg font-light text-white mb-4">Editar Exercici</h3>
-             <p className="text-zinc-400 text-sm mb-4">{editingExercise.name}</p>
+             <p className="text-zinc-400 text-sm mb-4">{editingExercise.exercise}</p>
              
              <div className="space-y-4">
                <div>
