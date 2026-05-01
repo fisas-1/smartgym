@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -32,7 +32,7 @@ async function analyzeOverload(exerciseName: string): Promise<string | null> {
   const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
   const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
 
-  return `Avui: ${targetWeight}kg (${Math.round(improvement)}%↑)`
+  return `Avui: ${targetWeight}kg (${Math.round(improvement)}%â†‘)`
 }
 
 export default function HomePage() {
@@ -42,6 +42,7 @@ export default function HomePage() {
   const [reps, setReps] = useState<string>('')
   const [rir, setRir] = useState<string>('0')
   const [oneRM, setOneRM] = useState<number>(0)
+  const [weightType, setWeightType] = useState("pes")
   const [savedSets, setSavedSets] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [customExercises, setCustomExercises] = useState<string[]>([])
@@ -92,15 +93,16 @@ export default function HomePage() {
 
     setLoading(true)
     setErrorMsg(null)
-    const { data, error } = await supabase.from('workout_logs').insert({
+    const insertData = {
       exercise, weight: w, reps: r, rir: parseFloat(rir), one_rm: oneRM,
-      user_id: user?.id
-    }).select().maybeSingle()
+      user_id: user?.id, weightType
+    }
+    const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
     setLoading(false)
     if (error) {
       console.error('Error saving set:', error)
       if (error.message.includes('column') || error.message.includes('exercise')) {
-        setErrorMsg('Error: La base de dades necessita configuració. Veure SOLUZIONE.md')
+        setErrorMsg('Error: La base de dades necessita configuraciÃ³. Veure SOLUZIONE.md')
       } else {
         setErrorMsg('Error al guardar: ' + error.message)
       }
@@ -136,7 +138,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-3xl font-light mb-2">gym.</h1>
-          <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
+          <p className="text-zinc-500 mb-8">Inicia sessiÃ³ per comenÃ§ar</p>
           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
             Entrar
           </a>
@@ -155,7 +157,7 @@ export default function HomePage() {
         <div className="py-8">
           <p className="text-zinc-500 text-sm mb-1">1RM estimat</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-7xl font-light tracking-tight">{oneRM || '—'}</span>
+            <span className="text-7xl font-light tracking-tight">{oneRM || 'â€”'}</span>
             <span className="text-zinc-600 text-xl">kg</span>
           </div>
         </div>
@@ -189,7 +191,7 @@ export default function HomePage() {
                 >
                   {ex}
                   {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">×</span>
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">Ã—</span>
                   )}
                 </button>
               ))}
@@ -205,10 +207,33 @@ export default function HomePage() {
                 inputMode="numeric"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="0"
-                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                placeholder={weightType === "corporal" ? "0 (corporal)" : "0"}
+                disabled={weightType === "corporal"}
+                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:opacity-50"
               />
             </div>
+
+            <div>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Tipus</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setWeightType("pes")}
+                  style={{backgroundColor: weightType === "pes" ? "white" : "#27272a", color: weightType === "pes" ? "black" : "#a1a1aa", padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", transition: "all 0.2s", border: "none", flex: 1, cursor: "pointer"}}
+                >
+                  Pes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWeightType("corporal")}
+                  style={{backgroundColor: weightType === "corporal" ? "white" : "#27272a", color: weightType === "corporal" ? "black" : "#a1a1aa", padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", transition: "all 0.2s", border: "none", flex: 1, cursor: "pointer"}}
+                >
+                  Corporal
+                </button>
+              </div>
+            </div>
+
+            <div>
             <div>
               <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Reps</label>
               <input
@@ -248,7 +273,7 @@ export default function HomePage() {
         <div className="pt-4">
           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Recents</p>
           {savedSets.length === 0 ? (
-            <p className="text-zinc-600 text-sm">Sense històric</p>
+            <p className="text-zinc-600 text-sm">Sense histÃ²ric</p>
           ) : (
             <div className="space-y-2">
               {savedSets.map((set) => (
@@ -258,7 +283,7 @@ export default function HomePage() {
                     <p className="text-zinc-500 text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-light">{set.weight}kg × {set.reps}</p>
+                    <p className="text-white font-light">{set.weight}kg Ã— {set.reps}</p>
                     <p className="text-zinc-600 text-xs">RIR {set.rir}</p>
                   </div>
                 </div>
@@ -294,3 +319,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+
