@@ -70,12 +70,20 @@ export default function HomePage() {
       if (exercise) analyzeOverload(exercise).then(setSuggestion)
     }, [exercise])
 
-   const getDisplayExercises = () => {
-     // Filter exercises to show base versions and custom exercises
-     // For exercises with bodyweight variants, show both base and corporal as separate options in UI logic
-     // But in the exercise selector, we only show base names for default exercises
-     return [...DEFAULT_EXERCISES, ...customExercises]
-   }
+    const getDisplayExercises = () => {
+      // Filter exercises to show base versions and custom exercises
+      // For exercises with bodyweight variants, show both base and corporal as separate options in UI logic
+      // But in the exercise selector, we only show base names for default exercises
+      return [...DEFAULT_EXERCISES, ...customExercises]
+    }
+
+    // Reset weightType to "pes" when exercise changes if it doesn't support bodyweight
+    useEffect(() => {
+      const info = EXERCISE_INFO[exercise as Exercise]
+      if (info && (!info.hasBodyweight || !info.hasWeight)) {
+        setWeightType("pes")
+      }
+    }, [exercise])
 
    async function loadSavedSets() {
     if (!user) {
@@ -98,20 +106,21 @@ export default function HomePage() {
     async function handleSave(e: React.FormEvent) {
       e.preventDefault()
       const w = parseFloat(weight), r = parseFloat(reps)
-      if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+      if (isNaN(r) || r <= 0) return
+      if (weightType === "pes" && (isNaN(w) || w <= 0)) return
 
       setLoading(true)
       setErrorMsg(null)
       
       // For bodyweight exercises, store with suffix to distinguish in history
-      const exerciseToStore = weightType === "corporal" ? `${exercise} - Corporal` : exercise
+      const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
       
       const insertData = {
         exercise: exerciseToStore, 
         weight: weightType === "corporal" ? 0 : w, 
         reps: r, 
         rir: parseFloat(rir), 
-        one_rm: oneRM,
+        one_rm: weightType === "corporal" ? 0 : oneRM,
         user_id: user?.id, 
         weightType
       }
@@ -209,7 +218,7 @@ export default function HomePage() {
                 >
                   {ex}
                   {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">Ã—</span>
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">×</span>
                   )}
                 </button>
               ))}
@@ -217,42 +226,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
+            {/* PES / PES CORPORAL section */}
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Pes</label>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">PES</label>
               <input
                 type="number"
                 inputMode="numeric"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder={weightType === "corporal" ? "0 (corporal)" : "0"}
-                disabled={weightType === "corporal"}
+                placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? "0 (pes corporal)" : "0") : "0"}
+                disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
                 className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:opacity-50"
               />
-            </div>
-
-            <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Tipus</label>
-              <div className="flex gap-2">
+              {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
                 <button
                   type="button"
-                  onClick={() => setWeightType("pes")}
-                  style={{backgroundColor: weightType === "pes" ? "white" : "#27272a", color: weightType === "pes" ? "black" : "#a1a1aa", padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", transition: "all 0.2s", border: "none", flex: 1, cursor: "pointer"}}
+                  onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
+                  style={{
+                    backgroundColor: weightType === "corporal" ? "white" : "#27272a",
+                    color: weightType === "corporal" ? "black" : "#a1a1aa",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    transition: "all 0.2s",
+                    border: "none",
+                    marginTop: "8px",
+                    cursor: "pointer"
+                  }}
                 >
-                  Pes
+                  {weightType === "corporal" ? "Pes corporal ✓" : "Pes corporal"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setWeightType("corporal")}
-                  style={{backgroundColor: weightType === "corporal" ? "white" : "#27272a", color: weightType === "corporal" ? "black" : "#a1a1aa", padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", transition: "all 0.2s", border: "none", flex: 1, cursor: "pointer"}}
-                >
-                  Corporal
-                </button>
-              </div>
+              )}
             </div>
 
+            {/* REPS section - now separate and below PES */}
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Reps</label>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">REPS</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -263,14 +274,7 @@ export default function HomePage() {
               />
             </div>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Guardant...' : 'Guardar'}
-          </button>
+          </div>
         </form>
 
         <div className="pt-4">

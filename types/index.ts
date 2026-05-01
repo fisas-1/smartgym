@@ -48,7 +48,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 ]
 
 export const EXERCISE_INFO: Record<Exercise, ExerciseInfo> = {
-  'Press Banca': { name: 'Press Banca', muscleGroup: 'Pectoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
+  'Press Banca': { name: 'Press Banca', muscleGroup: 'Pectoral', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Lat Pulldown': { name: 'Lat Pulldown', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Sentadilles': { name: 'Sentadilles', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
   'Leg Press': { name: 'Leg Press', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
