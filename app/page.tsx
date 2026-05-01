@@ -165,7 +165,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-3xl font-light mb-2">gym.</h1>
-          <p className="text-zinc-500 mb-8">Inicia sessiÃ³ per comenÃ§ar</p>
+           <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
             Entrar
           </a>
