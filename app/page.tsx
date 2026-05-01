@@ -274,7 +274,6 @@ export default function HomePage() {
               />
             </div>
           </div>
-          </div>
         </form>
 
         <div className="pt-4">
