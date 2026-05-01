@@ -175,7 +175,7 @@ export default function HomePage() {
         <div className="py-8">
           <p className="text-zinc-500 text-sm mb-1">1RM estimat</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-7xl font-light tracking-tight">{oneRM || 'â€”'}</span>
+            <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
             <span className="text-zinc-600 text-xl">kg</span>
           </div>
         </div>
