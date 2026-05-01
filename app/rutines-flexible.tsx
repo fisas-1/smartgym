@@ -448,12 +448,12 @@ export default function RutinesPage() {
     try {
       for (const set of completedSets) {
         const exercise = routineExercises.find(re => re.id === set.routine_exercise_id)
-        if (!exercise) continue
+        if (!exercise || exercise.name == null || exercise.reps_min === undefined) continue
 
         // Buscar recomendació de pes
         let recommendedWeight = null
         try {
-                     const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
+                      const rec = await getWeightRecommendation(exercise.name, exercise.reps_min ?? 0)
           if (rec && rec[0]?.recommended_weight) {
             recommendedWeight = rec[0].recommended_weight
           }
@@ -465,10 +465,10 @@ export default function RutinesPage() {
           .from('workout_logs')
           .insert({
              exercise: exercise.name,
-            weight: recommendedWeight || (exercise.reps_min * 5), // Estimació
-            reps: Math.floor((exercise.reps_min + exercise.reps_max) / 2),
+            weight: recommendedWeight || ((exercise.reps_min ?? 0) * 5), // Estimació
+            reps: Math.floor(((exercise.reps_min ?? 0) + (exercise.reps_max ?? 0)) / 2),
             rir: 0,
-            one_rm: recommendedWeight ? Math.round(recommendedWeight / (1.0278 - 0.0278 * exercise.reps_min)) : 0,
+            one_rm: recommendedWeight ? Math.round(recommendedWeight / (1.0278 - 0.0278 * (exercise.reps_min ?? 0))) : 0,
             user_id: user!.id
           })
           .select()
@@ -620,6 +620,8 @@ export default function RutinesPage() {
         </div>
 
         {routineExercises.map(exercise => {
+          if (!exercise || !exercise.name) return null;
+          
           const sets = routineSets[exercise.id] || []
           const completedSets = sets.filter(s => s.completed).length
           const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
@@ -628,7 +630,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                   <p className="text-white font-light">{exercise.name}</p>
+                  <p className="text-white font-light">{exercise.name}</p>
                   <p className="text-zinc-500 text-xs">
                     {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
@@ -643,13 +645,13 @@ export default function RutinesPage() {
                   ×
                 </button>
               </div>
-
+              
               <button
                 onClick={async () => {
                   if (isSchemaFixed) {
-                    const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
+                    const rec = await getWeightRecommendation(exercise.name!, exercise.reps_min ?? 0)
                     if (rec && rec[0]) {
-                       setSuccessMsg(`Recomanació per ${exercise.name}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg × ${rec[0].previous_reps})`)
+                      setSuccessMsg(`Recomanació per ${exercise.name!}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg × ${rec[0].previous_reps})`)
                     } else {
                       setSuccessMsg('No hi ha historial per a aquest exercici')
                     }
@@ -660,51 +662,115 @@ export default function RutinesPage() {
               >
                 💡 Recomanar Pes
               </button>
-
+              
               {sets.map((set, idx) => (
                 <div 
                   key={set.id || idx}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                     set.completed 
                       ? 'bg-green-900/30 border-green-800' 
-                      : 'bg-zinc-900 border-zinc-800'
+                      : 'bg-gray-900/20 border-gray-700'
                   }`}
                 >
+                  <div className="flex-1">
+                    <p className="text-white">{set.weight}kg × {set.reps} reps</p>
+                    {set.rir > 0 && <p className="text-xs text-gray-400">RIR {set.rir}</p>}
+                  </div>
                   <button
-                    onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
-                    disabled={!isSchemaFixed}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      set.completed
-                        ? 'bg-green-500 border-green-500 text-black'
-                        : 'border-zinc-600 hover:border-zinc-400'
-                    } disabled:opacity-50`}
+                    onClick={() => {
+                      const updatedSets = [...sets];
+                      updatedSets[idx] = {
+                        ...updatedSets[idx],
+                        completed: !updatedSets[idx].completed
+                      };
+                      setRoutineSets({
+                        ...routineSets,
+                        [exercise.id]: updatedSets
+                      });
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      set.completed 
+                        ? 'bg-green-600 hover:bg-green-700' 
+                        : 'bg-gray-600 hover:bg-gray-500'
+                    }`}
                   >
-                    {set.completed && '✓'}
+                    {set.completed ? '✓' : '+'}
                   </button>
-                  <span className="text-zinc-400 text-sm">Sèrie {set.set_number}</span>
-                  
-                  {set.completed ? (
-                    <span className="text-green-400 text-xs ml-auto">Completada</span>
-                  ) : (
-                    <span className="text-zinc-600 text-xs ml-auto">Pendent</span>
-                  )}
                 </div>
               ))}
-
-              {allCompleted && (
+              
+              {!allCompleted && sets.length < exercise.sets_target && (
                 <button
-                  onClick={() => autoCompleteExercise(exercise.id)}
-                  className="w-full text-xs py-2 rounded-lg bg-green-900/30 text-green-400 border border-green-800 hover:bg-green-900/50"
+                  onClick={() => {
+                    const updatedSets = [...sets];
+                    updatedSets.push({
+                      id: Date.now() + idx,
+                      weight: 0,
+                      reps: 0,
+                      rir: 0,
+                      completed: false
+                    });
+                    setRoutineSets({
+                      ...routineSets,
+                      [exercise.id]: updatedSets
+                    });
+                  }}
+                  className="w-full mt-2 px-4 py-2 bg-gray-800/50 text-gray-300 text-sm rounded hover:bg-gray-800"
                 >
-                  ✅ Exercici Completat (toc per desmarcar)
+                  + Afegir série
                 </button>
               )}
-
-              <div className="text-xs text-zinc-500 pt-2 border-t border-zinc-800">
-                Progrés: {completedSets}/{exercise.sets_target} series
-              </div>
+              
+              {allCompleted && (
+                <button
+                  onClick={async () => {
+                    if (isSchemaFixed) {
+                      setLoading(true);
+                      try {
+                        const exercise = routineExercises.find(re => re.id === exercise.id);
+                        if (!exercise) throw new Error('Exercise not found');
+                        
+                        const { data, error } = await supabase
+                          .from('workout_logs')
+                          .insert({
+                            exercise: exercise.name,
+                            weight: sets.reduce((max, set) => Math.max(max, set.weight), 0),
+                            reps: sets.reduce((max, set) => Math.max(max, set.reps), 0),
+                            rir: 0,
+                            one_rm: sets.reduce((max, set) => Math.max(max, set.one_rm || 0), 0),
+                            user_id: user!.id,
+                            routine_id: selectedRoutine?.id || null,
+                            completed_at: new Date().toISOString()
+                          });
+                        
+                        if (error) throw error;
+                        
+                        setSuccessMsg('Entrenament enregistrat correctament!');
+                        setRoutineSets({
+                          ...routineSets,
+                          [exercise.id]: sets.map(set => ({
+                            ...set,
+                            completed: true
+                          }))
+                        });
+                      } catch (err) {
+                        console.error('Error saving workout:', err);
+                        setErrorMsg('Error al guardar l\'entrenament');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                  disabled={loading}
+                  className={`w-full mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded ${
+                    loading ? 'opacity-50' : ''
+                  }`}
+                >
+                  {loading ? 'Guardant...' : 'Marca com completat'}
+                </button>
+              )}
             </div>
-          )
+          );
         })}
 
         <button
