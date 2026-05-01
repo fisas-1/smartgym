@@ -18,7 +18,7 @@ export default function RutinesPage() {
    const [newExerciseName, setNewExerciseName] = useState('')
    const [showRoutineModal, setShowRoutineModal] = useState(false)
    const [newRoutineName, setNewRoutineName] = useState('')
-   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
+    const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
    const [editRoutineName, setEditRoutineName] = useState('')
    const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
    const [editingExercise, setEditingExercise] = useState<RoutineExercise | null>(null)
@@ -26,11 +26,9 @@ export default function RutinesPage() {
    const [editSetsTarget, setEditSetsTarget] = useState<number>(3)
    const [editRepsMin, setEditRepsMin] = useState<number>(8)
    const [editRepsMax, setEditRepsMax] = useState<number>(12)
-   const [editRoutineName, setEditRoutineName] = useState('')
-   const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+   const [loading, setLoading] = useState(false)
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -241,9 +239,9 @@ export default function RutinesPage() {
      setEditingExercise(null)
      setSuccessMsg('Exercici actualitzat')
 
-     // Recarregar exercicis i sets per reflectir canvis
-     const exercises = await loadRoutineExercises(selectedRoutine.id)
-     await loadRoutineSets(selectedRoutine.id, exercises)
+      // Recarregar exercicis i sets per reflectir canvis
+      const exercises = await loadRoutineExercises(selectedRoutine.id)
+      await loadRoutineSets(selectedRoutine.id, exercises.map(e => e.id))
    }
 
   // Tornar a la llista de rutines
