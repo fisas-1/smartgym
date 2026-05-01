@@ -326,7 +326,7 @@ export default function RutinesPage() {
   async function handleAddExercise() {
     if (!selectedRoutine || !newExerciseName.trim()) return
 
-    const exerciseExists = routineExercises.some(re => re.exercise === newExerciseName.trim())
+    const exerciseExists = routineExercises.some(re => re.name === newExerciseName.trim())
     if (exerciseExists) {
       setErrorMsg('Aquest exercici ja està a la rutina')
       return
@@ -446,7 +446,7 @@ export default function RutinesPage() {
         // Buscar recomendació de pes
         let recommendedWeight = null
         try {
-          const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                     const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
           if (rec && rec[0]?.recommended_weight) {
             recommendedWeight = rec[0].recommended_weight
           }
@@ -457,7 +457,7 @@ export default function RutinesPage() {
         const { data, error } = await supabase
           .from('workout_logs')
           .insert({
-            exercise: exercise.exercise,
+             exercise: exercise.name,
             weight: recommendedWeight || (exercise.reps_min * 5), // Estimació
             reps: Math.floor((exercise.reps_min + exercise.reps_max) / 2),
             rir: 0,
@@ -621,7 +621,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-white font-light">{exercise.exercise}</p>
+                   <p className="text-white font-light">{exercise.name}</p>
                   <p className="text-zinc-500 text-xs">
                     {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
@@ -640,9 +640,9 @@ export default function RutinesPage() {
               <button
                 onClick={async () => {
                   if (isSchemaFixed) {
-                    const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                    const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
                     if (rec && rec[0]) {
-                      setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg × ${rec[0].previous_reps})`)
+                       setSuccessMsg(`Recomanació per ${exercise.name}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg × ${rec[0].previous_reps})`)
                     } else {
                       setSuccessMsg('No hi ha historial per a aquest exercici')
                     }

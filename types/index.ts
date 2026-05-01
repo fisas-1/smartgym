@@ -1,11 +1,11 @@
-// Tipus compartits per a l'aplicacio
+ï»¿// Tipus compartits per a l'aplicacio
 
 export type MuscleGroup =
   | 'Pectoral'
   | 'Esquena'
   | 'Cames'
   | 'Esquitxos'
-  | 'Braços'
+  | 'BraÃ§os'
   | 'Abdominals'
   | 'Full Body'
 
@@ -16,7 +16,7 @@ export type Exercise =
   | 'Leg Press'
   | 'Dominades'
   | 'Press Military'
-  | 'Curl de Bíceps'
+  | 'Curl de BÃ­ceps'
   | 'Extensiones Tricep'
   | 'French Press'
   | 'Zancades'
@@ -41,7 +41,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   'Leg Press',
   'Dominades',
   'Press Military',
-  'Curl de Bíceps',
+  'Curl de BÃ­ceps',
   'Extensiones Tricep',
   'French Press',
   'Zancades',
@@ -54,9 +54,9 @@ export const EXERCISE_INFO: Record<Exercise, ExerciseInfo> = {
   'Leg Press': { name: 'Leg Press', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
   'Dominades': { name: 'Dominades', muscleGroup: 'Esquena', defaultSets: 3, defaultRepsMin: 5, defaultRepsMax: 8, hasBodyweight: true, hasWeight: true },
   'Press Military': { name: 'Press Military', muscleGroup: 'Esquitxos', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
-  'Curl de Bíceps': { name: 'Curl de Bíceps', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'Extensiones Tricep': { name: 'Extensiones Tricep', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'French Press': { name: 'French Press', muscleGroup: 'Braços', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
+  'Curl de BÃ­ceps': { name: 'Curl de BÃ­ceps', muscleGroup: 'BraÃ§os', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
+  'Extensiones Tricep': { name: 'Extensiones Tricep', muscleGroup: 'BraÃ§os', defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
+  'French Press': { name: 'French Press', muscleGroup: 'BraÃ§os', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Zancades': { name: 'Zancades', muscleGroup: 'Cames', defaultSets: 3, defaultRepsMin: 8, defaultRepsMax: 12, hasBodyweight: true, hasWeight: true },
 } as const
 

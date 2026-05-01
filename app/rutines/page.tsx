@@ -169,7 +169,7 @@ export default function RutinesPage() {
     setLoading(true)
     setErrorMsg(null)
 
-    const exerciseExists = routineExercises.some(re => re.exercise === newExerciseName.trim())
+     const exerciseExists = routineExercises.some(re => re.name === newExerciseName.trim())
     if (exerciseExists) {
       setErrorMsg('Aquest exercici ja està a la rutina')
       setLoading(false)
@@ -462,7 +462,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-white font-light">{exercise.exercise}</p>
+                   <p className="text-white font-light">{exercise.name}</p>
                   <p className="text-zinc-500 text-xs">
                     {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
@@ -478,9 +478,9 @@ export default function RutinesPage() {
               {/* Botó de recomanació de pes */}
               <button
                 onClick={async () => {
-                  const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                   const rec = await getWeightRecommendation(exercise.name, exercise.reps_min)
                   if (rec) {
-                    setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
+                     setSuccessMsg(`Recomanació per ${exercise.name}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
                   } else {
                     setSuccessMsg('No hi ha historial per a aquest exercici')
                   }
