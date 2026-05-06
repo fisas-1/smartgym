@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
+import { ThemeContext } from '../contexts/ThemeContext'
+import { useContext } from 'react'
 
 const navItems = [
   { href: '/', label: 'home' },
@@ -16,7 +17,9 @@ const navItems = [
 export default function Navigation() {
   const pathname = usePathname()
   const { user, loading, signOut } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const themeContext = useContext(ThemeContext)
+  const theme = themeContext?.theme ?? 'dark'
+  const toggleTheme = themeContext?.toggleTheme ?? (() => {})
   
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-tertiary)] border-t border-[var(--color-border)] px-6 py-4 flex justify-between items-center z-50">
