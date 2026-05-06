@@ -618,7 +618,7 @@ export default function RutinesPage() {
                  <div className="flex-1">
                     <p className="text-white font-light">{exercise.exercise}</p>
                    <p className="text-zinc-500 text-xs">
-                     {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
+                      {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                    </p>
                  </div>
                  <div className="flex gap-1">
@@ -629,13 +629,13 @@ export default function RutinesPage() {
                    >
                      ✏️
                    </button>
-                   <button
-                     onClick={() => handleRemoveExercise(exercise.id)}
-                     className="text-zinc-500 hover:text-red-400 text-lg px-2"
-                     title="Eliminar exercici"
-                   >
-                     ×
-                   </button>
+                    <button
+                      onClick={() => handleRemoveExercise(exercise.id)}
+                      className="text-zinc-500 hover:text-red-400 text-lg px-2"
+                      title="Eliminar exercici"
+                    >
+                      x
+                    </button>
                  </div>
                </div>
 
@@ -643,11 +643,11 @@ export default function RutinesPage() {
 <button
                   onClick={async () => {
                      const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
-                    if (rec) {
-                       setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg × ${rec.previous_reps})`)
-                     } else {
-                       setSuccessMsg('No hi ha historial per a aquest exercici')
-                     }
+                      if (rec) {
+                        setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg x ${rec.previous_reps})`)
+                      } else {
+                        setSuccessMsg('No hi ha historial per a aquest exercici')
+                      }
                   }}
                   className="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                 >

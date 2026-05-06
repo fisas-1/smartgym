@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 const navItems = [
   { href: '/', label: 'home' },
   { href: '/rutines', label: 'rutines' },
-  { href: '/estadistiques', label: 'stats' },
+  { href: '/stats', label: 'stats' },
   { href: '/amics', label: 'amics' },
   { href: '/perfil', label: 'perfil' },
 ]

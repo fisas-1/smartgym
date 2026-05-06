@@ -632,7 +632,7 @@ export default function RutinesPage() {
                 <div className="flex-1">
                   <p className="text-white font-light">{exercise.name}</p>
                   <p className="text-zinc-500 text-xs">
-                    {exercise.sets_target} sèries × {exercise.reps_min}-{exercise.reps_max} reps
+                    {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
                 </div>
                 <button
@@ -642,7 +642,7 @@ export default function RutinesPage() {
                   }}
                   className="text-zinc-500 hover:text-red-400 text-lg px-2"
                 >
-                  ×
+                  x
                 </button>
               </div>
               
@@ -651,7 +651,7 @@ export default function RutinesPage() {
                   if (isSchemaFixed) {
                     const rec = await getWeightRecommendation(exercise.name!, exercise.reps_min ?? 0)
                     if (rec && rec[0]) {
-                      setSuccessMsg(`Recomanació per ${exercise.name!}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg × ${rec[0].previous_reps})`)
+                      setSuccessMsg(`Recomanació per ${exercise.name!}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg x ${rec[0].previous_reps})`)
                     } else {
                       setSuccessMsg('No hi ha historial per a aquest exercici')
                     }
@@ -673,7 +673,7 @@ export default function RutinesPage() {
                   }`}
                 >
                   <div className="flex-1">
-                    <p className="text-white">{set.weight}kg × {set.reps} reps</p>
+                    <p className="text-white">{set.weight}kg x {set.reps} reps</p>
                     {set.rir > 0 && <p className="text-xs text-gray-400">RIR {set.rir}</p>}
                   </div>
                   <button

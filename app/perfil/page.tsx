@@ -123,7 +123,7 @@ export default function PerfilPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
           <p className="text-zinc-500 mb-8">Inicia sessió per veure el teu perfil</p>
@@ -136,72 +136,72 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-black text-white">
        <div className="px-6 pt-8 pb-6">
           <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
         </div>
 
      <div className="px-6 space-y-6">
           {exerciseLevels.length > 0 && (
-            <div>
-              <p className="text-slate-300 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-              <div className="space-y-2">
-                {exerciseLevels.map((ex) => (
-                  <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-slate-700/50 rounded-lg px-3 hover:bg-slate-800/30 transition-colors">
-                    <span className="font-light text-slate-200">{ex.exercise}</span>
-                    <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
-                  </div>
-                ))}
-              </div>
+          <div>
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
+            <div className="space-y-2">
+              {exerciseLevels.map((ex) => (
+                <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-zinc-800 rounded-lg px-3 hover:bg-zinc-800/30 transition-colors">
+                  <span className="font-light text-white">{ex.exercise}</span>
+                  <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
+                </div>
+              ))}
             </div>
+          </div>
           )}
 
          <div>
            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Dades</p>
-           <div className="space-y-3">
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  placeholder="Edat"
-                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setGender('m')}
-                    className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'm' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
-                  >
-                    Home
-                  </button>
-                  <button
-                    onClick={() => setGender('f')}
-                    className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'f' ? 'bg-white text-black' : 'bg-slate-800/60 text-slate-300 border border-slate-700/50'}`}
-                  >
-                    Dona
-                  </button>
-                </div>
-              </div>
+            <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder="Altura (cm)"
-                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="Pes (kg)"
-                  className="bg-slate-800/60 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-600/50 border border-slate-700/50"
-                />
-              </div>
-           </div>
+                 <input
+                   type="text"
+                   inputMode="numeric"
+                   value={age}
+                   onChange={(e) => setAge(e.target.value)}
+                   placeholder="Edat"
+                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                 />
+                 <div className="flex gap-2">
+                   <button
+                     onClick={() => setGender('m')}
+                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'm' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-300 border border-zinc-800'}`}
+                   >
+                     Home
+                   </button>
+                   <button
+                     onClick={() => setGender('f')}
+                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'f' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-300 border border-zinc-800'}`}
+                   >
+                     Dona
+                   </button>
+                 </div>
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                 <input
+                   type="text"
+                   inputMode="numeric"
+                   value={height}
+                   onChange={(e) => setHeight(e.target.value)}
+                   placeholder="Altura (cm)"
+                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                 />
+                 <input
+                   type="text"
+                   inputMode="numeric"
+                   value={weight}
+                   onChange={(e) => setWeight(e.target.value)}
+                   placeholder="Pes (kg)"
+                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                 />
+               </div>
+            </div>
            <button
              onClick={saveProfile}
              type="button"
