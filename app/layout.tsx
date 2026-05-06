@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ca">
-      <body className={`${inter.className} antialiased bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]`}>
+      <body className={`${inter.className} antialiased bg-white dark:bg-black text-black dark:text-white`}>
         <Providers>
           {children}
           <Navigation />
