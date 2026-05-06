@@ -124,13 +124,13 @@ export default function AmicsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-3xl font-light mb-8">amics.</h1>
           <p className="text-zinc-500 mb-8">Inicia sessió per veure el ranking</p>
-          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
-            Entrar
-          </a>
+           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
+             Entrar
+           </a>
         </div>
       </div>
     )
@@ -140,7 +140,7 @@ export default function AmicsPage() {
   const sorted = [...allUsers].sort((a, b) => b.consistency - a.consistency)
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-xl font-medium tracking-tight text-zinc-400">amics.</h1>
       </div>

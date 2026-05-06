@@ -500,13 +500,13 @@ export default function RutinesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-3xl font-light mb-2">rutines.</h1>
           <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
-          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
-            Entrar
-          </a>
+           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
+             Entrar
+           </a>
         </div>
       </div>
     )
@@ -514,7 +514,7 @@ export default function RutinesPage() {
 
   if (!selectedRoutine) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
         <div className="px-6 pt-8 pb-6">
           {isSchemaFixed === false && (
             <div className="px-4 py-3 bg-yellow-900/50 border border-yellow-800 rounded-2xl mb-4">
@@ -582,7 +582,7 @@ export default function RutinesPage() {
               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
               <div className="flex gap-3">
                 <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                <button onClick={handleCreateRoutine} disabled={loading || isSchemaFixed === false} className="flex-1 py-3 rounded-2xl bg-white text-black font-light disabled:opacity-50">
+                <button onClick={handleCreateRoutine} disabled={loading || isSchemaFixed === false} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">
                   {loading ? 'Creant...' : 'Crear'}
                 </button>
               </div>
@@ -596,7 +596,7 @@ export default function RutinesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-8 pb-6">
         <div className="flex items-center gap-4">
           <button 
@@ -630,7 +630,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-white font-light">{exercise.name}</p>
+                   <p className="text-[var(--color-text-primary)] font-light">{exercise.name}</p>
                   <p className="text-zinc-500 text-xs">
                     {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
@@ -811,9 +811,9 @@ export default function RutinesPage() {
                       handleAddExercise()
                     }}
                     className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                      newExerciseName === ex 
-                        ? 'bg-white text-black' 
-                        : 'bg-zinc-800 text-zinc-300'
+                        newExerciseName === ex 
+                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                          : 'bg-zinc-800 text-zinc-300'
                     }`}
                   >
                     {ex}

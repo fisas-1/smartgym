@@ -123,11 +123,11 @@ export default function PerfilPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
           <p className="text-zinc-500 mb-8">Inicia sessió per veure el teu perfil</p>
-          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
+          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
             Entrar
           </a>
         </div>
@@ -136,7 +136,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
        <div className="px-6 pt-8 pb-6">
           <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
         </div>
@@ -202,13 +202,13 @@ export default function PerfilPage() {
                  />
                </div>
             </div>
-           <button
-             onClick={saveProfile}
-             type="button"
-             className="w-full mt-4 py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors"
-           >
-             {saved ? 'Guardat' : 'Guardar'}
-           </button>
+            <button
+              onClick={saveProfile}
+              type="button"
+              className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors"
+            >
+              {saved ? 'Guardat' : 'Guardar'}
+            </button>
          </div>
 
          {exerciseLevels.length > 0 && (

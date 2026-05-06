@@ -482,7 +482,7 @@ export default function RutinesPage() {
   // Renderitzar llista de rutines
   if (!selectedRoutine) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
         <div className="px-6 pt-8 pb-6">
           <h1 className="text-xl font-medium tracking-tight text-zinc-400">rutines.</h1>
         </div>
@@ -500,7 +500,7 @@ export default function RutinesPage() {
                    className="cursor-pointer hover:text-zinc-300"
                    onClick={() => handleSelectRoutine(routine)}
                  >
-                   <p className="text-white font-light text-lg">{routine.name}</p>
+                    <p className="text-[var(--color-text-primary)] font-light text-lg">{routine.name}</p>
                     <p className="text-zinc-500 text-xs mt-1">
                       {routineExerciseCounts[routine.id] || 0} exercicis
                     </p>
@@ -539,7 +539,7 @@ export default function RutinesPage() {
                {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
                <div className="flex gap-3">
                  <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                 <button onClick={handleCreateRoutine} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Crear</button>
+                  <button onClick={handleCreateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Crear</button>
                </div>
              </div>
            </div>
@@ -561,7 +561,7 @@ export default function RutinesPage() {
                {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
                <div className="flex gap-3">
                  <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                 <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Guardar</button>
+                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Guardar</button>
                </div>
              </div>
            </div>
@@ -582,7 +582,7 @@ export default function RutinesPage() {
   const screens = [{ label: 'Llista' }]
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-8 pb-6">
         <div className="flex items-center gap-4">
           <button 
@@ -616,7 +616,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
                <div className="flex justify-between items-start">
                  <div className="flex-1">
-                    <p className="text-white font-light">{exercise.exercise}</p>
+                     <p className="text-[var(--color-text-primary)] font-light">{exercise.exercise}</p>
                    <p className="text-zinc-500 text-xs">
                       {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                    </p>
@@ -733,11 +733,11 @@ export default function RutinesPage() {
                      setNewExerciseName(ex)
                      handleAddExercise()
                    }}
-                   className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                     newExerciseName === ex 
-                       ? 'bg-white text-black' 
-                       : 'bg-zinc-800 text-zinc-300'
-                   }`}
+                    className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
+                      newExerciseName === ex 
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                        : 'bg-zinc-800 text-zinc-300'
+                    }`}
                  >
                    {ex}
                  </button>
@@ -795,7 +795,7 @@ export default function RutinesPage() {
 
              <div className="flex gap-3 mt-6">
                <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-               <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Guardar</button>
+                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Guardar</button>
              </div>
            </div>
          </div>

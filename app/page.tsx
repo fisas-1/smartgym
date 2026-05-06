@@ -1,27 +1,9 @@
-"use client"
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-
-type Exercise =
-  | 'Press Banca'
-  | 'Lat Pulldown'
-  | 'Sentadilles'
-  | 'Leg Press'
-  | 'Dominades'
-  | 'Press Military'
-  | 'Curl de Bíceps'
-  | 'Extensiones Tricep'
-  | 'French Press'
-  | 'Zancadas'
-  | string
-
-const DEFAULT_EXERCISES: Exercise[] = [
-  'Press Banca', 'Lat Pulldown', 'Sentadilles', 'Leg Press',
-  'Dominades', 'Press Military', 'Curl de Bíceps', 'Extensiones Tricep',
-  'French Press', 'Zancadas',
-]
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO } from '@/types'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
@@ -29,38 +11,28 @@ function calculate1RM(weight: number, reps: number): number {
 }
 
 async function analyzeOverload(exerciseName: string): Promise<string | null> {
-  try {
-    const { data: logs, error } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('exercise', exerciseName)
-      .order('created_at', { ascending: false })
-      .limit(14)
+  const { data: logs } = await supabase
+    .from('workout_logs')
+    .select('*')
+    .eq('exercise', exerciseName)
+    .order('created_at', { ascending: false })
+    .limit(14)
 
-    if (error) {
-      console.log('analyzeOverload - column exercise may not exist:', error.message)
-      return null
-    }
-    
-    if (!logs || logs.length < 2) return null
+  if (!logs || logs.length < 2) return null
 
-    const recentLogs = logs.slice(0, 7)
-    const previousLogs = logs.slice(7, 14)
-    if (previousLogs.length === 0) return null
+  const recentLogs = logs.slice(0, 7)
+  const previousLogs = logs.slice(7, 14)
+  if (previousLogs.length === 0) return null
 
-    const avgRecent = recentLogs.reduce((sum, l) => sum + ((l as any).one_rm || 0), 0) / recentLogs.length
-    const avgPrevious = previousLogs.reduce((sum, l) => sum + ((l as any).one_rm || 0), 0) / previousLogs.length
+  const avgRecent = recentLogs.reduce((sum, l) => sum + (l.one_rm || 0), 0) / recentLogs.length
+  const avgPrevious = previousLogs.reduce((sum, l) => sum + (l.one_rm || 0), 0) / previousLogs.length
 
-    if (avgRecent <= avgPrevious) return null
+  if (avgRecent <= avgPrevious) return null
 
-    const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
-    const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
+  const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
+  const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
 
-    return `Avui: ${targetWeight}kg (${Math.round(improvement)}%↑)`
-  } catch (err) {
-    console.log('analyzeOverload error:', err)
-    return null
-  }
+  return `Avui: ${targetWeight}kg (${Math.round(improvement)}%â†‘)`
 }
 
 export default function HomePage() {
@@ -70,6 +42,7 @@ export default function HomePage() {
   const [reps, setReps] = useState<string>('')
   const [rir, setRir] = useState<string>('0')
   const [oneRM, setOneRM] = useState<number>(0)
+  const [weightType, setWeightType] = useState("pes")
   const [savedSets, setSavedSets] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [customExercises, setCustomExercises] = useState<string[]>([])
@@ -77,7 +50,6 @@ export default function HomePage() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<string | null>(null)
-  const [isSchemaFixed, setIsSchemaFixed] = useState<boolean | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
@@ -93,122 +65,85 @@ export default function HomePage() {
     }
   }, [weight, reps])
 
-  useEffect(() => { 
-    if (user) {
-      loadSavedSets()
-      checkSchema()
-    }
-  }, [user])
-  
-  useEffect(() => { 
-    if (exercise && isSchemaFixed) {
-      analyzeOverload(exercise).then(setSuggestion)
-    } else {
-      setSuggestion(null)
-    }
-  }, [exercise, isSchemaFixed])
+  useEffect(() => { loadSavedSets() }, [user])
+    useEffect(() => {
+      if (exercise) analyzeOverload(exercise).then(setSuggestion)
+    }, [exercise])
 
-  async function checkSchema() {
-    try {
-      // Prova si la columna 'exercise' existe
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .select('exercise')
-        .limit(1)
-      
-      if (error && error.message.includes('column')) {
-        setIsSchemaFixed(false)
-        console.log('⚠️ Schema not fixed: exercise column missing')
-      } else {
-        setIsSchemaFixed(true)
-        console.log('✅ Schema is fixed')
+    const getDisplayExercises = () => {
+      // Filter exercises to show base versions and custom exercises
+      // For exercises with bodyweight variants, show both base and corporal as separate options in UI logic
+      // But in the exercise selector, we only show base names for default exercises
+      return [...DEFAULT_EXERCISES, ...customExercises]
+    }
+
+    // Reset weightType to "pes" when exercise changes if it doesn't support bodyweight
+    useEffect(() => {
+      const info = EXERCISE_INFO[exercise as Exercise]
+      if (info && (!info.hasBodyweight || !info.hasWeight)) {
+        setWeightType("pes")
       }
-    } catch (err) {
-      setIsSchemaFixed(false)
-    }
-  }
+    }, [exercise])
 
-  async function loadSavedSets() {
+   async function loadSavedSets() {
     if (!user) {
       setSavedSets([])
       return
     }
-    try {
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(8)
-      
-      if (error) {
-        console.error('Error loading saved sets (may be schema issue):', error.message)
-        setErrorMsg('Error carregant dades. Comprova que el schema estigui configurat.')
-        return
-      }
-      
-      if (data) setSavedSets(data)
-    } catch (err) {
-      console.error('Error loading sets:', err)
+    const { data, error } = await supabase
+      .from('workout_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(8)
+    if (error) {
+      console.error('Error loading saved sets:', error)
+      return
     }
+    if (data) setSavedSets(data)
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
-    const w = parseFloat(weight), r = parseFloat(reps)
-    if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) return
+    async function handleSave(e: React.FormEvent) {
+      e.preventDefault()
+      const w = parseFloat(weight), r = parseFloat(reps)
+      if (isNaN(r) || r <= 0) return
+      if (weightType === "pes" && (isNaN(w) || w <= 0)) return
 
-    setLoading(true)
-    setErrorMsg(null)
-    
-    const insertData: any = {
-      exercise,
-      weight: w,
-      reps: r,
-      rir: parseFloat(rir),
-      user_id: user?.id
-    }
-    
-    // Només afegim one_rm si el schema està fixat
-    if (isSchemaFixed && oneRM > 0) {
-      insertData.one_rm = oneRM
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .insert(insertData)
-        .select()
-        .maybeSingle()
+      setLoading(true)
+      setErrorMsg(null)
       
+      // For bodyweight exercises, store with suffix to distinguish in history
+      const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
+      
+      const insertData = {
+        exercise: exerciseToStore, 
+        weight: weightType === "corporal" ? 0 : w, 
+        reps: r, 
+        rir: parseFloat(rir), 
+        one_rm: weightType === "corporal" ? 0 : oneRM,
+        user_id: user?.id, 
+        weightType
+      }
+      const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
       setLoading(false)
-      
       if (error) {
         console.error('Error saving set:', error)
-        
-        if (error.message.includes('column')) {
-          setErrorMsg('Error: Cal configurar el schema de la base de dades. Executa deploy-schema.sql')
+        if (error.message.includes('column') || error.message.includes('exercise')) {
+          setErrorMsg('Error: La base de dades necessita configuració. Veure SOLUZIONE.md')
         } else {
           setErrorMsg('Error al guardar: ' + error.message)
         }
         return
       }
-      
       setWeight(''); setReps(''); setRir('0')
       await loadSavedSets()
-      setErrorMsg(null)
-    } catch (err: any) {
-      setLoading(false)
-      console.error('Error saving:', err)
-      setErrorMsg('Error inesperat. Comprova la configuració de la base de dades.')
     }
-  }
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
     if (!trimmed) { setErrorMsg('Nom requerit'); return }
-    if (DEFAULT_EXERCISES.includes(trimmed as Exercise) || customExercises.includes(trimmed)) { 
-      setErrorMsg('Ja existeix'); return 
+    if (DEFAULT_EXERCISES.includes(trimmed as Exercise) || customExercises.includes(trimmed)) {
+      setErrorMsg('Ja existeix'); return
     }
     const updated = [...customExercises, trimmed]
     setCustomExercises(updated)
@@ -227,10 +162,10 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-3xl font-light mb-2">gym.</h1>
-          <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
+           <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
             Entrar
           </a>
@@ -240,13 +175,160 @@ export default function HomePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between bg-background p-8">
-      <h1 className="text-3xl font-bold text-foreground">
-        Welcome to SmartGym
-      </h1>
-      <p className="text-foreground/60">
-        Your fitness journey starts here
-      </p>
-    </main>
+     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+      <div className="px-6 pt-8 pb-6">
+        <h1 className="text-xl font-medium tracking-tight text-zinc-400">gym.</h1>
+      </div>
+
+      <div className="px-6 space-y-6">
+        <div className="py-8">
+          <p className="text-zinc-500 text-sm mb-1">1RM estimat</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
+            <span className="text-zinc-600 text-xl">kg</span>
+          </div>
+        </div>
+
+        {suggestion && (
+          <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+            <p className="text-zinc-300 text-sm">{suggestion}</p>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="px-4 py-3 bg-red-900/50 border border-red-800 rounded-2xl">
+            <p className="text-red-400 text-sm">{errorMsg}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Exercici</label>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {getDisplayExercises().map((ex) => (
+                <button
+                  key={ex}
+                  type="button"
+                  onClick={() => setExercise(ex)}
+                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                     exercise === ex
+                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                      : 'bg-zinc-900 text-zinc-40                   {ex}
+                      {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
+                        <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">x</span>
+                      )}
+                </button>
+              ))}
+              <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-400">+</button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* PES / PES CORPORAL section */}
+            <div>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">PES</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? "0 (pes corporal)" : "0") : "0"}
+                disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
+                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:opacity-50"
+              />
+              {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
+                <button
+                  type="button"
+                  onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
+                  style={{
+                    backgroundColor: weightType === "corporal" ? "white" : "#27272a",
+                    color: weightType === "corporal" ? "black" : "#a1a1aa",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    transition: "all 0.2s",
+                    border: "none",
+                    marginTop: "8px",
+                    cursor: "pointer"
+                  }}
+                >
+                  {weightType === "corporal" ? "Pes corporal ✓" : "Pes corporal"}
+                </button>
+              )}
+            </div>
+
+            {/* REPS section - now separate and below PES */}
+            <div>
+              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">REPS</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                placeholder="0"
+                className="w-full bg-zinc-900 text-white text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+              />
+            </div>
+            </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? 'Guardant...' : 'Guardar'}
+          </button>
+        </form>
+
+        <div className="pt-4">
+          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Recents</p>
+          {savedSets.length === 0 ? (
+            <p className="text-zinc-600 text-sm">Sense histÃ²ric</p>
+          ) : (
+            <div className="space-y-2">
+              {savedSets.map((set) => (
+                <div key={set.id} className="flex justify-between items-center py-3 border-b border-zinc-900">
+                  <div>
+                   <p className="text-[var(--color-text-primary)] font-light">{set.exercise}</p>
+                   <p className="text-[var(--color-text-secondary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
+                  </div>
+                  <div className="text-right">
+                     <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
+                     <p className="text-[var(--color-text-secondary)] text-xs">RIR {set.rir}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
+          <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-light text-white mb-4">Nou exercici</h3>
+            <input
+              type="text"
+              value={newExerciseName}
+              onChange={(e) => setNewExerciseName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
+              placeholder="Nom de l'exercici"
+              className="w-full bg-zinc-900 text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+              autoFocus
+            />
+            {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel</button>
+              <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Afegir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="h-20" />
+    </div>
   )
 }
+
+

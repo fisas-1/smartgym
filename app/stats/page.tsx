@@ -73,7 +73,7 @@ export default function EstadistiquesPage() {
   const improvedCount = stats.filter(s => s.improvement > 0).length
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-xl font-medium tracking-tight text-zinc-400">stats.</h1>
       </div>
@@ -88,8 +88,8 @@ export default function EstadistiquesPage() {
             <button
               key={p.key}
               onClick={() => setPeriod(p.key as '30' | '90' | 'all')}
-              className={`flex-1 py-2 rounded-full text-xs uppercase tracking-wider transition-colors ${
-                period === p.key ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-500'
+               className={`flex-1 py-2 rounded-full text-xs uppercase tracking-wider transition-colors ${
+                period === p.key ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-zinc-900 text-zinc-500'
               }`}
             >
               {p.label}

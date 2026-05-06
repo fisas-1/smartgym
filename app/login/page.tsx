@@ -35,7 +35,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-light mb-8 text-center">
           gym.
@@ -87,7 +87,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50"
+            className="w-full py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Accedint...' : (isLogin ? 'Entrar' : 'Crear compte')}
           </button>
