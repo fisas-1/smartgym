@@ -190,7 +190,7 @@ export default function HomePage() {
                 >
                   {ex}
                   {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">Ã—</span>
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">×</span>
                   )}
                 </button>
               ))}
@@ -259,7 +259,7 @@ export default function HomePage() {
                     <p className="text-zinc-500 text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-light">{set.weight}kg Ã— {set.reps}</p>
+                    <p className="text-white font-light">{set.weight}kg × {set.reps}</p>
                     <p className="text-zinc-600 text-xs">RIR {set.rir}</p>
                   </div>
                 </div>
