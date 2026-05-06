@@ -210,13 +210,16 @@ export default function HomePage() {
                   key={ex}
                   type="button"
                   onClick={() => setExercise(ex)}
-                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                     exercise === ex
-                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
-                      : 'bg-zinc-900 text-zinc-40                   {ex}
-                      {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                        <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">x</span>
-                      )}
+className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                      exercise === ex
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'bg-zinc-900 text-zinc-400'
+                    }`}
+                >
+                  {ex}
+                  {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
+                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">x</span>
+                  )}
                 </button>
               ))}
               <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-400">+</button>
