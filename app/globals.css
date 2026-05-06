@@ -1,55 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-  /* Dark theme (default) */
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #0a0a0a;
-  --color-bg-tertiary: #171717;
-  --color-bg-elevated: #262626;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #52525b;
-  --color-border: #27272a;
-  --color-border-strong: #3f3f46;
-
-  /* Zinc scale (dark) */
-  --color-zinc-50: #fafafa;
-  --color-zinc-100: #e4e4e7;
-  --color-zinc-200: #d4d4d8;
-  --color-zinc-300: #a1a1aa;
-  --color-zinc-400: #71717a;
-  --color-zinc-500: #52525b;
-  --color-zinc-600: #3f3f46;
-  --color-zinc-700: #27272a;
-  --color-zinc-800: #18181b;
-  --color-zinc-900: #09090b;
-  --color-zinc-950: #000000;
-}
-
-/* Light theme overrides */
-.light {
-  @theme {
-    --color-bg-primary: #ffffff;
-    --color-bg-secondary: #f4f4f5;
-    --color-bg-tertiary: #e4e4e7;
-    --color-bg-elevated: #d4d4d8;
-    --color-text-primary: #18181b;
-    --color-text-secondary: #52525b;
-    --color-text-muted: #a1a1aa;
-    --color-border: #e4e4e7;
-    --color-border-strong: #d4d4d8;
-
-    /* Zinc scale (light) */
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f4f4f5;
-    --color-zinc-200: #e4e4e7;
-    --color-zinc-300: #d4d4d8;
-    --color-zinc-400: #a1a1aa;
-    --color-zinc-500: #52525b;
-    --color-zinc-600: #71717a;
-    --color-zinc-700: #3f3f46;
-    --color-zinc-800: #27272a;
-    --color-zinc-900: #18181b;
-    --color-zinc-950: #09090b;
-  }
-}
+:root { --background: #ffffff; --foreground: #000000; }
+.dark { --background: #000000; --foreground: #ffffff; }
+body { background: var(--background); color: var(--foreground); }
