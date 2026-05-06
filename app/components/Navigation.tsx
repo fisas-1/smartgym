@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useAuth } from '../contexts/AuthContext'
+import { AuthContext } from '../contexts/AuthContext'
 import { ThemeContext } from '../contexts/ThemeContext'
 import { useContext } from 'react'
 
@@ -16,7 +16,12 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname()
-  const { user, loading, signOut } = useAuth()
+  
+  const authContext = useContext(AuthContext)
+  const user = authContext?.user ?? null
+  const loading = authContext?.loading ?? false
+  const signOut = authContext?.signOut ?? (async () => {})
+  
   const themeContext = useContext(ThemeContext)
   const theme = themeContext?.theme ?? 'dark'
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
