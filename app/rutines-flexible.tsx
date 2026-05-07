@@ -524,26 +524,23 @@ export default function RutinesPage() {
             </div>
           )}
           
-          <h1 className="text-xl font-medium tracking-tight text-zinc-400">rutines.</h1>
+            <h1 className="text-xl font-medium tracking-tight text-[var(--color-text-secondary)]">rutines.</h1>
         </div>
 
         <div className="px-6 space-y-4">
           {routines.length === 0 ? (
-            <p className="text-zinc-500 text-sm mt-4">
-              {isSchemaFixed === false 
-                ? 'Les taules encara no existeixen. Completa el pas 1.'
-                : 'No tens cap rutina creada'
-              }
-            </p>
+             <p className="text-[var(--color-text-tertiary)] text-sm mt-4">
+               Carregant...
+             </p>
           ) : (
             routines.map(routine => (
-              <div
-                key={routine.id}
-                onClick={() => handleSelectRoutine(routine)}
-                className="border border-zinc-900 rounded-2xl p-4 cursor-pointer hover:bg-zinc-900/50 transition-colors"
-              >
-                <p className="text-white font-light text-lg">{routine.name}</p>
-                <p className="text-zinc-500 text-xs mt-1">
+               <div
+                 key={routine.id}
+                 onClick={() => handleSelectRoutine(routine)}
+                 className="border border-[var(--border)] rounded-2xl p-4 cursor-pointer hover:bg-[var(--input)] transition-colors"
+               >
+                 <p className="text-[var(--color-text-primary)] font-light text-lg">{routine.name}</p>
+                 <p className="text-[var(--color-text-tertiary)] text-xs mt-1">
                   {isSchemaFixed 
                     ? `${routineExercises.filter(re => re.routine_id === routine.id).length} exercicis`
                     : 'Carregant...'
@@ -569,24 +566,24 @@ export default function RutinesPage() {
 
         {showRoutineModal && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowRoutineModal(false)}>
-            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-white mb-4">Nova Rutina</h3>
-              <input
-                type="text"
-                value={newRoutineName}
-                onChange={(e) => setNewRoutineName(e.target.value)}
-                placeholder="Nom de la rutina"
-                className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                autoFocus
-              />
-              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
-              <div className="flex gap-3">
-                <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                <button onClick={handleCreateRoutine} disabled={loading || isSchemaFixed === false} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">
-                  {loading ? 'Creant...' : 'Crear'}
-                </button>
-              </div>
-            </div>
+           <div className="bg-[var(--card)] rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">Nova Rutina</h3>
+               <input
+                 type="text"
+                 value={newRoutineName}
+                 onChange={(e) => setNewRoutineName(e.target.value)}
+                 placeholder="Nom de la rutina"
+                 className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
+                 autoFocus
+               />
+               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               <div className="flex gap-3">
+                 <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] font-light">Cancel·lar</button>
+                 <button onClick={handleCreateRoutine} disabled={loading || isSchemaFixed === false} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">
+                   {loading ? 'Creant...' : 'Crear'}
+                 </button>
+               </div>
+             </div>
           </div>
         )}
 
@@ -627,21 +624,21 @@ export default function RutinesPage() {
           const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
           
           return (
-            <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                   <p className="text-[var(--color-text-primary)] font-light">{exercise.name}</p>
-                  <p className="text-zinc-500 text-xs">
+             <div key={exercise.id} className="border border-[var(--border)] rounded-2xl p-4 space-y-3">
+               <div className="flex justify-between items-start">
+                 <div className="flex-1">
+                    <p className="text-[var(--color-text-primary)] font-light">{exercise.name}</p>
+                   <p className="text-[var(--color-text-tertiary)] text-xs">
                     {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    const newExercises = routineExercises.filter(re => re.id !== exercise.id)
-                    setRoutineExercises(newExercises)
-                  }}
-                  className="text-zinc-500 hover:text-red-400 text-lg px-2"
-                >
+                   onClick={() => {
+                     const newExercises = routineExercises.filter(re => re.id !== exercise.id)
+                     setRoutineExercises(newExercises)
+                   }}
+                   className="text-[var(--color-text-tertiary)] hover:text-red-400 text-lg px-2"
+                 >
                   x
                 </button>
               </div>
@@ -669,59 +666,59 @@ export default function RutinesPage() {
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                     set.completed 
                       ? 'bg-green-900/30 border-green-800' 
-                      : 'bg-gray-900/20 border-gray-700'
+                      :                        'bg-[var(--input)] border-[var(--border)]'
                   }`}
                 >
                   <div className="flex-1">
-                    <p className="text-white">{set.weight}kg x {set.reps} reps</p>
-                    {set.rir > 0 && <p className="text-xs text-gray-400">RIR {set.rir}</p>}
+                     <p className="text-[var(--color-text-primary)]">{set.weight}kg x {set.reps} reps</p>
+                     {set.rir > 0 && <p className="text-xs text-[var(--color-text-tertiary)]">RIR {set.rir}</p>}
                   </div>
-                  <button
-                    onClick={() => {
-                      const updatedSets = [...sets];
-                      updatedSets[idx] = {
-                        ...updatedSets[idx],
-                        completed: !updatedSets[idx].completed
-                      };
-                      setRoutineSets({
-                        ...routineSets,
-                        [exercise.id]: updatedSets
-                      });
-                    }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      set.completed 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                  >
+                 <button
+                   onClick={() => {
+                     const updatedSets = [...sets];
+                     updatedSets[idx] = {
+                       ...updatedSets[idx],
+                       completed: !updatedSets[idx].completed
+                     };
+                     setRoutineSets({
+                       ...routineSets,
+                       [exercise.id]: updatedSets
+                     });
+                   }}
+                   className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                     set.completed 
+                       ? 'bg-green-600 hover:bg-green-700' 
+                       : 'bg-[var(--input)] hover:bg-[var(--border)]'
+                   }`}
+                 >
                     {set.completed ? '✓' : '+'}
                   </button>
                 </div>
               ))}
               
               {!allCompleted && sets.length < exercise.sets_target && (
-                <button
-                  onClick={() => {
-                    const updatedSets = [...sets];
-                    updatedSets.push({
-                      id: crypto.randomUUID(),
-                      routine_exercise_id: exercise.id,
-                      set_number: sets.length + 1,
-                      weight: 0,
-                      reps: 0,
-                      rir: 0,
-                      completed: false,
-                      created_at: new Date().toISOString()
-                    });
-                    setRoutineSets({
-                      ...routineSets,
-                      [exercise.id]: updatedSets
-                    });
-                  }}
-                  className="w-full mt-2 px-4 py-2 bg-gray-800/50 text-gray-300 text-sm rounded hover:bg-gray-800"
-                >
-                  + Afegir série
-                </button>
+                 <button
+                   onClick={() => {
+                     const updatedSets = [...sets];
+                     updatedSets.push({
+                       id: crypto.randomUUID(),
+                       routine_exercise_id: exercise.id,
+                       set_number: sets.length + 1,
+                       weight: 0,
+                       reps: 0,
+                       rir: 0,
+                       completed: false,
+                       created_at: new Date().toISOString()
+                     });
+                     setRoutineSets({
+                       ...routineSets,
+                       [exercise.id]: updatedSets
+                     });
+                   }}
+                   className="w-full mt-2 px-4 py-2 bg-[var(--input)] text-[var(--color-text-primary)] text-sm rounded hover:bg-[var(--border)]"
+                 >
+                   + Afegir série
+                 </button>
               )}
               
               {allCompleted && (
@@ -773,68 +770,68 @@ export default function RutinesPage() {
           );
         })}
 
-        <button
-          onClick={handleAddExerciseClick}
-          disabled={!isSchemaFixed}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors disabled:opacity-50"
-        >
-          + Afegir Exercici
-        </button>
+         <button
+           onClick={handleAddExerciseClick}
+           disabled={!isSchemaFixed}
+           className="w-full py-3 rounded-2xl border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-50"
+         >
+           + Afegir Exercici
+         </button>
 
-        <button
-          onClick={resetRoutineForNextDay}
-          disabled={!isSchemaFixed}
-          className="w-full py-3 rounded-2xl bg-zinc-900 text-zinc-400 text-sm disabled:opacity-50"
-        >
-          🔄 Reset per a nova sessió
-        </button>
+         <button
+           onClick={resetRoutineForNextDay}
+           disabled={!isSchemaFixed}
+           className="w-full py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] text-sm disabled:opacity-50"
+         >
+           🔄 Reset per a nova sessió
+         </button>
 
-        <button
-          onClick={saveWorkoutLogFromRoutine}
-          disabled={!isSchemaFixed}
-          className="w-full py-3 rounded-2xl bg-green-900/30 border border-green-800 text-green-400 text-sm hover:bg-green-900/50 disabled:opacity-50"
-        >
-          💾 Guardar Entrenament
-        </button>
+         <button
+           onClick={saveWorkoutLogFromRoutine}
+           disabled={!isSchemaFixed}
+           className="w-full py-3 rounded-2xl bg-[var(--input)] border border-[var(--border)] text-green-400 text-sm hover:bg-green-900/30 disabled:opacity-50"
+         >
+           💾 Guardar Entrenament
+         </button>
 
         {showExerciseModal && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={handleCloseExerciseModal}>
-            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
-              
-              <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {allExercises.map(ex => (
-                  <button
-                    key={ex}
-                    onClick={() => {
-                      setNewExerciseName(ex)
-                      handleAddExercise()
-                    }}
-                    className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                        newExerciseName === ex 
-                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
-                          : 'bg-zinc-800 text-zinc-300'
-                    }`}
-                  >
-                    {ex}
-                  </button>
-                ))}
-              </div>
-              
-              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
-              
-              <div className="flex gap-3">
-                <button onClick={handleCloseExerciseModal} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+             <div className="bg-[var(--card)] rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">Afegir Exercici</h3>
+               
+               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+                 {allExercises.map(ex => (
+                   <button
+                     key={ex}
+                     onClick={() => {
+                       setNewExerciseName(ex)
+                       handleAddExercise()
+                     }}
+                     className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
+                         newExerciseName === ex 
+                           ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                           : 'bg-[var(--input)] text-[var(--color-text-primary)]'
+                     }`}
+                   >
+                     {ex}
+                   </button>
+                 ))}
+               </div>
+               
+               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               
+               <div className="flex gap-3">
+                 <button onClick={handleCloseExerciseModal} className="flex-1 py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] font-light">Cancel·lar</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800 rounded-2xl z-50">
-            <p className="text-green-400 text-sm text-center">{successMsg}</p>
-          </div>
-        )}
+          )}
+ 
+          {successMsg && (
+           <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800/50 rounded-2xl z-50">
+             <p className="text-green-400 text-sm text-center">{successMsg}</p>
+           </div>
+         )}
       </div>
 
       <div className="h-20" />

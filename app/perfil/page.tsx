@@ -127,13 +127,13 @@ export default function PerfilPage() {
         <div className="text-center">
           <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
           <p className="text-zinc-500 mb-8">Inicia sessió per veure el teu perfil</p>
-          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
-            Entrar
-          </a>
-        </div>
-      </div>
-    )
-  }
+           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
+             Entrar
+           </a>
+         </div>
+       </div>
+     )
+   }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
@@ -144,20 +144,20 @@ export default function PerfilPage() {
      <div className="px-6 space-y-6">
           {exerciseLevels.length > 0 && (
           <div>
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-            <div className="space-y-2">
-              {exerciseLevels.map((ex) => (
-                <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-zinc-800 rounded-lg px-3 hover:bg-zinc-800/30 transition-colors">
-                  <span className="font-light text-white">{ex.exercise}</span>
-                  <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
-                </div>
-              ))}
+             <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Per Exercici</p>
+             <div className="space-y-2">
+               {exerciseLevels.map((ex) => (
+                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-[var(--border)] rounded-lg px-3 hover:bg-[var(--input)] transition-colors">
+                   <span className="font-light text-[var(--color-text-primary)]">{ex.exercise}</span>
+                   <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
+                 </div>
+               ))}
+              </div>
             </div>
-          </div>
           )}
-
-         <div>
-           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Dades</p>
+ 
+          <div>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Dades</p>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                  <input
@@ -166,18 +166,26 @@ export default function PerfilPage() {
                    value={age}
                    onChange={(e) => setAge(e.target.value)}
                    placeholder="Edat"
-                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                  <div className="flex gap-2">
                    <button
                      onClick={() => setGender('m')}
-                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'm' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-300 border border-zinc-800'}`}
+                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
+                       gender === 'm' 
+                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                         : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
+                     }`}
                    >
                      Home
                    </button>
                    <button
                      onClick={() => setGender('f')}
-                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${gender === 'f' ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-300 border border-zinc-800'}`}
+                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
+                       gender === 'f' 
+                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                         : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
+                     }`}
                    >
                      Dona
                    </button>
@@ -190,7 +198,7 @@ export default function PerfilPage() {
                    value={height}
                    onChange={(e) => setHeight(e.target.value)}
                    placeholder="Altura (cm)"
-                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                  <input
                    type="text"
@@ -198,35 +206,21 @@ export default function PerfilPage() {
                    value={weight}
                    onChange={(e) => setWeight(e.target.value)}
                    placeholder="Pes (kg)"
-                   className="bg-zinc-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 border border-zinc-800"
+                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                </div>
-            </div>
-            <button
-              onClick={saveProfile}
-              type="button"
-              className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors"
-            >
-              {saved ? 'Guardat' : 'Guardar'}
-            </button>
-         </div>
-
-         {exerciseLevels.length > 0 && (
-           <div>
-             <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Exercici</p>
-             <div className="space-y-2">
-               {exerciseLevels.map((ex) => (
-                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-zinc-900">
-                   <span className="font-light">{ex.exercise}</span>
-                   <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
-                 </div>
-               ))}
              </div>
-           </div>
-         )}
-
-         <div>
-           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Escala</p>
+             <button
+               onClick={saveProfile}
+               type="button"
+               className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors"
+             >
+               {saved ? 'Guardat' : 'Guardar'}
+             </button>
+          </div>
+ 
+          <div>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-3">Escala</p>
            <div className="flex flex-wrap gap-2">
              {LEVELS.map((l) => (
                <span key={l.key} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: l.color + '22', color: l.color }}>

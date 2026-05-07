@@ -7,6 +7,10 @@
   --card-foreground: #000000;
   --border: #e5e5e5;
   --input: #e5e5e5;
+  --color-bg-primary: #ffffff;
+  --color-text-primary: #000000;
+  --color-text-secondary: #525252;
+  --color-text-tertiary: #737373;
 }
 
 .dark {
@@ -16,6 +20,10 @@
   --card-foreground: #ffffff;
   --border: #272727;
   --input: #272727;
+  --color-bg-primary: #000000;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a3a3a3;
+  --color-text-tertiary: #737373;
 }
 
 * {

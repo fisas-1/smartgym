@@ -182,21 +182,21 @@ export default function HomePage() {
   return (
      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-8 pb-6">
-        <h1 className="text-xl font-medium tracking-tight text-zinc-400">gym.</h1>
+            <h1 className="text-xl font-medium tracking-tight text-[var(--color-text-secondary)]">gym.</h1>
       </div>
 
       <div className="px-6 space-y-6">
         <div className="py-8">
-          <p className="text-zinc-500 text-sm mb-1">1RM estimat</p>
+           <p className="text-[var(--color-text-tertiary)] text-sm mb-1">1RM estimat</p>
           <div className="flex items-baseline gap-1">
             <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
-            <span className="text-zinc-600 text-xl">kg</span>
+            <span className="text-[var(--color-text-tertiary)] text-xl">kg</span>
           </div>
         </div>
 
         {suggestion && (
           <div className="px-4 py-3 bg-[var(--input)] border border-[var(--border)] rounded-2xl">
-            <p className="text-zinc-300 text-sm">{suggestion}</p>
+             <p className="text-[var(--color-text-tertiary)] text-sm">{suggestion}</p>
           </div>
         )}
 
@@ -208,7 +208,7 @@ export default function HomePage() {
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Exercici</label>
+             <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-3">Exercici</label>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
               {getDisplayExercises().map((ex) => (
                 <button
@@ -223,7 +223,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
                 >
                   {ex}
                   {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                    <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-zinc-500">x</span>
+                     <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-[var(--color-text-tertiary)]">x</span>
                   )}
                 </button>
               ))}
@@ -234,7 +234,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
           <div className="space-y-4">
             {/* PES / PES CORPORAL section */}
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">PES</label>
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">PES</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -268,7 +268,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
 
             {/* REPS section - now separate and below PES */}
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">REPS</label>
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">REPS</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -290,20 +290,20 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
         </form>
 
         <div className="pt-4">
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Recents</p>
+           <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Recents</p>
           {savedSets.length === 0 ? (
-            <p className="text-zinc-600 text-sm">Sense històric</p>
+             <p className="text-[var(--color-text-tertiary)] text-sm">Sense històric</p>
           ) : (
             <div className="space-y-2">
               {savedSets.map((set) => (
                 <div key={set.id} className="flex justify-between items-center py-3 border-b border-zinc-900">
                   <div>
-                   <p className="text-[var(--color-text-primary)] font-light">{set.exercise}</p>
-                   <p className="text-[var(--color-text-secondary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
+                    <p className="text-[var(--color-text-primary)] font-light">{set.exercise}</p>
+                    <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
                   <div className="text-right">
-                     <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
-                     <p className="text-[var(--color-text-secondary)] text-xs">RIR {set.rir}</p>
+                      <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
+                      <p className="text-[var(--color-text-tertiary)] text-xs">RIR {set.rir}</p>
                   </div>
                 </div>
               ))}
@@ -315,7 +315,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
       {showModal && (
         <div className="fixed inset-0 bg-[var(--card-foreground)]/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
            <div className="bg-[var(--card)] rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-light text-white mb-4">Nou exercici</h3>
+             <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">Nou exercici</h3>
             <input
               type="text"
               value={newExerciseName}
@@ -327,7 +327,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
             />
             {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
             <div className="flex gap-3">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel</button>
+               <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] font-light">Cancel</button>
                <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-[var(--card)] text-[var(--card-foreground)] font-light">Afegir</button>
             </div>
           </div>

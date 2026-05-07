@@ -36,29 +36,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-light mb-4 text-center">
-          gym.
-        </h1>
-
-        <div className="bg-[var(--color-card)] border border-zinc-800 rounded-3xl p-8">
+     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+       <div className="w-full max-w-sm">
+         <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">
+           gym.
+         </h1>
+ 
+         <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Usuari</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nom d'usuari"
-                className="w-full bg-zinc-900 text-white rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Usuari</label>
+               <input
+                 type="text"
+                 value={username}
+                 onChange={(e) => setUsername(e.target.value)}
+                 placeholder="Nom d'usuari"
+                 className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
                 required
               />
             </div>
 
             {isLogin ? null : (
               <div>
-                <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Email</label>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -72,23 +72,23 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Contrasenya</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-900 text-white rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700 pr-10"
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Contrasenya</label>
+               <div className="relative">
+                 <input
+                   type={showPassword ? "text" : "password"}
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   placeholder="••••••••"
+                   className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] pr-10"
                   required
                   autoComplete={isLogin ? "current-password" : "new-password"}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-                  aria-label="Mostrar o amagar contrasenya"
-                >
+                 <button
+                   type="button"
+                   onClick={() => setShowPassword(!showPassword)}
+                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                   aria-label="Mostrar o amagar contrasenya"
+                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
               </div>
@@ -107,29 +107,29 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
-            {isLogin ? (
-              <p className="text-sm text-zinc-500">
-                No tens compte?{' '}
-                <button
-                  onClick={() => setIsLogin(false)}
-                  className="text-white font-medium hover:underline transition-colors"
-                >
-                  Registra&apos;t
-                </button>
-              </p>
-            ) : (
-              <p className="text-sm text-zinc-500">
-                Ja tens compte?{' '}
-                <button
-                  onClick={() => setIsLogin(true)}
-                  className="text-white font-medium hover:underline transition-colors"
-                >
-                  Inicia sessió
-                </button>
-              </p>
-            )}
-          </div>
+             <div className="mt-4 text-center">
+             {isLogin ? (
+               <p className="text-[var(--color-text-tertiary)] text-sm">
+                 No tens compte?{' '}
+                 <button
+                   onClick={() => setIsLogin(false)}
+                   className="text-[var(--color-text-primary)] font-medium hover:underline transition-colors"
+                 >
+                   Registra&apos;t
+                 </button>
+               </p>
+             ) : (
+               <p className="text-[var(--color-text-tertiary)] text-sm">
+                 Ja tens compte?{' '}
+                 <button
+                   onClick={() => setIsLogin(true)}
+                   className="text-[var(--color-text-primary)] font-medium hover:underline transition-colors"
+                 >
+                   Inicia sessió
+                 </button>
+               </p>
+             )}
+           </div>
         </div>
       </div>
     </div>

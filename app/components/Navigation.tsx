@@ -27,16 +27,16 @@ export default function Navigation() {
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card-foreground)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50">
        <div className="flex gap-4">
          {navItems.map((item) => (
-           <Link 
-         key={item.href} 
-         href={item.href} 
-         className={`text-base tracking-wider transition-colors px-3 py-2 ${
-            pathname === item.href ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]/60 hover:text-[var(--foreground)]'
-         }`}
-       >
+            <Link 
+          key={item.href} 
+          href={item.href} 
+          className={`text-base tracking-wider transition-colors px-3 py-2 ${
+             pathname === item.href ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
              {item.label}
            </Link>
          ))}
