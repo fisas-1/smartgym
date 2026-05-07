@@ -53,6 +53,17 @@ export default function RutinesPage() {
     }
   }, [selectedRoutine, routineExercises])
 
+  // Netejar missatges després de 3 segons
+  useEffect(() => {
+    if (successMsg || errorMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg(null)
+        setErrorMsg(null)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [successMsg, errorMsg])
+
    // Assegurar que cada exercici té les sèries inicialitzades / sincronitzades
    useEffect(() => {
      if (selectedRoutine && routineExercises.length > 0) {
@@ -416,34 +427,54 @@ export default function RutinesPage() {
      }
    }
 
-  // Marcar/desmarcar série com a completada
-  async function toggleSetCompletion(exerciseId: string, setNumber: number, completed: boolean) {
-    const set = routineSets[exerciseId]?.find(s => s.set_number === setNumber)
-    if (!set) return
+// Marcar/desmarcar série com a completada
+   async function toggleSetCompletion(exerciseId: string, setNumber: number, completed: boolean) {
+     const set = routineSets[exerciseId]?.find(s => s.set_number === setNumber)
+     if (!set) return
 
-    const { error } = await supabase
-      .from('routine_sets')
-      .update({ 
-        completed: completed,
-        completed_at: completed ? new Date().toISOString() : null
-      })
-      .eq('id', set.id)
+     const { error } = await supabase
+       .from('routine_sets')
+       .update({ 
+         completed: completed,
+         completed_at: completed ? new Date().toISOString() : null
+       })
+       .eq('id', set.id)
 
-    if (error) {
-      setErrorMsg('Error en actualitzar serie')
-      return
-    }
+     if (error) {
+       setErrorMsg('Error en actualitzar serie')
+       return
+     }
 
-    setRoutineSets(prev => {
-      const current = prev[exerciseId] || []
-      const updated = current.map(s => 
-        s.set_number === setNumber 
-          ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
-          : s
-      )
-      return { ...prev, [exerciseId]: updated }
-    })
-  }
+     setRoutineSets(prev => {
+       const current = prev[exerciseId] || []
+       const updated = current.map(s => 
+         s.set_number === setNumber 
+           ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
+           : s
+       )
+       return { ...prev, [exerciseId]: updated }
+     })
+   }
+
+   // Actualitzar pes i reps d'una sèrie
+   async function handleUpdateSet(exerciseId: string, setId: string, weight: number, reps: number) {
+     setRoutineSets(prev => {
+       const current = prev[exerciseId] || []
+       const updated = current.map(s => 
+         s.id === setId ? { ...s, weight, reps } : s
+       )
+       return { ...prev, [exerciseId]: updated }
+     })
+
+     const { error } = await supabase
+       .from('routine_sets')
+       .update({ weight, reps })
+       .eq('id', setId)
+
+     if (error) {
+       console.error('Error updating set:', error)
+     }
+   }
 
   // Auto-completar totes les series d'un exercici (un cop acabades)
   function autoCompleteExercise(exerciseId: string) {
@@ -654,35 +685,66 @@ export default function RutinesPage() {
                 💡 Recomanar Pes
               </button>
 
-              {/* Llista de series */}
-              {sets.map((set, idx) => (
-                <div 
-                  key={set.id} 
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    set.completed 
-                      ? 'bg-green-900/30 border-green-800' 
-                      : 'bg-zinc-900 border-zinc-800'
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      set.completed
-                        ? 'bg-green-500 border-green-500 text-black'
-                        : 'border-zinc-600 hover:border-zinc-400'
-                    }`}
-                  >
-                    {set.completed && '✓'}
-                  </button>
-                  <span className="text-zinc-400 text-sm">Sèrie {set.set_number}</span>
-                  
-                  {set.completed ? (
-                    <span className="text-green-400 text-xs ml-auto">Completada</span>
-                  ) : (
-                    <span className="text-zinc-600 text-xs ml-auto">Pendent</span>
-                  )}
-                </div>
-              ))}
+{/* Llista de series */}
+               {sets.map((set, idx) => (
+                 <div 
+                   key={set.id} 
+                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                     set.completed 
+                       ? 'bg-green-900/30 border-green-800' 
+                       : 'bg-zinc-900 border-zinc-800'
+                   }`}
+                 >
+                   <button
+                     onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
+                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                       set.completed
+                         ? 'bg-green-500 border-green-500 text-black'
+                         : 'border-zinc-600 hover:border-zinc-400'
+                     }`}
+                   >
+                     {set.completed && '✓'}
+                   </button>
+                   
+                   {!set.completed && (
+                     <>
+                       <input
+                         type="number"
+                         value={set.weight || ''}
+                         onChange={(e) => {
+                           const w = parseFloat(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, w, set.reps || 0)
+                         }}
+                         placeholder="kg"
+                         className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
+                       />
+                       <span className="text-zinc-500 text-xs">x</span>
+                       <input
+                         type="number"
+                         value={set.reps || ''}
+                         onChange={(e) => {
+                           const r = parseInt(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
+                         }}
+                         placeholder="reps"
+                         className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
+                       />
+                     </>
+                   )}
+                   
+                   {set.completed && (
+                     <span className="text-zinc-400 text-sm">{set.weight}kg x {set.reps} reps</span>
+                   )}
+                   
+                   <span className="text-zinc-400 text-sm ml-auto">Sèrie {set.set_number}</span>
+                   
+                   {set.completed ? (
+                     <span className="text-green-400 text-xs">Completada</span>
+                   ) : (
+                     <span className="text-zinc-600 text-xs">Pendent</span>
+                   )}
+                 </div>
+               ))}
 
               {/* Auto-completar quan totes les series estan fetes */}
               {allCompleted && (

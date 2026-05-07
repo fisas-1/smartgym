@@ -256,6 +256,27 @@ export default function RutinesPage() {
     }
   }
 
+  async function handleUpdateSet(exerciseId: string, setId: string, weight: number, reps: number) {
+    if (!isSchemaFixed) return
+    
+    setRoutineSets(prev => {
+      const current = prev[exerciseId] || []
+      const updated = current.map(s => 
+        s.id === setId ? { ...s, weight, reps } : s
+      )
+      return { ...prev, [exerciseId]: updated }
+    })
+
+    const { error } = await supabase
+      .from('routine_sets')
+      .update({ weight, reps })
+      .eq('id', setId)
+
+    if (error) {
+      console.error('Error updating set:', error)
+    }
+  }
+
   function autoCompleteExercise(exerciseId: string) {
     const sets = routineSets[exerciseId] || []
     const allCompleted = sets.every(s => s.completed)
@@ -660,41 +681,55 @@ export default function RutinesPage() {
                 💡 Recomanar Pes
               </button>
               
-              {sets.map((set, idx) => (
-                <div 
-                  key={set.id || idx}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    set.completed 
-                      ? 'bg-green-900/30 border-green-800' 
-                      :                        'bg-[var(--input)] border-[var(--border)]'
-                  }`}
-                >
-                  <div className="flex-1">
-                     <p className="text-[var(--color-text-primary)]">{set.weight}kg x {set.reps} reps</p>
-                     {set.rir > 0 && <p className="text-xs text-[var(--color-text-tertiary)]">RIR {set.rir}</p>}
-                  </div>
-                 <button
-                   onClick={() => {
-                     const updatedSets = [...sets];
-                     updatedSets[idx] = {
-                       ...updatedSets[idx],
-                       completed: !updatedSets[idx].completed
-                     };
-                     setRoutineSets({
-                       ...routineSets,
-                       [exercise.id]: updatedSets
-                     });
-                   }}
-                   className={`w-10 h-10 rounded-full flex items-center justify-center ${
+{sets.map((set, idx) => (
+                 <div 
+                   key={set.id || idx}
+                   className={`flex items-center gap-2 p-3 rounded-xl border transition-colors ${
                      set.completed 
-                       ? 'bg-green-600 hover:bg-green-700' 
-                       : 'bg-[var(--input)] hover:bg-[var(--border)]'
+                       ? 'bg-green-900/30 border-green-800' 
+                       :                        'bg-[var(--input)] border-[var(--border)]'
                    }`}
                  >
-                    {set.completed ? '✓' : '+'}
-                  </button>
-                </div>
-              ))}
+                   <div className="flex-1 space-y-1">
+                     <div className="flex items-center gap-2">
+                       <input
+                         type="number"
+                         value={set.weight || ''}
+                         onChange={(e) => {
+                           const w = parseFloat(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, w, set.reps || 0)
+                         }}
+                         placeholder="kg"
+                         className="w-16 bg-[var(--border)] text-[var(--color-text-primary)] rounded px-2 py-1 text-sm focus:outline-none"
+                         disabled={set.completed}
+                       />
+                       <span className="text-[var(--color-text-tertiary)] text-xs">x</span>
+                       <input
+                         type="number"
+                         value={set.reps || ''}
+                         onChange={(e) => {
+                           const r = parseInt(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
+                         }}
+                         placeholder="reps"
+                         className="w-16 bg-[var(--border)] text-[var(--color-text-primary)] rounded px-2 py-1 text-sm focus:outline-none"
+                         disabled={set.completed}
+                       />
+                     </div>
+                     {set.rir > 0 && <p className="text-xs text-[var(--color-text-tertiary)]">RIR {set.rir}</p>}
+                   </div>
+<button
+                     onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
+                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                       set.completed 
+                         ? 'bg-green-600 hover:bg-green-700' 
+                         : 'bg-[var(--input)] hover:bg-[var(--border)]'
+                     }`}
+                   >
+                      {set.completed ? '✓' : '+'}
+                   </button>
+                 </div>
+               ))}
               
               {!allCompleted && sets.length < exercise.sets_target && (
                  <button
