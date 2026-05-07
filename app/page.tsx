@@ -162,15 +162,20 @@ export default function HomePage() {
 
   if (!user) {
     return (
-       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-light mb-2">gym.</h1>
-           <p className="text-zinc-500 mb-8">Inicia sessió per començar</p>
-          <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
-            Entrar
-          </a>
-        </div>
-      </div>
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+         <div className="text-center space-y-6">
+           <h1 className="text-3xl font-light mb-2">gym.</h1>
+           <p className="text-zinc-500 mb-4">L'app ideal per als teus entrenaments. Registra les teves series, segueix el teu progrés i supera els teus límites.</p>
+           <div className="flex flex-col sm:flex-row gap-4">
+             <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
+               Inicia sessió
+             </a>
+             <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
+               Crea compte gratuït
+             </a>
+           </div>
+         </div>
+       </div>
     )
   }
 

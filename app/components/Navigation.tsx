@@ -28,19 +28,19 @@ export default function Navigation() {
   
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 px-6 py-4 flex justify-between items-center z-50">
-      <div className="flex gap-4">
-        {navItems.map((item) => (
-          <Link 
-        key={item.href} 
-        href={item.href} 
-        className={`text-xs tracking-wider transition-colors ${
-          pathname === item.href ? 'text-white' : 'text-zinc-400 hover:text-white'
-        }`}
-      >
-            {item.label}
-          </Link>
-        ))}
-      </div>
+       <div className="flex gap-4">
+         {navItems.map((item) => (
+           <Link 
+         key={item.href} 
+         href={item.href} 
+         className={`text-base tracking-wider transition-colors px-3 py-2 ${
+           pathname === item.href ? 'text-white' : 'text-zinc-400 hover:text-white'
+         }`}
+       >
+             {item.label}
+           </Link>
+         ))}
+       </div>
       <div className="flex items-center gap-3">
         <button
           onClick={toggleTheme}
