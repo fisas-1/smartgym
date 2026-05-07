@@ -106,15 +106,29 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="w-full mt-4 text-sm text-zinc-500 hover:text-white transition-colors"
-        >
-          {isLogin
-            ? "No tens compte? Crea'n un"
-            : "Ja tens compte? Entra aquí"
-          }
-        </button>
+         <div className="mt-4 space-y-2">
+           {isLogin ? (
+             <>
+               <p className="text-sm text-zinc-500">No tens compte? Crea&apos;n un</p>
+               <button
+                 onClick={() => setIsLogin(false)}
+                 className="w-full text-sm font-medium text-zinc-500 hover:text-white transition-colors"
+               >
+                 Registra&apos;t
+               </button>
+             </>
+           ) : (
+             <>
+               <p className="text-sm text-zinc-500">Ja tens compte? Entra aquí</p>
+               <button
+                 onClick={() => setIsLogin(true)}
+                 className="w-full text-sm font-medium text-zinc-500 hover:text-white transition-colors"
+               >
+                 Iniciar sessió
+               </button>
+             </>
+           )}
+         </div>
       </div>
     </div>
   )
