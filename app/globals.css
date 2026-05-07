@@ -2,3 +2,11 @@
 
 :root { --background: #000000; --foreground: #ffffff; }
 .dark { --background: #000000; --foreground: #ffffff; }
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

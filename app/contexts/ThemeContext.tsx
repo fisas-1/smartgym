@@ -14,7 +14,15 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export { ThemeContext }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme') as Theme
+      if (saved && (saved === 'dark' || saved === 'light')) {
+        return saved
+      }
+    }
+    return 'dark'
+  })
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -43,7 +51,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   if (!mounted) {
-    return <div className="dark">{children}</div>
+    return null
   }
 
   return (

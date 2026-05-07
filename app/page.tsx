@@ -209,7 +209,7 @@ export default function HomePage() {
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-3">Exercici</label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
               {getDisplayExercises().map((ex) => (
                 <button
                   key={ex}
@@ -292,7 +292,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
         <div className="pt-4">
           <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Recents</p>
           {savedSets.length === 0 ? (
-            <p className="text-zinc-600 text-sm">Sense histÃ²ric</p>
+            <p className="text-zinc-600 text-sm">Sense històric</p>
           ) : (
             <div className="space-y-2">
               {savedSets.map((set) => (
