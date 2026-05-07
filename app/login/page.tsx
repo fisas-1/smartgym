@@ -64,7 +64,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@exemple.com"
-                  className="w-full bg-zinc-900 text-white rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                  className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
                   required
                   autoComplete="email"
                 />
@@ -101,7 +101,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-2xl font-medium bg-white text-black hover:opacity-90 disabled:opacity-50 transition-colors"
+               className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               {loading ? (isLogin ? 'Accedint...' : 'Creant...') : (isLogin ? 'Inicia sessió' : 'Crea compte')}
             </button>

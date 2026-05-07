@@ -27,14 +27,14 @@ export default function Navigation() {
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 px-6 py-4 flex justify-between items-center z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card-foreground)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50">
        <div className="flex gap-4">
          {navItems.map((item) => (
            <Link 
          key={item.href} 
          href={item.href} 
          className={`text-base tracking-wider transition-colors px-3 py-2 ${
-           pathname === item.href ? 'text-white' : 'text-zinc-400 hover:text-white'
+            pathname === item.href ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]/60 hover:text-[var(--foreground)]'
          }`}
        >
              {item.label}
@@ -43,8 +43,8 @@ export default function Navigation() {
        </div>
       <div className="flex items-center gap-3">
         <button
-          onClick={toggleTheme}
-          className="text-zinc-400 hover:text-white transition-colors p-2"
+           onClick={toggleTheme}
+           className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-2"
           title={theme === 'dark' ? 'Canviar a tema clar' : 'Canviar a tema fosc'}
         >
           {theme === 'dark' ? '☀️' : '🌙'}
@@ -56,7 +56,7 @@ export default function Navigation() {
             <span className="text-xs text-zinc-400 hidden sm:inline">Hola</span>
             <button
               onClick={() => signOut()}
-              className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1"
+               className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1"
             >
               Sortir
             </button>
@@ -64,7 +64,7 @@ export default function Navigation() {
         ) : (
           <Link
             href="/login"
-            className="text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1"
+             className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1"
           >
             Entrar
           </Link>

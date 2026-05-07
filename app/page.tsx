@@ -167,7 +167,7 @@ export default function HomePage() {
            <h1 className="text-3xl font-light mb-2">gym.</h1>
            <p className="text-zinc-500 mb-4">L'app ideal per als teus entrenaments. Registra les teves series, segueix el teu progrés i supera els teus límites.</p>
            <div className="flex flex-col sm:flex-row gap-4">
-             <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-white text-black hover:bg-zinc-200 transition-colors">
+            <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:bg-[var(--input)] transition-colors">
                Inicia sessió
              </a>
              <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
@@ -195,7 +195,7 @@ export default function HomePage() {
         </div>
 
         {suggestion && (
-          <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+          <div className="px-4 py-3 bg-[var(--input)] border border-[var(--border)] rounded-2xl">
             <p className="text-zinc-300 text-sm">{suggestion}</p>
           </div>
         )}
@@ -216,9 +216,9 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setExercise(ex)}
 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                      exercise === ex
-                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'bg-zinc-900 text-zinc-400'
+                       exercise === ex
+                         ? 'bg-[var(--card-foreground)] text-[var(--background)]'
+                         : 'bg-[var(--input)] text-[var(--foreground)]'
                     }`}
                 >
                   {ex}
@@ -227,7 +227,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
                   )}
                 </button>
               ))}
-              <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-zinc-900 text-zinc-400">+</button>
+               <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-[var(--input)] text-[var(--foreground)]">+</button>
             </div>
           </div>
 
@@ -242,7 +242,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
                 onChange={(e) => setWeight(e.target.value)}
                 placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? "0 (pes corporal)" : "0") : "0"}
                 disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
-                className="w-full bg-zinc-900 text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:opacity-50"
+                 className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50"
               />
               {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
                 <button
@@ -275,7 +275,7 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
                 placeholder="0"
-                className="w-full bg-zinc-900 text-white text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
               />
             </div>
             </div>
@@ -313,8 +313,8 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
-          <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-[var(--card-foreground)]/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
+           <div className="bg-[var(--card)] rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-light text-white mb-4">Nou exercici</h3>
             <input
               type="text"
@@ -322,13 +322,13 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
               onChange={(e) => setNewExerciseName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
               placeholder="Nom de l'exercici"
-              className="w-full bg-zinc-900 text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+               className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
               autoFocus
             />
             {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
             <div className="flex gap-3">
               <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel</button>
-              <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-white text-black font-light">Afegir</button>
+               <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-[var(--card)] text-[var(--card-foreground)] font-light">Afegir</button>
             </div>
           </div>
         </div>

@@ -1,7 +1,46 @@
 @import "tailwindcss";
 
-:root { --background: #ffffff; --foreground: #000000; }
-.dark { --background: #000000; --foreground: #ffffff; }
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --border: #272727;
+  --input: #272727;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+@layer components {
+  .bg-app-card {
+    background-color: var(--card);
+  }
+  .text-app-fg {
+    color: var(--card-foreground);
+  }
+  .border-app-border {
+    border-color: var(--border);
+  }
+  .bg-app-input {
+    background-color: var(--input);
+  }
+}
 
 .scrollbar-hidden {
   -ms-overflow-style: none;
