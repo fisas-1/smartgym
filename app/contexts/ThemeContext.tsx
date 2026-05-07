@@ -14,35 +14,30 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export { ThemeContext }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme | null>(null)
+  const [theme, setTheme] = useState<Theme>('dark')
 
+  // Client-side only: load theme from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('theme') as Theme
-    if (saved && (saved === 'dark' || saved === 'light')) {
-      setTheme(saved)
+    const initialTheme = (saved && (saved === 'dark' || saved === 'light')) ? saved : 'dark'
+    setTheme(initialTheme)
+    // Apply the class to document.documentElement
+    if (initialTheme === 'dark') {
+      document.documentElement.classList.add('dark')
     } else {
-      setTheme('dark')
+      document.documentElement.classList.remove('dark')
     }
   }, [])
 
-  useEffect(() => {
-    if (theme === null) return
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-  }, [theme])
-
   const toggleTheme = () => {
-    if (theme === null) return
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
-  }
-
-  if (theme === null) {
-    return null
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      // Apply class toggle to document.documentElement
+      document.documentElement.classList.toggle('dark')
+      // Save to localStorage
+      localStorage.setItem('theme', next)
+      return next
+    })
   }
 
   return (
