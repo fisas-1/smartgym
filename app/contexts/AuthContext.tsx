@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: { username },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-dominio.vercel.app'}/auth/callback`
       }
     })
     if (error) return { error: error.message }
