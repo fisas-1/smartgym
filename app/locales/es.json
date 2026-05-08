@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "workouts": "Entrenamientos",
+    "profile": "Perfil",
+    "friends": "Amigos",
+    "stats": "Estadísticas",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "theme_light": "Cambiar a tema claro",
+    "theme_dark": "Cambiar a tema oscuro",
+    "hello": "Hola"
+  },
+}

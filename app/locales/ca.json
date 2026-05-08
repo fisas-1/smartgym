@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "home": "Inici",
+    "workouts": "Entrenaments",
+    "profile": "Perfil",
+    "friends": "Amics",
+    "stats": "Estadístiques",
+    "login": "Inici de sessió",
+    "logout": "Tancar sessió",
+    "language": "Idioma",
+    "theme_light": "Canvia a tema clar",
+    "theme_dark": "Canvia a tema fosc",
+    "hello": "Hola"
+  },
+}

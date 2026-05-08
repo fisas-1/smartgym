@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "home": "Home",
+    "workouts": "Workouts",
+    "profile": "Profile",
+    "friends": "Friends",
+    "stats": "Stats",
+    "login": "Login",
+    "logout": "Logout",
+    "language": "Language",
+    "theme_light": "Switch to light theme",
+    "theme_dark": "Switch to dark theme",
+    "hello": "Hello"
+  },
+  "home": {
+    "title": "Track your training",
+    "description": "Log your workouts, track progress, and achieve your fitness goals."
+  },
+  "workouts": {
+    "title": "Workouts",
+    "newWorkout": "New Workout",
+    "save": "Save",
+    "setSaved": "Set saved!",
+    "exercise": "Exercise",
+    "sets": "Sets",
+    "reps": "Reps",
+    "weight": "Weight",
+    "addSet": "Add Set",
+    "restTime": "Rest Time (seconds)"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "email": "Email"
+  },
+  "friends": {
+    "title": "Friends",
+    "addFriend": "Add Friend",
+    "search": "Search..."
+  },
+  "stats": {
+    "title": "Statistics",
+    "totalWorkouts": "Total Workouts",
+    "totalSets": "Total Sets",
+    "totalReps": "Total Reps"
+  },
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}
