@@ -359,7 +359,6 @@ if (error) {
         .from('routine_exercises')
         .insert({
           routine_id: selectedRoutine.id,
-          name: newExerciseName.trim(),
           exercise: newExerciseName.trim(),
           sets_target: 3,
           reps_min: 8,

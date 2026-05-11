@@ -22,8 +22,7 @@ const LanguageSelector = () => {
   </span>
   <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </path>
-</svg>
+  </svg>
 </button>
 
       <div className="absolute top-full right-0 mt-1 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-100" style={{position: 'absolute'}}>
