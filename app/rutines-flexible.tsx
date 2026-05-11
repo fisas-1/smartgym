@@ -475,7 +475,8 @@ if (error) {
             reps: Math.floor(((exercise.reps_min ?? 0) + (exercise.reps_max ?? 0)) / 2),
             rir: 0,
             one_rm: recommendedWeight ? Math.round(recommendedWeight / (1.0278 - 0.0278 * (exercise.reps_min ?? 0))) : 0,
-            user_id: user!.id
+            user_id: user!.id,
+            routine_id: selectedRoutine?.id || null
           })
           .select()
           .maybeSingle()

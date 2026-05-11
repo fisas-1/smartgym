@@ -76,6 +76,8 @@
     "required": "Requerit",
     "exists": "Ja existeix",
     "dbError": "Error: La base de dades necessita configuració. Veure SOLUZIONE.md",
-    "saveError": "Error al desar: "
+    "saveError": "Error al desar: ",
+    "login": "Inici de sessió",
+    "register": "Registre't"
   }
 }

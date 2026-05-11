@@ -76,6 +76,8 @@
     "required": "Requerido",
     "exists": "Ya existe",
     "dbError": "Error: La base de datos necesita configuración. Ver SOLUZIONE.md",
-    "saveError": "Error al guardar: "
+    "saveError": "Error al guardar: ",
+    "login": "Iniciar sesión",
+    "register": "Registrarse"
   }
 }

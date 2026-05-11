@@ -76,6 +76,8 @@
     "required": "Required",
     "exists": "Already exists",
     "dbError": "Error: Database needs configuration. See SOLUZIONE.md",
-    "saveError": "Error saving: "
+    "saveError": "Error saving: ",
+    "login": "Login",
+    "register": "Register"
   }
 }
