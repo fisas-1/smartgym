@@ -12,4 +12,67 @@
     "theme_dark": "Cambiar a tema oscuro",
     "hello": "Hola"
   },
+  "home": {
+    "title": "Registra tu entrenamiento",
+    "description": "Registra tus entrenamientos, sigue tu progreso y alcanza tus metas de fitness.",
+    "welcome": "La app ideal para tus entrenamientos. Registra tus series, sigue tu progreso y supera tus límites.",
+    "oneRMLabel": "1RM estimado",
+    "recent": "Recientes",
+    "noHistory": "Sin historial",
+    "suggestionFormat": "Hoy: {weight}kg ({improvement}%↑)"
+  },
+  "workouts": {
+    "title": "Entrenamientos",
+    "newWorkout": "Nuevo Entrenamiento",
+    "save": "Guardar",
+    "setSaved": "¡Serie guardada!",
+    "exercise": "Ejercicio",
+    "sets": "Series",
+    "reps": "Repeticiones",
+    "weight": "Peso",
+    "addSet": "Añadir serie",
+    "restTime": "Tiempo de descanso (segundos)",
+    "bodyweight": "Peso corporal"
+  },
+  "profile": {
+    "title": "Perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico"
+  },
+  "friends": {
+    "title": "Amigos",
+    "addFriend": "Añadir amigo",
+    "search": "Buscar..."
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "totalWorkouts": "Total de entrenamientos",
+    "totalSets": "Total de series",
+    "totalReps": "Total de repeticiones"
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Iniciar sesión",
+    "register": "Registrarse",
+    "forgotPassword": "¿Olvidaste tu contraseña?"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "error": "Error",
+    "success": "Éxito",
+    "newExercise": "Nuevo ejercicio",
+    "exerciseName": "Nombre del ejercicio",
+    "add": "Añadir",
+    "required": "Requerido",
+    "exists": "Ya existe",
+    "dbError": "Error: La base de datos necesita configuración. Ver SOLUZIONE.md",
+    "saveError": "Error al guardar: "
+  }
 }

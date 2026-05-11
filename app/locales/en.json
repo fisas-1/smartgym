@@ -14,7 +14,12 @@
   },
   "home": {
     "title": "Track your training",
-    "description": "Log your workouts, track progress, and achieve your fitness goals."
+    "description": "Log your workouts, track progress, and achieve your fitness goals.",
+    "welcome": "The ideal app for your workouts. Log your sets, track your progress, and surpass your limits.",
+    "oneRMLabel": "Estimated 1RM",
+    "recent": "Recent",
+    "noHistory": "No history",
+    "suggestionFormat": "Today: {weight}kg ({improvement}%↑)"
   },
   "workouts": {
     "title": "Workouts",
@@ -26,7 +31,8 @@
     "reps": "Reps",
     "weight": "Weight",
     "addSet": "Add Set",
-    "restTime": "Rest Time (seconds)"
+    "restTime": "Rest Time (seconds)",
+    "bodyweight": "Bodyweight"
   },
   "profile": {
     "title": "Profile",
@@ -58,7 +64,15 @@
     "delete": "Delete",
     "confirm": "Confirm",
     "loading": "Loading...",
+    "saving": "Saving...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "newExercise": "New exercise",
+    "exerciseName": "Exercise name",
+    "add": "Add",
+    "required": "Required",
+    "exists": "Already exists",
+    "dbError": "Error: Database needs configuration. See SOLUZIONE.md",
+    "saveError": "Error saving: "
   }
 }

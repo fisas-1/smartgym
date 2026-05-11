@@ -12,4 +12,67 @@
     "theme_dark": "Canvia a tema fosc",
     "hello": "Hola"
   },
+  "home": {
+    "title": "Fes un seguiment dels teus entrenaments",
+    "description": "Registra els teus entrenaments, segueix el progrés i assol els objectius de forma física.",
+    "welcome": "L'app ideal per als teus entrenaments. Registra les teves series, segueix el teu progrés i supera els teus límits.",
+    "oneRMLabel": "1RM estimat",
+    "recent": "Recents",
+    "noHistory": "Sense històric",
+    "suggestionFormat": "Avui: {weight}kg ({improvement}%â†‘)"
+  },
+  "workouts": {
+    "title": "Entrenaments",
+    "newWorkout": "Nou Entrenament",
+    "save": "Desa",
+    "setSaved": "Sèrie desada!",
+    "exercise": "Exercici",
+    "sets": "Sèries",
+    "reps": "Repeticions",
+    "weight": "Pes",
+    "addSet": "Afegeix sèrie",
+    "restTime": "Temps de descans (segons)",
+    "bodyweight": "Pes corporal"
+  },
+  "profile": {
+    "title": "Perfil",
+    "name": "Nom",
+    "email": "Correu electrònic"
+  },
+  "friends": {
+    "title": "Amics",
+    "addFriend": "Afegeix amic",
+    "search": "Cerca..."
+  },
+  "stats": {
+    "title": "Estadístiques",
+    "totalWorkouts": "Total d'entrenaments",
+    "totalSets": "Total de sèries",
+    "totalReps": "Total de repeticions"
+  },
+  "login": {
+    "title": "Inici de sessió",
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "submit": "Inicia sessió",
+    "register": "Registre't",
+    "forgotPassword": "Has oblidat la teva contrasenya?"
+  },
+  "common": {
+    "save": "Desa",
+    "cancel": "Cancel·la",
+    "delete": "Esborra",
+    "confirm": "Confirma",
+    "loading": "Esperant...",
+    "saving": "Desant...",
+    "error": "Error",
+    "success": "Èxit",
+    "newExercise": "Nou exercici",
+    "exerciseName": "Nom de l'exercici",
+    "add": "Afegir",
+    "required": "Requerit",
+    "exists": "Ja existeix",
+    "dbError": "Error: La base de dades necessita configuració. Veure SOLUZIONE.md",
+    "saveError": "Error al desar: "
+  }
 }

@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO } from '@/types'
+import { useTranslation } from './contexts/LanguageContext'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
   return Math.round(weight / (1.0278 - 0.0278 * reps))
 }
 
-async function analyzeOverload(exerciseName: string): Promise<string | null> {
+async function analyzeOverload(exerciseName: string, t: (key: string) => string): Promise<string | null> {
   const { data: logs } = await supabase
     .from('workout_logs')
     .select('*')
@@ -32,11 +33,12 @@ async function analyzeOverload(exerciseName: string): Promise<string | null> {
   const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
   const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
 
-  return `Avui: ${targetWeight}kg (${Math.round(improvement)}%â†‘)`
+  return t('home.suggestionFormat', { weight: targetWeight, improvement: Math.round(improvement) })
 }
 
 export default function HomePage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
@@ -67,8 +69,8 @@ export default function HomePage() {
 
   useEffect(() => { loadSavedSets() }, [user])
     useEffect(() => {
-      if (exercise) analyzeOverload(exercise).then(setSuggestion)
-    }, [exercise])
+      if (exercise) analyzeOverload(exercise, t).then(setSuggestion)
+    }, [exercise, t])
 
     const getDisplayExercises = () => {
       // Filter exercises to show base versions and custom exercises
@@ -160,24 +162,24 @@ export default function HomePage() {
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-         <div className="text-center space-y-6">
-           <h1 className="text-3xl font-light mb-2">gym.</h1>
-           <p className="text-zinc-500 mb-4">L'app ideal per als teus entrenaments. Registra les teves series, segueix el teu progrés i supera els teus límites.</p>
-           <div className="flex flex-col sm:flex-row gap-4">
-            <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:bg-[var(--input)] transition-colors">
-               Inicia sessió
-             </a>
-             <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
-               Crea compte gratuït
-             </a>
-           </div>
-         </div>
-       </div>
-    )
-  }
+    if (!user) {
+      return (
+        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+          <div className="text-center space-y-6">
+            <h1 className="text-3xl font-light mb-2">gym.</h1>
+            <p className="text-zinc-500 mb-4">{t('home.welcome')}</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:bg-[var(--input)] transition-colors">
+                {t('common.login')}
+              </a>
+              <a href="/login" className="flex-1 py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
+                {t('common.register')}
+              </a>
+            </div>
+          </div>
+        </div>
+      )
+    }
 
   return (
      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
@@ -185,14 +187,14 @@ export default function HomePage() {
             <h1 className="text-xl font-medium tracking-tight text-[var(--color-text-secondary)]">gym.</h1>
       </div>
 
-      <div className="px-6 space-y-6">
-        <div className="py-8">
-           <p className="text-[var(--color-text-tertiary)] text-sm mb-1">1RM estimat</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
-            <span className="text-[var(--color-text-tertiary)] text-xl">kg</span>
-          </div>
-        </div>
+       <div className="px-6 space-y-6">
+         <div className="py-8">
+            <p className="text-[var(--color-text-tertiary)] text-sm mb-1">{t('home.oneRMLabel')}</p>
+           <div className="flex items-baseline gap-1">
+             <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
+             <span className="text-[var(--color-text-tertiary)] text-xl">kg</span>
+           </div>
+         </div>
 
         {suggestion && (
           <div className="px-4 py-3 bg-[var(--input)] border border-[var(--border)] rounded-2xl">
@@ -206,9 +208,9 @@ export default function HomePage() {
           </div>
         )}
 
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-             <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-3">Exercici</label>
+         <form onSubmit={handleSave} className="space-y-4">
+           <div>
+              <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-3">{t('workouts.exercise')}</label>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
               {getDisplayExercises().map((ex) => (
                 <button
@@ -231,44 +233,44 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
             </div>
           </div>
 
-          <div className="space-y-4">
-            {/* PES / PES CORPORAL section */}
-            <div>
-               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">PES</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? "0 (pes corporal)" : "0") : "0"}
-                disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
-                 className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50"
-              />
-              {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
-                <button
-                  type="button"
-                  onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
-                  style={{
-                    backgroundColor: weightType === "corporal" ? "white" : "#27272a",
-                    color: weightType === "corporal" ? "black" : "#a1a1aa",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                    transition: "all 0.2s",
-                    border: "none",
-                    marginTop: "8px",
-                    cursor: "pointer"
-                  }}
-                >
-                  {weightType === "corporal" ? "Pes corporal ✓" : "Pes corporal"}
-                </button>
-              )}
-            </div>
+           <div className="space-y-4">
+             {/* PES / PES CORPORAL section */}
+             <div>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.weight')}</label>
+               <input
+                 type="number"
+                 inputMode="numeric"
+                 value={weight}
+                 onChange={(e) => setWeight(e.target.value)}
+                 placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
+                 disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
+                  className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50"
+               />
+               {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
+                 <button
+                   type="button"
+                   onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
+                   style={{
+                     backgroundColor: weightType === "corporal" ? "white" : "#27272a",
+                     color: weightType === "corporal" ? "black" : "#a1a1aa",
+                     padding: "8px 16px",
+                     borderRadius: "8px",
+                     fontSize: "12px",
+                     fontWeight: "500",
+                     transition: "all 0.2s",
+                     border: "none",
+                     marginTop: "8px",
+                     cursor: "pointer"
+                   }}
+                 >
+                   {weightType === "corporal" ? `${t('workouts.bodyweight')} ✓` : t('workouts.bodyweight')}
+                 </button>
+               )}
+             </div>
 
-            {/* REPS section - now separate and below PES */}
-            <div>
-               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">REPS</label>
+             {/* REPS section - now separate and below PES */}
+             <div>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.reps')}</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -280,19 +282,19 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
             </div>
             </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 disabled:opacity-50"
-          >
-            {loading ? 'Guardant...' : 'Guardar'}
-          </button>
+           <button
+             type="submit"
+             disabled={loading}
+             className="w-full py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 disabled:opacity-50"
+           >
+             {loading ? t('common.saving') : t('common.save')}
+           </button>
         </form>
 
         <div className="pt-4">
-           <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Recents</p>
-          {savedSets.length === 0 ? (
-             <p className="text-[var(--color-text-tertiary)] text-sm">Sense històric</p>
+           <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('home.recent')}</p>
+           {savedSets.length === 0 ? (
+              <p className="text-[var(--color-text-tertiary)] text-sm">{t('home.noHistory')}</p>
           ) : (
             <div className="space-y-2">
               {savedSets.map((set) => (
@@ -315,24 +317,24 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
       {showModal && (
         <div className="fixed inset-0 bg-[var(--card-foreground)]/80 z-50 flex items-center justify-center p-6" onClick={() => setShowModal(false)}>
            <div className="bg-[var(--card)] rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-             <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">Nou exercici</h3>
-            <input
-              type="text"
-              value={newExerciseName}
-              onChange={(e) => setNewExerciseName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
-              placeholder="Nom de l'exercici"
-               className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
-              autoFocus
-            />
-            {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
-            <div className="flex gap-3">
-               <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] font-light">Cancel</button>
-               <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-[var(--card)] text-[var(--card-foreground)] font-light">Afegir</button>
-            </div>
-          </div>
-        </div>
-      )}
+              <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('common.newExercise')}</h3>
+             <input
+               type="text"
+               value={newExerciseName}
+               onChange={(e) => setNewExerciseName(e.target.value)}
+               onKeyDown={(e) => e.key === 'Enter' && handleAddExercise()}
+               placeholder={t('common.exerciseName')}
+                className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
+               autoFocus
+             />
+             {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+             <div className="flex gap-3">
+                <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--input)] text-[var(--color-text-primary)] font-light">{t('common.cancel')}</button>
+                <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-[var(--card)] text-[var(--card-foreground)] font-light">{t('common.add')}</button>
+             </div>
+           </div>
+         </div>
+       )}
 
       <div className="h-20" />
     </div>
