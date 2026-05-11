@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     if (result?.error) {
       if (result.error.includes('Invalid login credentials')) {
-        setError('Credencials incorrectes. Verifica email i contrasenya.')
+        setError(t('login.invalidCredentials'))
       } else {
         setError(result.error)
       }
@@ -48,7 +48,7 @@ export default function LoginPage() {
   async function handleForgotPassword(e: FormEvent) {
     e.preventDefault()
     if (!email.trim()) {
-      setError('Introdueix el teu correu electrònic')
+      setError(t('login.enterEmail'))
       return
     }
     setError(null)
@@ -65,7 +65,7 @@ export default function LoginPage() {
   async function handleForgotUsername(e: FormEvent) {
     e.preventDefault()
     if (!email.trim()) {
-      setError('Introdueix el teu correu electrònic')
+      setError(t('login.enterEmail'))
       return
     }
     setError(null)
@@ -89,7 +89,7 @@ export default function LoginPage() {
       return (
         <div className="text-center">
           <p className="text-green-400 text-sm mb-4">
-            {t('login.forgotPassword')}<br />
+            {t('login.resetPassword')}<br />
             {t('login.resetPasswordHint')}
           </p>
           <button
@@ -144,7 +144,7 @@ export default function LoginPage() {
       return (
         <div className="text-center">
           <p className="text-green-400 text-sm mb-4">
-            S'ha enviat un recordatori del teu usuari al correu electrònic.
+            {t('login.usernameReminderSent')}
           </p>
           <button
             onClick={() => { setShowForgotUsername(false); setUsernameReminderSent(false); setEmail(''); }}
@@ -158,7 +158,7 @@ export default function LoginPage() {
     return (
       <form onSubmit={handleForgotUsername} className="space-y-4">
         <p className="text-sm text-zinc-400 mb-2">
-          Introdueix el teu correu electrònic i t'enviarem un recordatori del teu nom d'usuari.
+          {t('login.resetUsernameHint')}
         </p>
         <div>
           <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
@@ -199,7 +199,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">gym.</h1>
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
-            <h3 className="text-lg font-light text-white mb-4">Restablir contrasenya</h3>
+            <h3 className="text-lg font-light text-white mb-4">{t('login.resetPassword')}</h3>
             {renderForgotPasswordForm()}
           </div>
         </div>
@@ -211,9 +211,11 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">gym.</h1>
+          <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">
+            gym.
+          </h1>
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
-            <h3 className="text-lg font-light text-white mb-4">Recordatori d'usuari</h3>
+            <h3 className="text-lg font-light text-white mb-4">{t('login.reminderUsername')}</h3>
             {renderForgotUsernameForm()}
           </div>
         </div>
@@ -250,12 +252,12 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Usuari</label>
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('login.username')}</label>
                <input
                  type="text"
                  value={username}
                  onChange={(e) => setUsername(e.target.value)}
-                 placeholder="Nom d'usuari"
+                 placeholder={t('login.placeholderUsername')}
                  className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
                 required
                 />
@@ -292,7 +294,7 @@ export default function LoginPage() {
             )}
 
             <div>
-               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Contrasenya</label>
+               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('login.password')}</label>
                <div className="relative">
                  <input
                    type={showPassword ? "text" : "password"}
@@ -307,7 +309,7 @@ export default function LoginPage() {
                    type="button"
                    onClick={() => setShowPassword(!showPassword)}
                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] min-w-[44px] min-h-[44px] flex items-center justify-center"
-                   aria-label="Mostrar o amagar contrasenya"
+                   aria-label={t('login.togglePassword')}
                  >
                    {showPassword ? '👁️' : '👁️‍🗨️'}
                  </button>
@@ -323,7 +325,7 @@ export default function LoginPage() {
                disabled={loading}
                className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors min-h-[44px]"
             >
-               {loading ? (isLogin ? 'Accedint...' : 'Creant...') : (isLogin ? 'Inicia sessió' : 'Crea compte')}
+               {loading ? (isLogin ? t('login.loggingIn') : t('login.registering')) : (isLogin ? t('common.login') : t('common.register'))}
             </button>
           </form>
 
