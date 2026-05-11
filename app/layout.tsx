@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/Navigation";
+import CookiesBanner from "./components/CookiesBanner";
 import Providers from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="ca" suppressHydrationWarning>
       <body className={`${inter.className} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <Providers>
+          <CookiesBanner />
           {children}
           <Navigation />
         </Providers>

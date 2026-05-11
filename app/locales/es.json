@@ -79,5 +79,10 @@
     "saveError": "Error al guardar: ",
     "login": "Iniciar sesión",
     "register": "Registrarse"
+  },
+  "cookies": {
+    "message": "Usamos cookies esenciales para el funcionamiento. Más información en nuestras políticas.",
+    "accept": "Aceptar",
+    "more": "Más info"
   }
 }

@@ -44,36 +44,36 @@ export default function Navigation() {
             </Link>
           ))}
       </div>
-      <div className="flex items-center gap-3">
-        <LanguageSelector />
-        <button
-          onClick={toggleTheme}
-          className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-2"
-          title={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        {loading ? (
-          <span className="text-xs text-zinc-400">...</span>
-        ) : user ? (
-          <>
-            <span className="text-xs text-zinc-400 hidden sm:inline">{t('nav.hello')}</span>
-            <button
-              onClick={() => signOut()}
-              className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1"
-            >
-              {t('nav.logout')}
-            </button>
-          </>
-        ) : (
-          <Link
-            href="/login"
-            className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1"
-          >
-            {t('nav.login')}
-          </Link>
-        )}
-      </div>
+<div className="flex items-center gap-3">
+         <LanguageSelector />
+         <button
+           onClick={toggleTheme}
+           className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+           title={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+         >
+           {theme === 'dark' ? '☀️' : '🌙'}
+         </button>
+         {loading ? (
+           <span className="text-xs text-zinc-400">...</span>
+         ) : user ? (
+           <>
+             <span className="text-xs text-zinc-400 hidden sm:inline">{t('nav.hello')}</span>
+             <button
+               onClick={() => signOut()}
+               className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center"
+             >
+               {t('nav.logout')}
+             </button>
+           </>
+         ) : (
+           <Link
+             href="/login"
+             className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center"
+           >
+             {t('nav.login')}
+           </Link>
+         )}
+       </div>
     </nav>
   )
 }

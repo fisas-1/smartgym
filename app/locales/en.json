@@ -13,7 +13,8 @@
     "language": "Language",
     "theme_light": "Switch to light theme",
     "theme_dark": "Switch to dark theme",
-    "hello": "Hello"
+    "hello": "Hello",
+    "privacy": "Privacy"
   },
   "home": {
     "title": "Track your training",
@@ -79,5 +80,10 @@
     "saveError": "Error saving: ",
     "login": "Login",
     "register": "Register"
+  },
+  "cookies": {
+    "message": "We use essential cookies for functionality. Learn more in our policies.",
+    "accept": "Accept",
+    "more": "More info"
   }
 }

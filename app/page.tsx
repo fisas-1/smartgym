@@ -215,23 +215,23 @@ export default function HomePage() {
               <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-3">{t('workouts.exercise')}</label>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
               {getDisplayExercises().map((ex) => (
-                <button
-                  key={ex}
-                  type="button"
-                  onClick={() => setExercise(ex)}
-className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                       exercise === ex
-                         ? 'bg-[var(--card-foreground)] text-[var(--background)]'
-                         : 'bg-[var(--input)] text-[var(--foreground)]'
-                    }`}
-                >
+<button
+                   key={ex}
+                   type="button"
+                   onClick={() => setExercise(ex)}
+                   className={`px-4 py-3 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${
+                        exercise === ex
+                          ? 'bg-[var(--card-foreground)] text-[var(--background)]'
+                          : 'bg-[var(--input)] text-[var(--foreground)]'
+                     }`}
+                 >
                   {ex}
-                  {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
-                     <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-1 text-[var(--color-text-tertiary)]">x</span>
-                  )}
+{!DEFAULT_EXERCISES.includes(ex as Exercise) && (
+                      <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-2 w-8 h-8 flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-red-400 rounded-full">x</span>
+                   )}
                 </button>
               ))}
-               <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-sm bg-[var(--input)] text-[var(--foreground)]">+</button>
+               <button type="button" onClick={() => setShowModal(true)} className="px-4 py-2 rounded-full text-base bg-[var(--input)] text-[var(--foreground)] min-h-[44px]">+</button>
             </div>
           </div>
 
@@ -248,26 +248,19 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
                   disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
                   className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50`}
                 />
-               {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
-                 <button
-                   type="button"
-                   onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
-                   style={{
-                     backgroundColor: weightType === "corporal" ? "white" : "#27272a",
-                     color: weightType === "corporal" ? "black" : "#a1a1aa",
-                     padding: "8px 16px",
-                     borderRadius: "8px",
-                     fontSize: "12px",
-                     fontWeight: "500",
-                     transition: "all 0.2s",
-                     border: "none",
-                     marginTop: "8px",
-                     cursor: "pointer"
-                   }}
-                 >
-                   {weightType === "corporal" ? `${t('workouts.bodyweight')} ✓` : t('workouts.bodyweight')}
-                 </button>
-               )}
+{EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
+                  <button
+                    type="button"
+                    onClick={() => setWeightType(weightType === "corporal" ? "pes" : "corporal")}
+                    className="mt-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px]"
+                    style={{
+                      backgroundColor: weightType === "corporal" ? "white" : "#27272a",
+                      color: weightType === "corporal" ? "black" : "#a1a1aa",
+                    }}
+                  >
+                    {weightType === "corporal" ? `${t('workouts.bodyweight')} ✓` : t('workouts.bodyweight')}
+                  </button>
+                )}
              </div>
 
              {/* REPS section - now separate and below PES */}

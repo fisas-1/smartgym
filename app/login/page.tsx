@@ -31,18 +31,41 @@ export default function LoginPage() {
     setLoading(false)
 
     if (result?.error) {
-      setError(result.error)
+      if (result.error.includes('Invalid login credentials')) {
+        setError('Credencials incorrectes. Verifica email i contrasenya.')
+      } else {
+        setError(result.error)
+      }
     }
   }
 
-  return (
-     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-       <div className="w-full max-w-sm">
-         <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">
-           gym.
-         </h1>
- 
-         <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
+return (
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">
+          gym.
+        </h1>
+  
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
+          <div className="flex mb-6 bg-zinc-900 rounded-full p-1">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
+                isLogin ? 'bg-white text-black' : 'text-zinc-400'
+              }`}
+            >
+              {t('common.login')}
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
+                !isLogin ? 'bg-white text-black' : 'text-zinc-400'
+              }`}
+            >
+              {t('common.register')}
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Usuari</label>
@@ -53,10 +76,25 @@ export default function LoginPage() {
                  placeholder="Nom d'usuari"
                  className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
                 required
-              />
+               />
             </div>
 
-            {isLogin ? null : (
+            {!isLogin && (
+              <div>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@exemple.com"
+                  className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            )}
+
+            {isLogin && (
               <div>
                 <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
                 <input
@@ -80,56 +118,32 @@ export default function LoginPage() {
                    onChange={(e) => setPassword(e.target.value)}
                    placeholder="••••••••"
                    className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] pr-10"
-                  required
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                />
+                   required
+                   autoComplete={isLogin ? "current-password" : "new-password"}
+                 />
                  <button
                    type="button"
                    onClick={() => setShowPassword(!showPassword)}
-                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] min-w-[44px] min-h-[44px] flex items-center justify-center"
                    aria-label="Mostrar o amagar contrasenya"
                  >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
-                </button>
-              </div>
+                   {showPassword ? '👁️' : '👁️‍🗨️'}
+                 </button>
+               </div>
             </div>
 
             {error && (
-              <p className="text-red-400 text-sm">{error}</p>
+               <p className="text-red-400 text-sm">{error}</p>
             )}
 
             <button
-              type="submit"
-              disabled={loading}
-               className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors"
+               type="submit"
+               disabled={loading}
+                className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors min-h-[44px]"
             >
-              {loading ? (isLogin ? 'Accedint...' : 'Creant...') : (isLogin ? 'Inicia sessió' : 'Crea compte')}
+               {loading ? (isLogin ? 'Accedint...' : 'Creant...') : (isLogin ? 'Inicia sessió' : 'Crea compte')}
             </button>
           </form>
-
-             <div className="mt-4 text-center">
-             {isLogin ? (
-               <p className="text-[var(--color-text-tertiary)] text-sm">
-                 No tens compte?{' '}
-                 <button
-                   onClick={() => setIsLogin(false)}
-                   className="text-[var(--color-text-primary)] font-medium hover:underline transition-colors"
-                 >
-                   Registra&apos;t
-                 </button>
-               </p>
-             ) : (
-               <p className="text-[var(--color-text-tertiary)] text-sm">
-                 Ja tens compte?{' '}
-                 <button
-                   onClick={() => setIsLogin(true)}
-                   className="text-[var(--color-text-primary)] font-medium hover:underline transition-colors"
-                 >
-                   Inicia sessió
-                 </button>
-               </p>
-             )}
-           </div>
         </div>
       </div>
     </div>

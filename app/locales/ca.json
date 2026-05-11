@@ -79,5 +79,10 @@
     "saveError": "Error al desar: ",
     "login": "Inici de sessió",
     "register": "Registre't"
+  },
+  "cookies": {
+    "message": "Utilitzem cookies essentials per al funcionament. Més informació a les polítiques.",
+    "accept": "Acceptar",
+    "more": "Més info"
   }
 }
