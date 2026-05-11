@@ -10,6 +10,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error?: string }>
   signUp: (email: string, password: string, username: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ error?: string }>
   loading: boolean
 }
 
@@ -72,8 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  async function resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-dominio.vercel.app'}/auth/callback`
+    })
+    if (error) return { error: error.message }
+    return {}
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut, resetPassword, loading }}>
       {children}
     </AuthContext.Provider>
   )

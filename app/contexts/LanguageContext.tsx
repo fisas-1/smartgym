@@ -30,7 +30,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const [translations, setTranslations] = useState(translationsMap['en'])
+  const [translations, setTranslations] = useState<Record<string, any>>({})
 
   useEffect(() => {
     document.documentElement.lang = language
@@ -40,19 +40,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setTranslations(translationsMap[language])
   }, [language])
 
-   const t = (key: string, variables?: Record<string, any>) => {
-     // Divideix la clau pels punts per buscar dins de l'objecte JSON
-     let value = key.split('.').reduce((obj, i) => obj?.[i], translations);
+const t = (key: string, variables?: Record<string, any>) => {
+    const keys = key.split('.')
+    let value: any = translations
+    for (const k of keys) {
+      value = value?.[k]
+    }
+    if (typeof value !== 'string') return key
 
-     if (!value) return key; // Si no troba la clau, mostra el nom de la clau
-
-     if (variables) {
-       Object.entries(variables).forEach(([k, v]) => {
-         value = value.replace(`{{${k}}}`, String(v));
-       });
-     }
-     return value;
-   }
+    if (variables) {
+      Object.entries(variables).forEach(([k, v]) => {
+        value = (value as string).replace(`{{${k}}}`, String(v))
+      })
+    }
+    return value
+  }
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)

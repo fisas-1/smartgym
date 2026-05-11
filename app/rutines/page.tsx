@@ -277,47 +277,115 @@ export default function RutinesPage() {
 
 // Afegir exercici a la rutina
     async function handleAddExercise(exerciseName?: string) {
-      if (!selectedRoutine) return
+      if (!user || !selectedRoutine) return
 
       const exercise = exerciseName || newExerciseName
       if (!exercise || !exercise.trim()) return
 
+      const exerciseTrimmed = exercise.trim()
+
+      // Comprovar duplicats
+      const exerciseExists = routineExercises.some(re => re.exercise === exerciseTrimmed)
+      if (exerciseExists) {
+        setErrorMsg('Aquest exercici ja està a la rutina')
+        return
+      }
+
       setLoading(true)
       setErrorMsg(null)
 
-      const exerciseExists = routineExercises.some(re => re.exercise === exercise.trim())
-      if (exerciseExists) {
-        setErrorMsg('Aquest exercici ja està a la rutina')
+      try {
+        // Si és un exercici personalitzat (no està en la llista per defecte), desar-lo també a saved_exercises
+        const isDefaultExercise = DEFAULT_EXERCISES.includes(exerciseTrimmed as any)
+        if (!isDefaultExercise) {
+          // Comprovar si ja existeix a saved_exercises per aquest usuari
+          const { data: existing } = await supabase
+            .from('saved_exercises')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('exercise', exerciseTrimmed)
+            .single()
+
+          if (!existing) {
+            const { error: saveError } = await supabase
+              .from('saved_exercises')
+              .insert({ user_id: user.id, exercise: exerciseTrimmed })
+
+            if (saveError) {
+              console.error('Error saving custom exercise:', saveError)
+            }
+          }
+        }
+
+        // Inserir l'exercici a la rutina
+        const { data, error } = await supabase
+          .from('routine_exercises')
+          .insert({
+            routine_id: selectedRoutine.id,
+            exercise: exerciseTrimmed,
+            muscle_group: 'Full Body',
+            sets_target: 3,
+            reps_min: 8,
+            reps_max: 12,
+            order_index: routineExercises.length
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Supabase error adding exercise:', error)
+          setErrorMsg('Error al afegir exercici: ' + error.message)
+          return
+        }
+
+        // Generar les sèries inicials (3 per defecte)
+        const newSets = []
+        const newRoutineSets: Record<string, RoutineSet[]> = { ...routineSets }
+        for (let i = 1; i <= 3; i++) {
+          const setId = crypto.randomUUID()
+          newSets.push({
+            routine_exercise_id: data.id,
+            set_number: i,
+            completed: false
+          })
+          if (!newRoutineSets[data.id]) {
+            newRoutineSets[data.id] = []
+          }
+          newRoutineSets[data.id].push({
+            id: setId,
+            routine_exercise_id: data.id,
+            set_number: i,
+            weight: 0,
+            reps: 0,
+            rir: 0,
+            completed: false,
+            created_at: new Date().toISOString()
+          })
+        }
+        await supabase.from('routine_sets').insert(newSets)
+
+        // Actualitzar exercicis de la rutina i recomptar
+        setRoutineExercises(prev => [...prev, data])
+        setRoutineSets(newRoutineSets)
+
+        const { count } = await supabase
+          .from('routine_exercises')
+          .select('*', { count: 'exact', head: true })
+          .eq('routine_id', selectedRoutine.id)
+        setRoutineExerciseCounts(prev => ({
+          ...prev,
+          [selectedRoutine.id]: count || 0
+        }))
+
+        setNewExerciseName('')
+        setShowExerciseModal(false)
+        setSuccessMsg('Exercici afegit')
+      } catch (err) {
+        console.error('Error in handleAddExercise:', err)
+        setErrorMsg('Error inesperat al afegir exercici')
+      } finally {
         setLoading(false)
-        return
       }
-
-      const { data, error } = await supabase
-        .from('routine_exercises')
-        .insert({
-          routine_id: selectedRoutine.id,
-          exercise: exercise.trim(),
-          muscle_group: 'Full Body',
-          sets_target: 3,
-          reps_min: 8,
-          reps_max: 12,
-          order_index: routineExercises.length
-        })
-        .select()
-        .single()
-
-      setLoading(false)
-
-      if (error) {
-        console.error('Supabase error adding exercise:', error)
-        setErrorMsg('Error al afegir exercici: ' + error.message)
-        return
-      }
-
-      setNewExerciseName('')
-      setShowExerciseModal(false)
-      setRoutineExercises(prev => [...prev, data])
-      setSuccessMsg('Exercici afegit')
     }
 
    // Eliminar exercici de la rutina
@@ -785,34 +853,61 @@ export default function RutinesPage() {
         </button>
       </div>
 
-       {/* Modal Afegir Exercici */}
-       {showExerciseModal && (
-         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
-           <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-             <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
-             
-<div className="space-y-3 mb-4">
-                {allExercises.map(ex => (
-                  <button
-                    key={ex}
-                    onClick={() => handleAddExercise(ex)}
-                     className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                       newExerciseName === ex 
-                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
-                         : 'bg-zinc-800 text-zinc-300'
-                     }`}
-                  >
-                    {ex}
-                  </button>
-                ))}
-              </div>
+{/* Modal Afegir Exercici */}
+        {showExerciseModal && (
+          <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
+            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
 
-             <div className="flex gap-3">
-               <button onClick={() => setShowExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-             </div>
-           </div>
-         </div>
-       )}
+              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+
+<div className="space-y-3 mb-4">
+  <div className="flex gap-2">
+    <input
+      type="text"
+      value={newExerciseName}
+      onChange={(e) => setNewExerciseName(e.target.value)}
+      placeholder="Nom de l'exercici..."
+      className="flex-1 bg-black text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && newExerciseName.trim()) {
+          handleAddExercise();
+        }
+      }}
+    />
+    <button
+      onClick={() => {
+        if (newExerciseName.trim()) {
+          handleAddExercise();
+        }
+      }}
+      className="px-4 py-2 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap"
+    >
+      + Afegir
+    </button>
+  </div>
+
+                 {allExercises.map(ex => (
+                   <button
+                     key={ex}
+                     onClick={() => handleAddExercise(ex)}
+                      className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
+                        newExerciseName === ex
+                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                          : 'bg-zinc-800 text-zinc-300'
+                      }`}
+                   >
+                     {ex}
+                   </button>
+                 ))}
+               </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null); }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+              </div>
+            </div>
+          </div>
+        )}
 
        {/* Modal Editar Exercici */}
        {showEditExerciseModal && editingExercise && (

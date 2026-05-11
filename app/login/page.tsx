@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '../contexts/LanguageContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,8 +13,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { user, signIn, signUp } = useAuth()
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [showForgotUsername, setShowForgotUsername] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
+  const [usernameReminderSent, setUsernameReminderSent] = useState(false)
+  const { user, signIn, signUp, resetPassword } = useAuth()
   const router = useRouter()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (user) router.replace('/')
@@ -39,13 +45,189 @@ export default function LoginPage() {
     }
   }
 
-return (
+  async function handleForgotPassword(e: FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) {
+      setError('Introdueix el teu correu electrònic')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    const result = await resetPassword(email)
+    setLoading(false)
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      setResetEmailSent(true)
+    }
+  }
+
+  async function handleForgotUsername(e: FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) {
+      setError('Introdueix el teu correu electrònic')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    // Send a reminder email via Supabase (same endpoint as password reset with a hint in the redirect)
+    const { error } = await fetch('/api/remind-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    }).then(r => r.json())
+    setLoading(false)
+    if (error) {
+      setError(error)
+    } else {
+      setUsernameReminderSent(true)
+    }
+  }
+
+  function renderForgotPasswordForm() {
+    if (resetEmailSent) {
+      return (
+        <div className="text-center">
+          <p className="text-green-400 text-sm mb-4">
+            {t('login.forgotPassword')}<br />
+            {t('login.resetPasswordHint')}
+          </p>
+          <button
+            onClick={() => { setShowForgotPassword(false); setResetEmailSent(false); setEmail(''); }}
+            className="text-sm text-[var(--color-text-primary)]/60 hover:text-[var(--color-text-primary)] underline"
+          >
+            ← {t('common.cancel')}
+          </button>
+        </div>
+      )
+    }
+    return (
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        <p className="text-sm text-zinc-400 mb-2">
+          {t('login.resetPasswordHint')}
+        </p>
+        <div>
+          <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="email@exemple.com"
+            className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
+            required
+            autoComplete="email"
+          />
+        </div>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => { setShowForgotPassword(false); setError(null) }}
+            className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 py-3 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] disabled:opacity-50"
+          >
+            {loading ? t('common.loading') : t('common.send')}
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  function renderForgotUsernameForm() {
+    if (usernameReminderSent) {
+      return (
+        <div className="text-center">
+          <p className="text-green-400 text-sm mb-4">
+            S'ha enviat un recordatori del teu usuari al correu electrònic.
+          </p>
+          <button
+            onClick={() => { setShowForgotUsername(false); setUsernameReminderSent(false); setEmail(''); }}
+            className="text-sm text-[var(--color-text-primary)]/60 hover:text-[var(--color-text-primary)] underline"
+          >
+            ← {t('common.cancel')}
+          </button>
+        </div>
+      )
+    }
+    return (
+      <form onSubmit={handleForgotUsername} className="space-y-4">
+        <p className="text-sm text-zinc-400 mb-2">
+          Introdueix el teu correu electrònic i t'enviarem un recordatori del teu nom d'usuari.
+        </p>
+        <div>
+          <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="email@exemple.com"
+            className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
+            required
+            autoComplete="email"
+          />
+        </div>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => { setShowForgotUsername(false); setError(null) }}
+            className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 py-3 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] disabled:opacity-50"
+          >
+            {loading ? t('common.loading') : t('common.send')}
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">gym.</h1>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
+            <h3 className="text-lg font-light text-white mb-4">Restablir contrasenya</h3>
+            {renderForgotPasswordForm()}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (showForgotUsername) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">gym.</h1>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
+            <h3 className="text-lg font-light text-white mb-4">Recordatori d'usuari</h3>
+            {renderForgotUsernameForm()}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-light mb-4 text-center text-[var(--color-text-primary)]">
           gym.
         </h1>
-  
+
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-8">
           <div className="flex mb-6 bg-zinc-900 rounded-full p-1">
             <button
@@ -76,7 +258,7 @@ return (
                  placeholder="Nom d'usuari"
                  className="w-full bg-[var(--input)] text-[var(--foreground)] rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
                 required
-               />
+                />
             </div>
 
             {!isLogin && (
@@ -139,11 +321,27 @@ return (
             <button
                type="submit"
                disabled={loading}
-                className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors min-h-[44px]"
+               className="w-full py-4 rounded-2xl font-medium bg-[var(--card)] text-[var(--card-foreground)] hover:opacity-90 disabled:opacity-50 transition-colors min-h-[44px]"
             >
                {loading ? (isLogin ? 'Accedint...' : 'Creant...') : (isLogin ? 'Inicia sessió' : 'Crea compte')}
             </button>
           </form>
+
+          {/* Enllaços de recuperació */}
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <button
+              onClick={() => { setShowForgotPassword(true); setError(null) }}
+              className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] underline"
+            >
+              {t('login.forgotPassword')}
+            </button>
+            <button
+              onClick={() => { setShowForgotUsername(true); setError(null) }}
+              className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] underline"
+            >
+              {t('login.forgotUsername')}
+            </button>
+          </div>
         </div>
       </div>
     </div>
