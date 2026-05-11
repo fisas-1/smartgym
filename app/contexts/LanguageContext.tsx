@@ -1,6 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import en from '@/app/locales/en.json'
+import ca from '@/app/locales/ca.json'
+import es from '@/app/locales/es.json'
 
 type Language = 'en' | 'ca' | 'es'
 
@@ -10,41 +13,27 @@ interface LanguageContextType {
   t: (key: string) => string
 }
 
+const translationsMap = { en, ca, es }
+
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Try to get from localStorage
     const saved = localStorage.getItem('language')
     if (saved && ['en', 'ca', 'es'].includes(saved as Language)) {
       return saved as Language
     }
-    // Default to English
     return 'en'
   })
 
-  // Update html lang attribute and localStorage when language changes
+  const [translations, setTranslations] = useState(translationsMap[language])
+
   useEffect(() => {
     document.documentElement.lang = language
     localStorage.setItem('language', language)
+    setTranslations(translationsMap[language])
   }, [language])
 
-  // Load translations
-  const [translations, setTranslations] = useState<Record<string, any>>({})
-
-  useEffect(() => {
-    // Dynamically import the translation file
-    import(`/app/locales/${language}.json`).then((module) => {
-      setTranslations(module.default)
-    }).catch(() => {
-      // Fallback to English if file not found
-      import(`/app/locales/en.json`).then((module) => {
-        setTranslations(module.default)
-      })
-    })
-  }, [language])
-
-  // Translation function
   const t = (key: string): string => {
     const keys = key.split('.')
     let value: any = translations
