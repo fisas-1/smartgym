@@ -19,7 +19,7 @@
     "oneRMLabel": "1RM estimado",
     "recent": "Recientes",
     "noHistory": "Sin historial",
-    "suggestionFormat": "Hoy: {weight}kg ({improvement}%↑)"
+    "suggestionFormat": "Hoy: {{weight}}kg ({{improvement}}%↑)"
   },
   "workouts": {
     "title": "Entrenamientos",

@@ -5,13 +5,14 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO } from '@/types'
 import { useTranslation } from './contexts/LanguageContext'
+import { useTheme } from './contexts/ThemeContext'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
   return Math.round(weight / (1.0278 - 0.0278 * reps))
 }
 
-async function analyzeOverload(exerciseName: string, t: (key: string) => string): Promise<string | null> {
+async function analyzeOverload(exerciseName: string, t: (key: string, variables?: Record<string, any>) => string): Promise<string | null> {
   const { data: logs } = await supabase
     .from('workout_logs')
     .select('*')
@@ -39,6 +40,7 @@ async function analyzeOverload(exerciseName: string, t: (key: string) => string)
 export default function HomePage() {
   const { user } = useAuth()
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
@@ -237,15 +239,15 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
              {/* PES / PES CORPORAL section */}
              <div>
                 <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.weight')}</label>
-               <input
-                 type="number"
-                 inputMode="numeric"
-                 value={weight}
-                 onChange={(e) => setWeight(e.target.value)}
-                 placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
-                 disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
-                  className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50"
-               />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
+                  disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
+                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50`}
+                />
                {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
                  <button
                    type="button"
@@ -271,14 +273,14 @@ className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors $
              {/* REPS section - now separate and below PES */}
              <div>
                 <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.reps')}</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                placeholder="0"
-                 className="w-full bg-[var(--input)] text-[var(--foreground)] text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]"
-              />
+               <input
+                 type="number"
+                 inputMode="numeric"
+                 value={reps}
+                 onChange={(e) => setReps(e.target.value)}
+                 placeholder="0"
+                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
+               />
             </div>
             </div>
 

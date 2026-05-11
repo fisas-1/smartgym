@@ -19,7 +19,7 @@
     "oneRMLabel": "1RM estimat",
     "recent": "Recents",
     "noHistory": "Sense històric",
-    "suggestionFormat": "Avui: {weight}kg ({improvement}%â†‘)"
+    "suggestionFormat": "Avui: {{weight}}kg ({{improvement}}%â†‘)"
   },
   "workouts": {
     "title": "Entrenaments",

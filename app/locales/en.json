@@ -19,7 +19,7 @@
     "oneRMLabel": "Estimated 1RM",
     "recent": "Recent",
     "noHistory": "No history",
-    "suggestionFormat": "Today: {weight}kg ({improvement}%↑)"
+    "suggestionFormat": "Today: {{weight}}kg ({{improvement}}%↑)"
   },
   "workouts": {
     "title": "Workouts",
