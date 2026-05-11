@@ -10,7 +10,7 @@ type Language = 'en' | 'ca' | 'es'
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  t: (key: string, variables?: Record<string, unknown>) => string
 }
 
 const translationsMap = { en, ca, es }
@@ -34,14 +34,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setTranslations(translationsMap[language])
   }, [language])
 
-  const t = (key: string): string => {
+  const t = (key: string, variables?: Record<string, unknown>): string => {
     const keys = key.split('.')
     let value: any = translations
     for (const k of keys) {
       if (value == null) return key
       value = value[k]
     }
-    return value !== null && value !== undefined ? value : key
+    let result = value !== null && value !== undefined ? value : key
+    if (variables && typeof result === 'string') {
+      Object.entries(variables).forEach(([varKey, varValue]) => {
+        const regex = new RegExp(`{${varKey}}`, 'g')
+        result = result.replace(regex, String(varValue))
+      })
+    }
+    return result
   }
 
   const setLanguage = (lang: Language) => {
