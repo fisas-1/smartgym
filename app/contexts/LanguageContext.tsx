@@ -18,19 +18,24 @@ const translationsMap = { en, ca, es }
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('language')
-    if (saved && ['en', 'ca', 'es'].includes(saved as Language)) {
-      return saved as Language
-    }
-    return 'en'
-  })
+  const [language, setLanguageState] = useState<Language>('en')
 
-  const [translations, setTranslations] = useState(translationsMap[language])
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('language')
+      if (saved && ['en', 'ca', 'es'].includes(saved as Language)) {
+        setLanguageState(saved as Language)
+      }
+    }
+  }, [])
+
+  const [translations, setTranslations] = useState(translationsMap['en'])
 
   useEffect(() => {
     document.documentElement.lang = language
-    localStorage.setItem('language', language)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', language)
+    }
     setTranslations(translationsMap[language])
   }, [language])
 
