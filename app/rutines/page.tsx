@@ -317,20 +317,19 @@ export default function RutinesPage() {
           }
         }
 
-        // Inserir l'exercici a la rutina
-        const { data, error } = await supabase
-          .from('routine_exercises')
-          .insert({
-            routine_id: selectedRoutine.id,
-            exercise: exerciseTrimmed,
-            muscle_group: 'Full Body',
-            sets_target: 3,
-            reps_min: 8,
-            reps_max: 12,
-            order_index: routineExercises.length
-          })
-          .select()
-          .single()
+         // Inserir l'exercici a la rutina
+         const { data, error } = await supabase
+           .from('routine_exercises')
+           .insert({
+             routine_id: selectedRoutine.id,
+             exercise: exerciseTrimmed,
+             sets_target: 3,
+             reps_min: 8,
+             reps_max: 12,
+             order_index: routineExercises.length
+           })
+           .select()
+           .single()
 
         if (error) {
           console.error('Supabase error adding exercise:', error)

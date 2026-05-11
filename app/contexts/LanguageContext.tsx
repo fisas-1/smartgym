@@ -41,20 +41,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [language])
 
 const t = (key: string, variables?: Record<string, any>) => {
-    const keys = key.split('.')
-    let value: any = translations
-    for (const k of keys) {
-      value = value?.[k]
+    // First try to get the value directly (for flat keys like "nav.home")
+    let value: any = translations[key]
+    if (typeof value !== 'string') {
+        // If not found, try nested path (for compatibility with nested structure)
+        const keys = key.split('.')
+        value = translations
+        for (const k of keys) {
+            if (value === null || value === undefined) {
+                break
+            }
+            value = value[k]
+        }
     }
     if (typeof value !== 'string') return key
 
     if (variables) {
-      Object.entries(variables).forEach(([k, v]) => {
-        value = (value as string).replace(`{{${k}}}`, String(v))
-      })
+        Object.entries(variables).forEach(([k, v]) => {
+            value = (value as string).replace(`{{${k}}}`, String(v))
+        })
     }
     return value
-  }
+}
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)

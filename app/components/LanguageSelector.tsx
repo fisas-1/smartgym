@@ -13,17 +13,18 @@ const LanguageSelector = () => {
 
   return (
     <div className="relative group">
-      <button
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]/10 transition-colors"
-        aria-label={t('nav.language')}
-      >
-        <span className="font-medium uppercase tracking-wider text-xs">
-          {language.toUpperCase()}
-        </span>
-        <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+<button
+  className="relative flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]/10 transition-colors"
+  aria-label={t('nav.language')}
+>
+  <span className="font-medium uppercase tracking-wider text-xs">
+    {language.toUpperCase()}
+  </span>
+  <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </path>
+</svg>
+</button>
 
       <div className="absolute top-full right-0 mt-1 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-100" style={{position: 'absolute'}}>
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg overflow-hidden">
