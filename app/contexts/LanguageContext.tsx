@@ -6,6 +6,7 @@ import ca from '@/app/locales/ca.json'
 import es from '@/app/locales/es.json'
 
 type Language = 'en' | 'ca' | 'es'
+type Translations = Record<string, any>;
 
 interface LanguageContextType {
   language: Language
@@ -13,7 +14,7 @@ interface LanguageContextType {
   t: (key: string, variables?: Record<string, any>) => string
 }
 
-const translationsMap = { en, ca, es }
+const translationsMap: Record<Language, Translations> = { en, ca, es }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
@@ -39,21 +40,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setTranslations(translationsMap[language])
   }, [language])
 
-  const t = (key: string, variables?: Record<string, any>): string => {
-    const keys = key.split('.')
-    let value: any = translations
-    for (const k of keys) {
-      if (value == null) return key
-      value = value[k]
-    }
-    let result = value !== null && value !== undefined ? value : key
-    if (variables && typeof result === 'string') {
-      Object.entries(variables).forEach(([k, v]) => {
-        result = result.replace(`{{${k}}}`, String(v))
-      })
-    }
-    return result
-  }
+   const t = (key: string, variables?: Record<string, any>) => {
+     // Divideix la clau pels punts per buscar dins de l'objecte JSON
+     let value = key.split('.').reduce((obj, i) => obj?.[i], translations);
+
+     if (!value) return key; // Si no troba la clau, mostra el nom de la clau
+
+     if (variables) {
+       Object.entries(variables).forEach(([k, v]) => {
+         value = value.replace(`{{${k}}}`, String(v));
+       });
+     }
+     return value;
+   }
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
