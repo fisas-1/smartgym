@@ -2,9 +2,12 @@
   "nav": {
     "home": "Inici",
     "workouts": "Entrenaments",
+    "rutines": "Rutines",
     "profile": "Perfil",
     "friends": "Amics",
+    "amics": "Amics",
     "stats": "Estadístiques",
+    "perfil": "Perfil",
     "login": "Inici de sessió",
     "logout": "Tancar sessió",
     "language": "Idioma",

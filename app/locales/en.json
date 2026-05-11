@@ -2,9 +2,12 @@
   "nav": {
     "home": "Home",
     "workouts": "Workouts",
+    "rutines": "Routines",
     "profile": "Profile",
     "friends": "Friends",
+    "amics": "Friends",
     "stats": "Stats",
+    "perfil": "Profile",
     "login": "Login",
     "logout": "Logout",
     "language": "Language",

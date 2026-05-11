@@ -30,7 +30,7 @@ export default function Navigation() {
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50 overflow-visible">
       <div className="flex gap-4">
         {navItems.map((item) => (
           <Link 

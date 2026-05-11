@@ -70,10 +70,7 @@ export default function RutinesPage() {
       
       if (error && error.message.includes('table')) {
         setIsSchemaFixed(false)
-        console.log('⚠️ Schema not fixed: routines table missing')
       } else {
-        setIsSchemaFixed(true)
-        console.log('✅ Schema is fixed')
       }
     } catch (err) {
       setIsSchemaFixed(false)
@@ -90,18 +87,15 @@ export default function RutinesPage() {
         .order('created_at', { ascending: false })
       
       if (error && error.message.includes('table')) {
-        console.log('Tabla routines no existe (esperado antes del fix)')
         return
       }
       
       if (error) {
-        console.error('Error loading routines:', error)
         return
       }
       
       if (data) setRoutines(data)
     } catch (err) {
-      console.log('Error loading routines:', err)
     }
   }
 
@@ -114,18 +108,15 @@ export default function RutinesPage() {
         .order('order_index', { ascending: true })
       
       if (error && error.message.includes('table')) {
-        console.log('Tabla routine_exercises no existe (esperado antes del fix)')
         return
       }
       
       if (error) {
-        console.error('Error loading routine exercises:', error)
         return
       }
       
       if (data) setRoutineExercises(data)
     } catch (err) {
-      console.log('Error loading routine exercises:', err)
     }
   }
 
@@ -141,12 +132,10 @@ export default function RutinesPage() {
         .order('created_at', { ascending: true })
       
       if (error && error.message.includes('table')) {
-        console.log('Tabla routine_sets no existe (esperado antes del fix)')
         return
       }
       
       if (error) {
-        console.error('Error loading routine sets:', error)
         return
       }
       
@@ -159,7 +148,6 @@ export default function RutinesPage() {
         setRoutineSets(grouped)
       }
     } catch (err) {
-      console.log('Error loading routine sets:', err)
     }
   }
 
@@ -214,7 +202,6 @@ export default function RutinesPage() {
         }))
       }
     } catch (error) {
-      console.error('Error initializing sets:', error)
     }
   }
 
@@ -252,7 +239,6 @@ export default function RutinesPage() {
         return { ...prev, [exerciseId]: updated }
       })
     } catch (err) {
-      console.error('Error toggling set:', err)
     }
   }
 
@@ -272,9 +258,9 @@ export default function RutinesPage() {
       .update({ weight, reps })
       .eq('id', setId)
 
-    if (error) {
-      console.error('Error updating set:', error)
-    }
+if (error) {
+        return
+      }
   }
 
   function autoCompleteExercise(exerciseId: string) {
@@ -373,6 +359,7 @@ export default function RutinesPage() {
         .from('routine_exercises')
         .insert({
           routine_id: selectedRoutine.id,
+          name: newExerciseName.trim(),
           exercise: newExerciseName.trim(),
           sets_target: 3,
           reps_min: 8,
@@ -440,13 +427,11 @@ export default function RutinesPage() {
         })
 
       if (error) {
-        console.log('Weight recommendation error (may not exist):', error.message)
         return null
       }
 
       return data
     } catch (err) {
-      console.log('Weight recommendation error:', err)
       return null
     }
   }
@@ -507,7 +492,6 @@ export default function RutinesPage() {
       setSuccessMsg('Entrenament guardat correctament!')
       loadRoutineSets(selectedRoutine.id)
     } catch (err) {
-      console.error('Error saving workout log:', err)
       setErrorMsg('Error guardant l\'entrenament')
     } finally {
       setLoading(false)
@@ -785,10 +769,9 @@ export default function RutinesPage() {
                             completed: true
                           }))
                         });
-                      } catch (err) {
-                        console.error('Error saving workout:', err);
-                        setErrorMsg('Error al guardar l\'entrenament');
-                      } finally {
+} catch (err) {
+                         setErrorMsg('Error al guardar l\'entrenament');
+                       } finally {
                         setLoading(false);
                       }
                     }

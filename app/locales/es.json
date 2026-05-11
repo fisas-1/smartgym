@@ -2,9 +2,12 @@
   "nav": {
     "home": "Inicio",
     "workouts": "Entrenamientos",
+    "rutines": "Rutinas",
     "profile": "Perfil",
     "friends": "Amigos",
+    "amics": "Amigos",
     "stats": "Estadísticas",
+    "perfil": "Perfil",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "language": "Idioma",
