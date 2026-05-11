@@ -16,26 +16,26 @@ export { ThemeContext }
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
-  // Client-side only: load theme from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('theme') as Theme
-    const initialTheme = (saved && (saved === 'dark' || saved === 'light')) ? saved : 'dark'
-    setTheme(initialTheme)
-    // Apply the class to document.documentElement
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme') as Theme
+      const initialTheme = (saved && (saved === 'dark' || saved === 'light')) ? saved : 'dark'
+      setTheme(initialTheme)
+      if (initialTheme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
     }
   }, [])
 
   const toggleTheme = () => {
     setTheme((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark'
-      // Apply class toggle to document.documentElement
       document.documentElement.classList.toggle('dark')
-      // Save to localStorage
-      localStorage.setItem('theme', next)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', next)
+      }
       return next
     })
   }
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (!context) {
-    throw new Error('useTheme必须在ThemeProvider内部的组件中使用')
+    throw new Error('useTheme must be used within a ThemeProvider')
   }
   return context
 }
