@@ -6,6 +6,23 @@ import { useAuth } from '../contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM, EXERCISE_KEYS } from '@/types'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useUnit } from '../contexts/UnitContext'
+import { ROUTINE_TEMPLATES } from '../lib/routineTemplates'
+import RestTimer from '../components/RestTimer'
+import QuickLogFab from '../components/QuickLogFab'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+function SortableExerciseItem({ id, children }: { id: string; children: (handleProps: { ref: any; style: any; attributes: any; listeners: any; isDragging: boolean }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  }
+  return <>{children({ ref: setNodeRef, style, attributes, listeners, isDragging })}</>
+}
 
 type CustomExercises = string[]
 
@@ -36,8 +53,33 @@ export default function RutinesPage() {
    const [successMsg, setSuccessMsg] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
    const [lastSessions, setLastSessions] = useState<Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }>>({})
+   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  async function handleExerciseDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = routineExercises.findIndex(e => e.id === active.id)
+    const newIdx = routineExercises.findIndex(e => e.id === over.id)
+    if (oldIdx < 0 || newIdx < 0) return
+    const reordered = arrayMove(routineExercises, oldIdx, newIdx)
+    setRoutineExercises(reordered)
+    // Persist new order_index for each item
+    const updates = reordered.map((ex, i) => supabase.from('routine_exercises').update({ order_index: i }).eq('id', ex.id))
+    const results = await Promise.all(updates)
+    const firstErr = results.find(r => r.error)
+    if (firstErr?.error) {
+      console.error('Error reordering:', firstErr.error)
+      setErrorMsg('Error en reordenar exercicis')
+    }
+  }
 
   // Càrrega inicial
   useEffect(() => {
@@ -185,34 +227,73 @@ export default function RutinesPage() {
   // Crear nova rutina
   async function handleCreateRoutine() {
     if (!user) return
-    if (!newRoutineName.trim()) {
-      setErrorMsg('Escriu un nom per a la rutina')
+    const template = ROUTINE_TEMPLATES.find(t => t.id === selectedTemplate) || null
+
+    // If no template and no name, error
+    if (!template && !newRoutineName.trim()) {
+      setErrorMsg('Escriu un nom per a la rutina o tria una plantilla')
       return
     }
 
     setLoading(true)
     setErrorMsg(null)
 
-    const { data, error } = await supabase
-      .from('routines')
-      .insert({
-        user_id: user.id,
-        name: newRoutineName.trim(),
-        description: ''
-      })
-      .select()
-      .single()
+    try {
+      if (template) {
+        // Create one routine per template entry
+        for (const r of template.routines) {
+          const routineName = template.routines.length === 1 && newRoutineName.trim()
+            ? newRoutineName.trim()
+            : r.name
+          const { data: newRoutine, error: rErr } = await supabase
+            .from('routines')
+            .insert({ user_id: user.id, name: routineName, description: template.name })
+            .select()
+            .single()
+          if (rErr || !newRoutine) throw rErr || new Error('No s\'ha pogut crear la rutina')
 
-    setLoading(false)
-
-    if (error) {
-      setErrorMsg('Error al crear rutina: ' + error.message)
+          // Insert exercises with sets
+          for (let i = 0; i < r.exercises.length; i++) {
+            const ex = r.exercises[i]
+            const { data: newEx, error: eErr } = await supabase
+              .from('routine_exercises')
+              .insert({
+                routine_id: newRoutine.id,
+                exercise: ex.exercise,
+                sets_target: ex.sets_target,
+                reps_min: ex.reps_min,
+                reps_max: ex.reps_max,
+                order_index: i,
+              })
+              .select()
+              .single()
+            if (eErr || !newEx) throw eErr || new Error('No s\'ha pogut crear l\'exercici')
+            const setsToInsert = Array.from({ length: ex.sets_target }, (_, k) => ({
+              routine_exercise_id: newEx.id,
+              set_number: k + 1,
+              completed: false,
+            }))
+            await supabase.from('routine_sets').insert(setsToInsert)
+          }
+        }
+        setSuccessMsg(template.routines.length > 1 ? 'Rutines creades!' : 'Rutina creada!')
+      } else {
+        const { error } = await supabase
+          .from('routines')
+          .insert({ user_id: user.id, name: newRoutineName.trim(), description: '' })
+        if (error) throw error
+        setSuccessMsg('Rutina creada!')
+      }
+    } catch (err: any) {
+      setLoading(false)
+      setErrorMsg('Error al crear rutina: ' + (err.message || 'desconegut'))
       return
     }
 
-    setSuccessMsg('Rutina creada!')
+    setLoading(false)
     setShowRoutineModal(false)
     setNewRoutineName('')
+    setSelectedTemplate('')
     loadRoutines()
   }
 
@@ -552,13 +633,19 @@ export default function RutinesPage() {
 
      setRoutineSets(prev => {
        const current = prev[exerciseId] || []
-       const updated = current.map(s => 
-         s.set_number === setNumber 
+       const updated = current.map(s =>
+         s.set_number === setNumber
            ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
            : s
        )
        return { ...prev, [exerciseId]: updated }
      })
+
+     // Auto-arrencar timer de descans quan es marca una sèrie completada
+     if (completed && typeof window !== 'undefined') {
+       const restPreset = parseInt(localStorage.getItem('rest_timer_default') || '90', 10)
+       window.dispatchEvent(new CustomEvent('rest-timer:start', { detail: { seconds: restPreset } }))
+     }
    }
 
    // Actualitzar pes i reps d'una sèrie
@@ -661,21 +748,46 @@ export default function RutinesPage() {
 
          {/* Modal Nova Rutina */}
          {showRoutineModal && (
-           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowRoutineModal(false)}>
-             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
+             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-white mb-4">Nova Rutina</h3>
-               <input
-                 type="text"
-                 value={newRoutineName}
-                 onChange={(e) => setNewRoutineName(e.target.value)}
-                 placeholder="Nom de la rutina"
-                 className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                 autoFocus
-               />
+
+               <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Plantilla</p>
+               <div className="space-y-2 mb-4">
+                 <button
+                   type="button"
+                   onClick={() => setSelectedTemplate('')}
+                   className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
+                 >
+                   <p className="text-sm font-light">Buida</p>
+                   <p className="text-xs text-zinc-500">Començar des de zero</p>
+                 </button>
+                 {ROUTINE_TEMPLATES.map(tpl => (
+                   <button
+                     key={tpl.id}
+                     type="button"
+                     onClick={() => setSelectedTemplate(tpl.id)}
+                     className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
+                   >
+                     <p className="text-sm font-light">{tpl.name}</p>
+                     <p className="text-xs text-zinc-500">{tpl.description}</p>
+                   </button>
+                 ))}
+               </div>
+
+               {(!selectedTemplate || ROUTINE_TEMPLATES.find(t => t.id === selectedTemplate)?.routines.length === 1) && (
+                 <input
+                   type="text"
+                   value={newRoutineName}
+                   onChange={(e) => setNewRoutineName(e.target.value)}
+                   placeholder={selectedTemplate ? 'Nom personalitzat (opcional)' : 'Nom de la rutina'}
+                   className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 />
+               )}
                {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
                <div className="flex gap-3">
-                 <button onClick={() => setShowRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                  <button onClick={handleCreateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Crear</button>
+                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">{loading ? '...' : 'Crear'}</button>
                </div>
              </div>
            </div>
@@ -709,6 +821,7 @@ export default function RutinesPage() {
           </div>
         )}
 
+        <QuickLogFab />
         <div className="h-20" />
       </div>
     )
@@ -743,14 +856,27 @@ export default function RutinesPage() {
         </div>
 
         {/* Llista d'exercicis */}
+        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
+          <SortableContext items={routineExercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
         {routineExercises.map(exercise => {
           const sets = routineSets[exercise.id] || []
           const completedSets = sets.filter(s => s.completed).length
           const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
-          
+
           return (
-            <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
+            <SortableExerciseItem key={exercise.id} id={exercise.id}>
+              {({ ref, style, attributes, listeners, isDragging }) => (
+            <div ref={ref} style={style} {...attributes} className={`border rounded-2xl p-4 space-y-3 ${isDragging ? 'border-zinc-600 bg-zinc-900/80' : 'border-zinc-900'}`}>
                <div className="flex justify-between items-start">
+                 <button
+                   {...listeners}
+                   type="button"
+                   className="touch-none cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-300 px-2 py-1 -ml-2"
+                   aria-label="Arrossegar per reordenar"
+                   title="Arrossegar per reordenar"
+                 >
+                   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
+                 </button>
                  <div className="flex-1">
                      <p className="text-[var(--color-text-primary)] font-light">{tEx(exercise.exercise)}</p>
                    <p className="text-zinc-500 text-xs">
@@ -911,8 +1037,12 @@ export default function RutinesPage() {
                 Progrés: {completedSets}/{exercise.sets_target} series
               </div>
             </div>
+              )}
+            </SortableExerciseItem>
           )
         })}
+          </SortableContext>
+        </DndContext>
 
         {/* Afegir exercici */}
         <button
@@ -1043,6 +1173,8 @@ export default function RutinesPage() {
         </div>
       )}
 
+      <RestTimer />
+      <QuickLogFab />
       <div className="h-20" />
     </div>
   )

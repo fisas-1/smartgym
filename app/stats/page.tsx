@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useUnit } from '../contexts/UnitContext'
 import { EXERCISE_KEYS } from '@/types'
 import { useTranslation } from '../contexts/LanguageContext'
+import QuickLogFab from '../components/QuickLogFab'
 
 const MUSCLE_GROUPS = [
   { id: 'pit', label: 'Pit', color: '#888' },
@@ -25,7 +26,7 @@ const EXERCISE_MUSCLE_MAP: Record<string, string> = {
 }
 
 type MuscleStats = { muscle: string; label: string; improvement: number; currentMax: number; previousMax: number }
-type LogEntry = { id: string; exercise: string; weight: number; reps: number; rir: number | null; one_rm: number; created_at: string }
+type LogEntry = { id: string; exercise: string; weight: number; reps: number; rir: number | null; one_rm: number; note: string | null; created_at: string }
 
 export default function EstadistiquesPage() {
   const { user } = useAuth()
@@ -40,10 +41,50 @@ export default function EstadistiquesPage() {
   const [selectedExercise, setSelectedExercise] = useState<string>('')
   const [exerciseLogs, setExerciseLogs] = useState<LogEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
+  const [weeklyVolume, setWeeklyVolume] = useState<{ muscle: string; label: string; thisWeek: number; lastWeek: number }[]>([])
 
   useEffect(() => { loadStats() }, [period])
-  useEffect(() => { if (user) loadExerciseList() }, [user])
+  useEffect(() => { if (user) { loadExerciseList(); loadWeeklyVolume() } }, [user])
   useEffect(() => { if (selectedExercise) loadExerciseHistory(selectedExercise) }, [selectedExercise, user])
+
+  async function loadWeeklyVolume() {
+    if (!user) return
+    const now = new Date()
+    const dayMs = 24 * 60 * 60 * 1000
+    const dayOfWeek = (now.getDay() + 6) % 7 // Monday = 0
+    const startThis = new Date(now.getTime() - dayOfWeek * dayMs)
+    startThis.setHours(0, 0, 0, 0)
+    const startLast = new Date(startThis.getTime() - 7 * dayMs)
+
+    const { data } = await supabase
+      .from('workout_logs')
+      .select('exercise, weight, reps, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', startLast.toISOString())
+
+    const byMuscle: Record<string, { thisWeek: number; lastWeek: number }> = {}
+    for (const m of MUSCLE_GROUPS) byMuscle[m.id] = { thisWeek: 0, lastWeek: 0 }
+
+    for (const log of data || []) {
+      // Strip "- Pes corporal" suffix to find muscle group
+      const cleanName = (log.exercise as string).replace(' - Pes corporal', '')
+      const muscle = EXERCISE_MUSCLE_MAP[cleanName]
+      if (!muscle) continue
+      const vol = (log.weight || 0) * (log.reps || 0)
+      if (vol <= 0) continue
+      const ts = new Date(log.created_at).getTime()
+      if (ts >= startThis.getTime()) byMuscle[muscle].thisWeek += vol
+      else byMuscle[muscle].lastWeek += vol
+    }
+
+    const result = MUSCLE_GROUPS.map(m => ({
+      muscle: m.id,
+      label: m.label,
+      thisWeek: byMuscle[m.id].thisWeek,
+      lastWeek: byMuscle[m.id].lastWeek,
+    })).filter(r => r.thisWeek > 0 || r.lastWeek > 0)
+    setWeeklyVolume(result)
+  }
 
   async function loadStats() {
     setLoading(true)
@@ -104,7 +145,7 @@ export default function EstadistiquesPage() {
     setHistoryLoading(true)
     const { data } = await supabase
       .from('workout_logs')
-      .select('id, exercise, weight, reps, rir, one_rm, created_at')
+      .select('id, exercise, weight, reps, rir, one_rm, note, created_at')
       .eq('user_id', user.id)
       .eq('exercise', exercise)
       .order('created_at', { ascending: false })
@@ -200,6 +241,39 @@ export default function EstadistiquesPage() {
           </>
         )}
 
+        {/* Volum setmanal per grup muscular */}
+        {weeklyVolume.length > 0 && (
+          <div className="pt-4 border-t border-zinc-900">
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Volum setmanal (pes × reps)</p>
+            <div className="space-y-3">
+              {weeklyVolume.sort((a, b) => b.thisWeek - a.thisWeek).map(v => {
+                const max = Math.max(v.thisWeek, v.lastWeek, 1)
+                const diff = v.lastWeek > 0 ? Math.round(((v.thisWeek - v.lastWeek) / v.lastWeek) * 100) : (v.thisWeek > 0 ? 100 : 0)
+                return (
+                  <div key={v.muscle}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-zinc-300 font-light">{v.label}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-zinc-300">{format(v.thisWeek)}{unit}</span>
+                        {v.lastWeek > 0 && (
+                          <span className={`text-xs ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : 'text-zinc-500'}`}>
+                            {diff > 0 ? '+' : ''}{diff}%
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="relative h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                      <div className="absolute h-full bg-zinc-700 rounded-full" style={{ width: `${(v.lastWeek / max) * 100}%` }} />
+                      <div className="absolute h-full bg-green-500 rounded-full" style={{ width: `${(v.thisWeek / max) * 100}%`, opacity: 0.85 }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="text-[10px] text-zinc-600 mt-3">Barra fosca: setmana anterior · Verda: aquesta setmana</p>
+          </div>
+        )}
+
         {/* Historial per exercici */}
         {exerciseList.length > 0 && (
           <div className="pt-4 border-t border-zinc-900">
@@ -233,13 +307,19 @@ export default function EstadistiquesPage() {
                 )}
 
                 {/* Sessions agrupades per dia */}
+                {(() => {
+                  const allTimeMax = Math.max(...exerciseLogs.map(l => l.one_rm || 0))
+                  return (
                 <div className="space-y-3 mt-4">
                   {groupedByDay.map(([day, logs]) => {
                     const maxOneRM = Math.max(...logs.map(l => l.one_rm || 0))
+                    const isPrDay = maxOneRM > 0 && maxOneRM === allTimeMax
+                    const notes = logs.map(l => l.note).filter(Boolean) as string[]
                     return (
-                      <div key={day} className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
+                      <div key={day} className={`bg-zinc-900/40 border rounded-xl p-3 ${isPrDay ? 'border-yellow-700/50' : 'border-zinc-900'}`}>
                         <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-light text-zinc-300">
+                          <p className="text-sm font-light text-zinc-300 flex items-center gap-1.5">
+                            {isPrDay && <span title="Rècord personal">🏆</span>}
                             {new Date(day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                           {maxOneRM > 0 && (
@@ -254,16 +334,26 @@ export default function EstadistiquesPage() {
                             </span>
                           ))}
                         </div>
+                        {notes.length > 0 && (
+                          <div className="mt-2 space-y-0.5">
+                            {notes.map((n, i) => (
+                              <p key={i} className="text-xs text-zinc-500 italic">"{n}"</p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
                 </div>
+                  )
+                })()}
               </>
             )}
           </div>
         )}
       </div>
 
+      <QuickLogFab />
       <div className="h-20" />
     </div>
   )

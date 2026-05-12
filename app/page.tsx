@@ -56,6 +56,9 @@ export default function HomePage() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<string | null>(null)
+  const [note, setNote] = useState<string>('')
+  const [prMsg, setPrMsg] = useState<string | null>(null)
+  const [bestPerExercise, setBestPerExercise] = useState<Record<string, number>>({})
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
@@ -100,6 +103,7 @@ export default function HomePage() {
    async function loadSavedSets() {
     if (!user) {
       setSavedSets([])
+      setBestPerExercise({})
       return
     }
     const { data, error } = await supabase
@@ -112,7 +116,23 @@ export default function HomePage() {
       console.error('Error loading saved sets:', error)
       return
     }
-    if (data) setSavedSets(data)
+    if (data) {
+      setSavedSets(data)
+      // Load all-time max 1RM per exercise (for PR badge)
+      const exercises = Array.from(new Set(data.map((s: any) => s.exercise)))
+      if (exercises.length > 0) {
+        const { data: allLogs } = await supabase
+          .from('workout_logs')
+          .select('exercise, one_rm')
+          .eq('user_id', user.id)
+          .in('exercise', exercises)
+        const best: Record<string, number> = {}
+        for (const l of allLogs || []) {
+          if ((l.one_rm || 0) > (best[l.exercise] || 0)) best[l.exercise] = l.one_rm
+        }
+        setBestPerExercise(best)
+      }
+    }
   }
 
     async function handleSave(e: React.FormEvent) {
@@ -129,7 +149,21 @@ export default function HomePage() {
       // For bodyweight exercises, store with suffix to distinguish in history
       const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
 
-      const insertData = {
+      // PR check: get current max 1RM for this exercise BEFORE inserting
+      let isPr = false
+      if (weightType !== "corporal" && oneRM > 0 && user) {
+        const { data: prev } = await supabase
+          .from('workout_logs')
+          .select('one_rm')
+          .eq('user_id', user.id)
+          .eq('exercise', exerciseToStore)
+          .order('one_rm', { ascending: false })
+          .limit(1)
+        const prevMax = prev?.[0]?.one_rm || 0
+        if (oneRM > prevMax) isPr = true
+      }
+
+      const insertData: any = {
         exercise: exerciseToStore,
         weight: weightType === "corporal" ? 0 : wKg,
         reps: r,
@@ -137,6 +171,7 @@ export default function HomePage() {
         one_rm: weightType === "corporal" ? 0 : oneRM,
         user_id: user?.id,
       }
+      if (note.trim()) insertData.note = note.trim()
       const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
       setLoading(false)
       if (error) {
@@ -148,7 +183,11 @@ export default function HomePage() {
         }
         return
       }
-      setWeight(''); setReps(''); setRir('')
+      setWeight(''); setReps(''); setRir(''); setNote('')
+      if (isPr) {
+        setPrMsg(`🏆 Nou rècord personal a ${tEx(exerciseToStore)}: ${format(oneRM)}${unit}!`)
+        setTimeout(() => setPrMsg(null), 6000)
+      }
       await loadSavedSets()
     }
 
@@ -216,6 +255,12 @@ export default function HomePage() {
         {errorMsg && (
           <div className="px-4 py-3 bg-red-900/50 border border-red-800 rounded-2xl">
             <p className="text-red-400 text-sm">{errorMsg}</p>
+          </div>
+        )}
+
+        {prMsg && (
+          <div className="px-4 py-3 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border border-yellow-700 rounded-2xl animate-pulse">
+            <p className="text-yellow-300 text-sm font-medium">{prMsg}</p>
           </div>
         )}
 
@@ -365,6 +410,19 @@ export default function HomePage() {
                   ))}
                 </div>
             </div>
+
+             {/* NOTES section (optional) */}
+             <div>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Notes <span className="opacity-60 normal-case">(opcional)</span></label>
+                <input
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Sensació, tècnica, dolor…"
+                  maxLength={200}
+                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-sm font-light rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
+                />
+            </div>
             </div>
 
            <button
@@ -382,18 +440,24 @@ export default function HomePage() {
               <p className="text-[var(--color-text-tertiary)] text-sm">{t('home.noHistory')}</p>
           ) : (
             <div className="space-y-2">
-              {savedSets.map((set) => (
-                <div key={set.id} className="flex justify-between items-center py-3 border-b border-zinc-900">
-                  <div>
-                    <p className="text-[var(--color-text-primary)] font-light">{tEx(set.exercise)}</p>
+              {savedSets.map((set) => {
+                const isPr = set.one_rm > 0 && bestPerExercise[set.exercise] === set.one_rm
+                return (
+                <div key={set.id} className="flex justify-between items-start py-3 border-b border-zinc-900">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[var(--color-text-primary)] font-light flex items-center gap-1.5">
+                      {isPr && <span title="Rècord personal">🏆</span>}
+                      <span>{tEx(set.exercise)}</span>
+                    </p>
                     <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
+                    {set.note && <p className="text-[var(--color-text-tertiary)] text-xs italic mt-1 truncate">"{set.note}"</p>}
                   </div>
-                   <div className="text-right">
+                   <div className="text-right ml-2">
                        <p className="text-[var(--color-text-primary)] font-light">{format(set.weight)}{unit} x {set.reps}</p>
                        {set.rir != null && <p className="text-[var(--color-text-tertiary)] text-xs">{t('workouts.rir')} {set.rir}</p>}
                    </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>
