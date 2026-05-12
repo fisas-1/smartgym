@@ -274,20 +274,53 @@ export default function HomePage() {
 
              {/* REPS section */}
              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('workouts.reps')}</label>
-                  <span className="text-[var(--color-text-primary)] text-2xl font-light">{reps || '—'}</span>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-3">{t('workouts.reps')}</label>
+                <div className={`flex items-center justify-between rounded-2xl px-4 py-3 ${theme === 'light' ? 'bg-zinc-100' : 'bg-[var(--input)]'}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const n = parseInt(reps) || 0
+                      if (n > 0) setReps(String(n - 1))
+                    }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-light bg-[var(--card)] border border-[var(--border)] text-[var(--color-text-primary)] hover:opacity-80 active:scale-95 transition-all disabled:opacity-30"
+                    disabled={!reps || parseInt(reps) <= 0}
+                    aria-label="Reduir reps"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={reps}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9]/g, '')
+                      setReps(v)
+                    }}
+                    placeholder="0"
+                    className={`flex-1 mx-2 bg-transparent text-center text-4xl font-light focus:outline-none ${theme === 'light' ? 'text-zinc-900' : 'text-[var(--foreground)]'}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const n = parseInt(reps) || 0
+                      setReps(String(n + 1))
+                    }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-light bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-80 active:scale-95 transition-all"
+                    aria-label="Augmentar reps"
+                  >
+                    +
+                  </button>
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
-                  {Array.from({ length: 30 }, (_, i) => i + 1).map(n => (
+                <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
+                  {[5, 8, 10, 12, 15, 20].map(n => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => setReps(String(n))}
-                      className={`min-w-[44px] h-11 px-3 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
+                      className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
                         reps === String(n)
-                          ? 'bg-[var(--card-foreground)] text-[var(--background)]'
-                          : 'bg-[var(--input)] text-[var(--foreground)]'
+                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                          : 'bg-[var(--input)] text-[var(--color-text-tertiary)] border border-[var(--border)]'
                       }`}
                     >
                       {n}
