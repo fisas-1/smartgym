@@ -44,6 +44,58 @@ BEGIN
   ELSE
     RAISE NOTICE '✓ Column "one_rm" already exists in workout_logs';
   END IF;
+
+  -- Add weight column (numeric for kg)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'workout_logs'
+      AND column_name = 'weight'
+      AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.workout_logs ADD COLUMN weight NUMERIC DEFAULT 0;
+    RAISE NOTICE '✓ Column "weight" added to workout_logs';
+  ELSE
+    RAISE NOTICE '✓ Column "weight" already exists in workout_logs';
+  END IF;
+
+  -- Add reps column (integer)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'workout_logs'
+      AND column_name = 'reps'
+      AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.workout_logs ADD COLUMN reps INTEGER DEFAULT 0;
+    RAISE NOTICE '✓ Column "reps" added to workout_logs';
+  ELSE
+    RAISE NOTICE '✓ Column "reps" already exists in workout_logs';
+  END IF;
+
+  -- Add rir column (integer, reps in reserve)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'workout_logs'
+      AND column_name = 'rir'
+      AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.workout_logs ADD COLUMN rir INTEGER DEFAULT 0;
+    RAISE NOTICE '✓ Column "rir" added to workout_logs';
+  ELSE
+    RAISE NOTICE '✓ Column "rir" already exists in workout_logs';
+  END IF;
+
+  -- Add weightType column (text: 'pes' or 'corporal')
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'workout_logs'
+      AND column_name = 'weighttype'
+      AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.workout_logs ADD COLUMN weightType TEXT DEFAULT 'pes';
+    RAISE NOTICE '✓ Column "weightType" added to workout_logs';
+  ELSE
+    RAISE NOTICE '✓ Column "weightType" already exists in workout_logs';
+  END IF;
 END $$;
 
 -- =========================================================================

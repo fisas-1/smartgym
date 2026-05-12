@@ -298,10 +298,10 @@ export default function HomePage() {
                     <p className="text-[var(--color-text-primary)] font-light">{set.exercise}</p>
                     <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
-                  <div className="text-right">
-                      <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
-                      <p className="text-[var(--color-text-tertiary)] text-xs">RIR {set.rir}</p>
-                  </div>
+                   <div className="text-right">
+                       <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
+                       <p className="text-[var(--color-text-tertiary)] text-xs">{t('workouts.rir')} {set.rir}</p>
+                   </div>
                 </div>
               ))}
             </div>

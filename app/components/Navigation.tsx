@@ -30,13 +30,13 @@ export default function Navigation() {
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-6 py-4 flex justify-between items-center z-50 overflow-visible">
-      <div className="flex gap-4">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-50 overflow-visible">
+      <div className="flex gap-1 sm:gap-4 flex-nowrap overflow-x-auto scrollbar-hidden min-w-0">
         {navItems.map((item) => (
-          <Link 
-            key={item.href} 
-            href={item.href} 
-            className={`text-base tracking-wider transition-colors px-3 py-2 ${
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`text-xs sm:text-base tracking-wider transition-colors px-2 sm:px-3 py-1 sm:py-2 whitespace-nowrap flex-shrink-0 ${
                pathname === item.href ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
@@ -44,36 +44,36 @@ export default function Navigation() {
             </Link>
           ))}
       </div>
-<div className="flex items-center gap-3">
-         <LanguageSelector />
-         <button
-           onClick={toggleTheme}
-           className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
-           title={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
-         >
-           {theme === 'dark' ? '☀️' : '🌙'}
-         </button>
-         {loading ? (
-           <span className="text-xs text-zinc-400">...</span>
-         ) : user ? (
-           <>
-             <span className="text-xs text-zinc-400 hidden sm:inline">{t('nav.hello')}</span>
-             <button
-               onClick={() => signOut()}
-               className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center"
-             >
-               {t('nav.logout')}
-             </button>
-           </>
-         ) : (
-           <Link
-             href="/login"
-             className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center"
-           >
-             {t('nav.login')}
-           </Link>
-         )}
-       </div>
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <LanguageSelector />
+          <button
+            onClick={toggleTheme}
+            className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-1.5 sm:p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            title={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          {loading ? (
+            <span className="text-xs text-zinc-400">...</span>
+          ) : user ? (
+            <>
+              <span className="text-xs text-zinc-400 hidden sm:inline">{t('nav.hello')}</span>
+              <button
+                onClick={() => signOut()}
+                className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
+              >
+                {t('nav.logout')}
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
+            >
+              {t('nav.login')}
+            </Link>
+          )}
+        </div>
     </nav>
   )
 }
