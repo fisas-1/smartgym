@@ -82,5 +82,15 @@
   "nav.privacy": "Privacidad",
   "cookies.message": "Usamos cookies esenciales para el funcionamiento. Más información en nuestras políticas.",
   "cookies.accept": "Aceptar",
-  "cookies.more": "Más info"
+  "cookies.more": "Más info",
+  "exercise.pressBanca": "Press de Banca",
+  "exercise.latPulldown": "Jalón al Pecho",
+  "exercise.sentadilles": "Sentadillas",
+  "exercise.legPress": "Prensa de Piernas",
+  "exercise.dominades": "Dominadas",
+  "exercise.pressMilitary": "Press Militar",
+  "exercise.curlBiceps": "Curl de Bíceps",
+  "exercise.extensionesTricep": "Extensión de Tríceps",
+  "exercise.frenchPress": "Press Francés",
+  "exercise.zancades": "Zancadas"
 }

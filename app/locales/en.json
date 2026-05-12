@@ -82,5 +82,15 @@
   "common.rir": "RIR",
   "cookies.message": "We use essential cookies for functionality. Learn more in our policies.",
   "cookies.accept": "Accept",
-  "cookies.more": "More info"
+  "cookies.more": "More info",
+  "exercise.pressBanca": "Bench Press",
+  "exercise.latPulldown": "Lat Pulldown",
+  "exercise.sentadilles": "Squats",
+  "exercise.legPress": "Leg Press",
+  "exercise.dominades": "Pull Ups",
+  "exercise.pressMilitary": "Military Press",
+  "exercise.curlBiceps": "Biceps Curl",
+  "exercise.extensionesTricep": "Triceps Extension",
+  "exercise.frenchPress": "French Press",
+  "exercise.zancades": "Lunges"
 }

@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM, EXERCISE_KEYS } from '@/types'
+import { useTranslation } from '../contexts/LanguageContext'
 
 type CustomExercises = string[]
 
 export default function RutinesPage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
+  const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
   const [routines, setRoutines] = useState<Routine[]>([])
   const [routineExerciseCounts, setRoutineExerciseCounts] = useState<Record<string, number>>({})
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
@@ -718,7 +721,7 @@ export default function RutinesPage() {
             <div key={exercise.id} className="border border-zinc-900 rounded-2xl p-4 space-y-3">
                <div className="flex justify-between items-start">
                  <div className="flex-1">
-                     <p className="text-[var(--color-text-primary)] font-light">{exercise.exercise}</p>
+                     <p className="text-[var(--color-text-primary)] font-light">{tEx(exercise.exercise)}</p>
                    <p className="text-zinc-500 text-xs">
                       {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
                    </p>
@@ -746,7 +749,7 @@ export default function RutinesPage() {
                   onClick={async () => {
                      const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
                       if (rec) {
-                        setSuccessMsg(`Recomanació per ${exercise.exercise}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg x ${rec.previous_reps})`)
+                        setSuccessMsg(`Recomanació per ${tEx(exercise.exercise)}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg x ${rec.previous_reps})`)
                       } else {
                         setSuccessMsg('No hi ha historial per a aquest exercici')
                       }
@@ -913,7 +916,7 @@ export default function RutinesPage() {
          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditExerciseModal(false)}>
            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
              <h3 className="text-lg font-light text-white mb-4">Editar Exercici</h3>
-             <p className="text-zinc-400 text-sm mb-4">{editingExercise.exercise}</p>
+             <p className="text-zinc-400 text-sm mb-4">{tEx(editingExercise.exercise)}</p>
              
              <div className="space-y-4">
                <div>

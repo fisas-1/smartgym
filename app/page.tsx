@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS } from '@/types'
 import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
 
@@ -74,11 +74,17 @@ export default function HomePage() {
       if (exercise) analyzeOverload(exercise, t).then(setSuggestion)
     }, [exercise, t])
 
-    const getDisplayExercises = () => {
-      // Filter exercises to show base versions and custom exercises
-      // For exercises with bodyweight variants, show both base and corporal as separate options in UI logic
-      // But in the exercise selector, we only show base names for default exercises
-      return [...DEFAULT_EXERCISES, ...customExercises]
+    const getDisplayExercises = () => [...DEFAULT_EXERCISES, ...customExercises]
+
+    const tEx = (name: string) => {
+      const bodywaterSuffix = ' - Pes corporal'
+      if (name.endsWith(bodywaterSuffix)) {
+        const base = name.slice(0, -bodywaterSuffix.length)
+        const key = EXERCISE_KEYS[base]
+        return `${key ? t(key) : base} - ${t('workouts.bodyweight')}`
+      }
+      const key = EXERCISE_KEYS[name]
+      return key ? t(key) : name
     }
 
     // Reset weightType to "pes" when exercise changes if it doesn't support bodyweight
@@ -224,7 +230,7 @@ export default function HomePage() {
                           : 'bg-[var(--input)] text-[var(--foreground)]'
                      }`}
                  >
-                  {ex}
+                  {tEx(ex)}
 {!DEFAULT_EXERCISES.includes(ex as Exercise) && (
                       <span onClick={(e) => { e.stopPropagation(); handleDeleteExercise(ex) }} className="ml-2 w-8 h-8 flex items-center justify-center text-[var(--color-text-tertiary)] hover:text-red-400 rounded-full">x</span>
                    )}
@@ -262,7 +268,7 @@ export default function HomePage() {
                 )}
              </div>
 
-             {/* REPS section - now separate and below PES */}
+             {/* REPS section */}
              <div>
                 <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.reps')}</label>
                <input
@@ -271,6 +277,21 @@ export default function HomePage() {
                  value={reps}
                  onChange={(e) => setReps(e.target.value)}
                  placeholder="0"
+                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
+               />
+            </div>
+
+             {/* RIR section */}
+             <div>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('common.rir')}</label>
+               <input
+                 type="number"
+                 inputMode="numeric"
+                 value={rir}
+                 onChange={(e) => setRir(e.target.value)}
+                 placeholder="0"
+                 min="0"
+                 max="5"
                   className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
                />
             </div>
@@ -294,7 +315,7 @@ export default function HomePage() {
               {savedSets.map((set) => (
                 <div key={set.id} className="flex justify-between items-center py-3 border-b border-zinc-900">
                   <div>
-                    <p className="text-[var(--color-text-primary)] font-light">{set.exercise}</p>
+                    <p className="text-[var(--color-text-primary)] font-light">{tEx(set.exercise)}</p>
                     <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
                    <div className="text-right">

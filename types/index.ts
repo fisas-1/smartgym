@@ -117,6 +117,19 @@ export interface SavedExercise {
   created_at: string
 }
 
+export const EXERCISE_KEYS: Record<string, string> = {
+  'Press Banca': 'exercise.pressBanca',
+  'Lat Pulldown': 'exercise.latPulldown',
+  'Sentadilles': 'exercise.sentadilles',
+  'Leg Press': 'exercise.legPress',
+  'Dominades': 'exercise.dominades',
+  'Press Military': 'exercise.pressMilitary',
+  'Curl de Bíceps': 'exercise.curlBiceps',
+  'Extensiones Tricep': 'exercise.extensionesTricep',
+  'French Press': 'exercise.frenchPress',
+  'Zancades': 'exercise.zancades',
+}
+
 // Funcions auxiliars
 export function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
