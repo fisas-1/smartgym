@@ -3,9 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { AuthContext } from '../contexts/AuthContext'
-import { ThemeContext } from '../contexts/ThemeContext'
 import { useContext } from 'react'
-import LanguageSelector from './LanguageSelector'
 import { useTranslation } from '../contexts/LanguageContext'
 
 const navItems = [
@@ -25,10 +23,6 @@ export default function Navigation() {
   const loading = authContext?.loading ?? false
   const signOut = authContext?.signOut ?? (async () => {})
 
-  const themeContext = useContext(ThemeContext)
-  const theme = themeContext?.theme ?? 'dark'
-  const toggleTheme = themeContext?.toggleTheme ?? (() => {})
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-50 overflow-visible">
       <div className="flex gap-1 sm:gap-4 flex-nowrap overflow-x-auto scrollbar-hidden min-w-0">
@@ -45,26 +39,15 @@ export default function Navigation() {
           ))}
       </div>
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <LanguageSelector />
-          <button
-            onClick={toggleTheme}
-            className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors p-1.5 sm:p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            title={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
           {loading ? (
             <span className="text-xs text-zinc-400">...</span>
           ) : user ? (
-            <>
-              <span className="text-xs text-zinc-400 hidden sm:inline">{t('nav.hello')}</span>
-              <button
-                onClick={() => signOut()}
-                className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
-              >
-                {t('nav.logout')}
-              </button>
-            </>
+            <button
+              onClick={() => signOut()}
+              className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
+            >
+              {t('nav.logout')}
+            </button>
           ) : (
             <Link
               href="/login"

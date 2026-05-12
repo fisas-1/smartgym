@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { ThemeContext } from '../contexts/ThemeContext'
+import { useTranslation } from '../contexts/LanguageContext'
+import LanguageSelector from '../components/LanguageSelector'
 
 type UserProfile = {
   age: number | null
@@ -37,6 +40,10 @@ type ExerciseLevel = { exercise: string; level: string; levelLabel: string; leve
 
 export default function PerfilPage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
+  const themeContext = useContext(ThemeContext)
+  const theme = themeContext?.theme ?? 'dark'
+  const toggleTheme = themeContext?.toggleTheme ?? (() => {})
   const [age, setAge] = useState<string>('')
   const [height, setHeight] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
@@ -229,6 +236,27 @@ export default function PerfilPage() {
              ))}
            </div>
          </div>
+
+          <div>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Preferències</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('nav.language')}</span>
+                <LanguageSelector />
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+                <span className="text-sm font-light text-[var(--color-text-primary)]">{t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}</span>
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]/10 transition-colors min-h-[44px]"
+                  aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+                >
+                  <span className="text-base">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                  <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
        </div>
 
        <div className="h-20" />
