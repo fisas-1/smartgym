@@ -250,9 +250,14 @@ export default function HomePage() {
                 <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.weight')} ({unit})</label>
                 <input
                   type="number"
-                  inputMode="numeric"
+                  inputMode="decimal"
+                  min="0"
                   value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (v === '' || parseFloat(v) >= 0) setWeight(v)
+                  }}
+                  onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault() }}
                   placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
                   disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
                   className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)] disabled:opacity-50`}
