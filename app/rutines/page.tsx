@@ -35,6 +35,7 @@ export default function RutinesPage() {
    const [errorMsg, setErrorMsg] = useState<string | null>(null)
    const [successMsg, setSuccessMsg] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
+   const [lastSessions, setLastSessions] = useState<Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }>>({})
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -55,8 +56,36 @@ export default function RutinesPage() {
   useEffect(() => {
     if (selectedRoutine && routineExercises.length > 0) {
       loadRoutineSets(selectedRoutine.id)
+      loadLastSessions(routineExercises.map(e => e.exercise))
     }
   }, [selectedRoutine, routineExercises])
+
+  async function loadLastSessions(exerciseNames: string[]) {
+    if (!user || exerciseNames.length === 0) return
+    const uniq = Array.from(new Set(exerciseNames))
+    const { data } = await supabase
+      .from('workout_logs')
+      .select('exercise, weight, reps, rir, created_at')
+      .eq('user_id', user.id)
+      .in('exercise', uniq)
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    if (!data) return
+    const grouped: Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }> = {}
+    for (const log of data) {
+      const dayKey = new Date(log.created_at).toISOString().slice(0, 10)
+      const entry = grouped[log.exercise]
+      if (!entry) {
+        grouped[log.exercise] = { date: dayKey, sets: [{ weight: log.weight, reps: log.reps, rir: log.rir }] }
+      } else if (entry.date === dayKey) {
+        entry.sets.push({ weight: log.weight, reps: log.reps, rir: log.rir })
+      }
+    }
+    // Logs come DESC; reverse each exercise's sets so set 1 = chronologically first
+    for (const ex of Object.keys(grouped)) grouped[ex].sets.reverse()
+    setLastSessions(grouped)
+  }
 
   // Netejar missatges després de 3 segons
   useEffect(() => {
@@ -746,6 +775,26 @@ export default function RutinesPage() {
                  </div>
                </div>
 
+              {/* Última sessió */}
+              {lastSessions[exercise.exercise] && (
+                <div className="px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-500">Última sessió</p>
+                    <p className="text-[10px] text-zinc-600">
+                      {new Date(lastSessions[exercise.exercise].date).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {lastSessions[exercise.exercise].sets.map((s, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-zinc-800/60 text-zinc-300 font-light">
+                        {format(s.weight)}{unit} × {s.reps}
+                        {s.rir != null && <span className="text-zinc-500"> · RIR {s.rir}</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Botó de recomanació de pes */}
 <button
                   onClick={async () => {
@@ -762,12 +811,21 @@ export default function RutinesPage() {
               </button>
 
 {/* Llista de series */}
-               {sets.map((set, idx) => (
-                 <div 
-                   key={set.id} 
+               {sets.map((set, idx) => {
+                 const prev = lastSessions[exercise.exercise]?.sets[set.set_number - 1]
+                 const curW = set.weight || 0, curR = set.reps || 0
+                 const hasCurrent = curR > 0 && (curW > 0 || (prev?.weight === 0))
+                 const isBodyweight = prev?.weight === 0 && curW === 0
+                 const curMetric = isBodyweight ? curR : calculate1RM(curW, curR)
+                 const prevMetric = prev ? (isBodyweight ? prev.reps : calculate1RM(prev.weight, prev.reps)) : 0
+                 const diff = curMetric - prevMetric
+                 const diffPct = prevMetric > 0 ? Math.round((diff / prevMetric) * 100) : 0
+                 return (
+                 <div
+                   key={set.id}
                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                     set.completed 
-                       ? 'bg-green-900/30 border-green-800' 
+                     set.completed
+                       ? 'bg-green-900/30 border-green-800'
                        : 'bg-zinc-900 border-zinc-800'
                    }`}
                  >
@@ -781,7 +839,7 @@ export default function RutinesPage() {
                    >
                      {set.completed && '✓'}
                    </button>
-                   
+
                    {!set.completed && (
                      <>
                        <input
@@ -791,7 +849,7 @@ export default function RutinesPage() {
                            const inputVal = parseFloat(e.target.value) || 0
                            handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
                          }}
-                         placeholder={unit}
+                         placeholder={prev ? format(prev.weight) : unit}
                          className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
                        />
                        <span className="text-zinc-500 text-xs">x</span>
@@ -802,16 +860,31 @@ export default function RutinesPage() {
                            const r = parseInt(e.target.value) || 0
                            handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
                          }}
-                         placeholder="reps"
+                         placeholder={prev ? String(prev.reps) : 'reps'}
                          className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
                        />
                      </>
                    )}
-                   
+
                    {set.completed && (
                      <span className="text-zinc-400 text-sm">{format(set.weight)}{unit} x {set.reps} reps</span>
                    )}
-                   
+
+                   {/* Comparador amb la sessió anterior */}
+                   {prev && hasCurrent && prevMetric > 0 && (
+                     <span
+                       className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                         diff > 0
+                           ? 'bg-green-900/50 text-green-400'
+                           : diff < 0
+                             ? 'bg-zinc-800 text-zinc-500'
+                             : 'bg-yellow-900/40 text-yellow-400'
+                       }`}
+                       title={`Anterior: ${format(prev.weight)}${unit} × ${prev.reps}`}
+                     >
+                       {diff > 0 ? `▲ +${diffPct}%` : diff < 0 ? `▼ ${diffPct}%` : '= igual'}
+                     </span>
+                   )}
                    <span className="text-zinc-400 text-sm ml-auto">Sèrie {set.set_number}</span>
                    
                    {set.completed ? (
@@ -820,7 +893,8 @@ export default function RutinesPage() {
                      <span className="text-zinc-600 text-xs">Pendent</span>
                    )}
                  </div>
-               ))}
+                 )
+               })}
 
               {/* Auto-completar quan totes les series estan fetes */}
               {allCompleted && (

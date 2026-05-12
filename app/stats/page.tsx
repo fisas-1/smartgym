@@ -1,7 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { useUnit } from '../contexts/UnitContext'
+import { EXERCISE_KEYS } from '@/types'
+import { useTranslation } from '../contexts/LanguageContext'
 
 const MUSCLE_GROUPS = [
   { id: 'pit', label: 'Pit', color: '#888' },
@@ -21,13 +25,25 @@ const EXERCISE_MUSCLE_MAP: Record<string, string> = {
 }
 
 type MuscleStats = { muscle: string; label: string; improvement: number; currentMax: number; previousMax: number }
+type LogEntry = { id: string; exercise: string; weight: number; reps: number; rir: number | null; one_rm: number; created_at: string }
 
 export default function EstadistiquesPage() {
+  const { user } = useAuth()
+  const { unit, format } = useUnit()
+  const { t } = useTranslation()
+  const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
   const [stats, setStats] = useState<MuscleStats[]>([])
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<'30' | '90' | 'all'>('30')
 
+  const [exerciseList, setExerciseList] = useState<string[]>([])
+  const [selectedExercise, setSelectedExercise] = useState<string>('')
+  const [exerciseLogs, setExerciseLogs] = useState<LogEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+
   useEffect(() => { loadStats() }, [period])
+  useEffect(() => { if (user) loadExerciseList() }, [user])
+  useEffect(() => { if (selectedExercise) loadExerciseHistory(selectedExercise) }, [selectedExercise, user])
 
   async function loadStats() {
     setLoading(true)
@@ -68,6 +84,51 @@ export default function EstadistiquesPage() {
     setStats(calculated)
     setLoading(false)
   }
+
+  async function loadExerciseList() {
+    if (!user) return
+    const { data } = await supabase
+      .from('workout_logs')
+      .select('exercise')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    if (!data) return
+    const uniq = Array.from(new Set(data.map(r => r.exercise as string)))
+    setExerciseList(uniq)
+    if (uniq.length && !selectedExercise) setSelectedExercise(uniq[0])
+  }
+
+  async function loadExerciseHistory(exercise: string) {
+    if (!user) return
+    setHistoryLoading(true)
+    const { data } = await supabase
+      .from('workout_logs')
+      .select('id, exercise, weight, reps, rir, one_rm, created_at')
+      .eq('user_id', user.id)
+      .eq('exercise', exercise)
+      .order('created_at', { ascending: false })
+      .limit(200)
+    setExerciseLogs((data as LogEntry[]) || [])
+    setHistoryLoading(false)
+  }
+
+  const groupedByDay = useMemo(() => {
+    const map: Record<string, LogEntry[]> = {}
+    for (const l of exerciseLogs) {
+      const key = new Date(l.created_at).toISOString().slice(0, 10)
+      ;(map[key] ||= []).push(l)
+    }
+    return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]))
+  }, [exerciseLogs])
+
+  const chartData = useMemo(() => {
+    const points = groupedByDay
+      .map(([day, logs]) => ({ day, max: Math.max(...logs.map(l => l.one_rm || 0)) }))
+      .filter(p => p.max > 0)
+      .reverse()
+    return points
+  }, [groupedByDay])
 
   const totalImprovement = stats.filter(s => s.improvement > 0).reduce((sum, s) => sum + s.improvement, 0)
   const improvedCount = stats.filter(s => s.improvement > 0).length
@@ -138,9 +199,115 @@ export default function EstadistiquesPage() {
             </div>
           </>
         )}
+
+        {/* Historial per exercici */}
+        {exerciseList.length > 0 && (
+          <div className="pt-4 border-t border-zinc-900">
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Historial per exercici</p>
+
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden mb-4">
+              {exerciseList.map(ex => (
+                <button
+                  key={ex}
+                  onClick={() => setSelectedExercise(ex)}
+                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
+                    selectedExercise === ex
+                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                      : 'bg-zinc-900 text-zinc-400'
+                  }`}
+                >
+                  {tEx(ex)}
+                </button>
+              ))}
+            </div>
+
+            {historyLoading ? (
+              <div className="py-10 text-center text-zinc-600 text-sm">Carregant historial...</div>
+            ) : exerciseLogs.length === 0 ? (
+              <p className="text-zinc-600 text-sm py-6 text-center">Sense historial</p>
+            ) : (
+              <>
+                {/* Mini-gràfic d'evolució 1RM */}
+                {chartData.length >= 2 && (
+                  <ProgressChart points={chartData} unit={unit} format={format} />
+                )}
+
+                {/* Sessions agrupades per dia */}
+                <div className="space-y-3 mt-4">
+                  {groupedByDay.map(([day, logs]) => {
+                    const maxOneRM = Math.max(...logs.map(l => l.one_rm || 0))
+                    return (
+                      <div key={day} className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="text-sm font-light text-zinc-300">
+                            {new Date(day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                          {maxOneRM > 0 && (
+                            <p className="text-xs text-zinc-500">1RM: <span className="text-zinc-300">{format(maxOneRM)}{unit}</span></p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {logs.map(l => (
+                            <span key={l.id} className="text-xs px-2 py-1 rounded-md bg-zinc-800/60 text-zinc-300 font-light">
+                              {format(l.weight)}{unit} × {l.reps}
+                              {l.rir != null && <span className="text-zinc-500"> · RIR {l.rir}</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="h-20" />
+    </div>
+  )
+}
+
+function ProgressChart({ points, unit, format }: { points: { day: string; max: number }[]; unit: string; format: (kg: number) => string }) {
+  const W = 320, H = 100, P = 12
+  const xs = points.map((_, i) => P + (i * (W - 2 * P)) / Math.max(1, points.length - 1))
+  const maxY = Math.max(...points.map(p => p.max))
+  const minY = Math.min(...points.map(p => p.max))
+  const range = maxY - minY || 1
+  const ys = points.map(p => H - P - ((p.max - minY) / range) * (H - 2 * P))
+  const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'} ${x} ${ys[i]}`).join(' ')
+  const areaPath = `${path} L ${xs[xs.length - 1]} ${H - P} L ${xs[0]} ${H - P} Z`
+  const first = points[0].max, last = points[points.length - 1].max
+  const trend = last - first
+  const trendPct = first > 0 ? Math.round((trend / first) * 100) : 0
+
+  return (
+    <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-4">
+      <div className="flex justify-between items-baseline mb-2">
+        <p className="text-xs uppercase tracking-wider text-zinc-500">Evolució 1RM</p>
+        <p className={`text-xs ${trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-zinc-500'}`}>
+          {trend > 0 ? '+' : ''}{format(trend)}{unit} ({trendPct > 0 ? '+' : ''}{trendPct}%)
+        </p>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24">
+        <defs>
+          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#chartGrad)" />
+        <path d={path} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {xs.map((x, i) => (
+          <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 3 : 2} fill="#22c55e" />
+        ))}
+      </svg>
+      <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+        <span>{new Date(points[0].day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</span>
+        <span>{format(minY)}–{format(maxY)}{unit}</span>
+        <span>{new Date(points[points.length - 1].day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</span>
+      </div>
     </div>
   )
 }
