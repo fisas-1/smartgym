@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase/index'
 import { useAuth } from '../app/contexts/AuthContext'
+import { useUnit } from '../app/contexts/UnitContext'
 import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM } from '@/types'
 
 type CustomExercises = string[]
 
 export default function RutinesPage() {
   const { user } = useAuth()
+  const { unit, toKg, fromKg, format } = useUnit()
   const [routines, setRoutines] = useState<Routine[]>([])
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([])
@@ -653,7 +655,7 @@ if (error) {
                   if (isSchemaFixed) {
                     const rec = await getWeightRecommendation(exercise.name!, exercise.reps_min ?? 0)
                     if (rec && rec[0]) {
-                      setSuccessMsg(`Recomanació per ${exercise.name!}: ${rec[0].recommended_weight}kg (anterior: ${rec[0].previous_weight}kg x ${rec[0].previous_reps})`)
+                      setSuccessMsg(`Recomanació per ${exercise.name!}: ${format(rec[0].recommended_weight)}${unit} (anterior: ${format(rec[0].previous_weight)}${unit} x ${rec[0].previous_reps})`)
                     } else {
                       setSuccessMsg('No hi ha historial per a aquest exercici')
                     }
@@ -678,12 +680,12 @@ if (error) {
                      <div className="flex items-center gap-2">
                        <input
                          type="number"
-                         value={set.weight || ''}
+                         value={set.weight ? (unit === 'kg' ? set.weight : Number(fromKg(set.weight).toFixed(1))) : ''}
                          onChange={(e) => {
-                           const w = parseFloat(e.target.value) || 0
-                           handleUpdateSet(exercise.id, set.id, w, set.reps || 0)
+                           const inputVal = parseFloat(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
                          }}
-                         placeholder="kg"
+                         placeholder={unit}
                          className="w-16 bg-[var(--border)] text-[var(--color-text-primary)] rounded px-2 py-1 text-sm focus:outline-none"
                          disabled={set.completed}
                        />

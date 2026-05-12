@@ -5,12 +5,14 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM, EXERCISE_KEYS } from '@/types'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useUnit } from '../contexts/UnitContext'
 
 type CustomExercises = string[]
 
 export default function RutinesPage() {
   const { user } = useAuth()
   const { t } = useTranslation()
+  const { unit, toKg, fromKg, format } = useUnit()
   const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
   const [routines, setRoutines] = useState<Routine[]>([])
   const [routineExerciseCounts, setRoutineExerciseCounts] = useState<Record<string, number>>({})
@@ -749,7 +751,7 @@ export default function RutinesPage() {
                   onClick={async () => {
                      const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
                       if (rec) {
-                        setSuccessMsg(`Recomanació per ${tEx(exercise.exercise)}: ${rec.recommended_weight}kg (anterior: ${rec.previous_weight}kg x ${rec.previous_reps})`)
+                        setSuccessMsg(`Recomanació per ${tEx(exercise.exercise)}: ${format(rec.recommended_weight)}${unit} (anterior: ${format(rec.previous_weight)}${unit} x ${rec.previous_reps})`)
                       } else {
                         setSuccessMsg('No hi ha historial per a aquest exercici')
                       }
@@ -784,12 +786,12 @@ export default function RutinesPage() {
                      <>
                        <input
                          type="number"
-                         value={set.weight || ''}
+                         value={set.weight ? (unit === 'kg' ? set.weight : Number(fromKg(set.weight).toFixed(1))) : ''}
                          onChange={(e) => {
-                           const w = parseFloat(e.target.value) || 0
-                           handleUpdateSet(exercise.id, set.id, w, set.reps || 0)
+                           const inputVal = parseFloat(e.target.value) || 0
+                           handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
                          }}
-                         placeholder="kg"
+                         placeholder={unit}
                          className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
                        />
                        <span className="text-zinc-500 text-xs">x</span>
@@ -807,7 +809,7 @@ export default function RutinesPage() {
                    )}
                    
                    {set.completed && (
-                     <span className="text-zinc-400 text-sm">{set.weight}kg x {set.reps} reps</span>
+                     <span className="text-zinc-400 text-sm">{format(set.weight)}{unit} x {set.reps} reps</span>
                    )}
                    
                    <span className="text-zinc-400 text-sm ml-auto">Sèrie {set.set_number}</span>

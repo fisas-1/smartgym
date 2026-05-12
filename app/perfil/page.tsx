@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { ThemeContext } from '../contexts/ThemeContext'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useUnit } from '../contexts/UnitContext'
 import LanguageSelector from '../components/LanguageSelector'
 
 type UserProfile = {
@@ -41,6 +42,7 @@ type ExerciseLevel = { exercise: string; level: string; levelLabel: string; leve
 export default function PerfilPage() {
   const { user } = useAuth()
   const { t } = useTranslation()
+  const { unit, setUnit, toKg, format } = useUnit()
   const themeContext = useContext(ThemeContext)
   const theme = themeContext?.theme ?? 'dark'
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
@@ -52,7 +54,7 @@ export default function PerfilPage() {
   const [exerciseLevels, setExerciseLevels] = useState<ExerciseLevel[]>([])
   const [overallLevel, setOverallLevel] = useState<string>('')
 
-  useEffect(() => { loadProfile() }, [])
+  useEffect(() => { loadProfile() }, [unit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
 
   function loadProfile() {
@@ -61,16 +63,17 @@ export default function PerfilPage() {
       const p: UserProfile = JSON.parse(saved)
       setAge(p.age?.toString() || '')
       setHeight(p.height?.toString() || '')
-      setWeight(p.weight?.toString() || '')
+      setWeight(p.weight != null ? format(p.weight) : '')
       setGender(p.gender || 'm')
     }
   }
 
   function saveProfile() {
+    const wInput = parseFloat(weight)
     localStorage.setItem('user_profile', JSON.stringify({
       age: parseInt(age) || null,
       height: parseFloat(height) || null,
-      weight: parseFloat(weight) || null,
+      weight: isNaN(wInput) ? null : toKg(wInput),
       gender,
     }))
     setSaved(true)
@@ -79,7 +82,8 @@ export default function PerfilPage() {
 
   function calculateLevels() {
     if (!user) return
-    const w = parseFloat(weight) || 70
+    const wInput = parseFloat(weight)
+    const w = isNaN(wInput) ? 70 : toKg(wInput)
     supabase.from('workout_logs').select('exercise, weight, reps, one_rm')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }).then(({ data: logs }) => {
@@ -212,7 +216,7 @@ export default function PerfilPage() {
                    inputMode="numeric"
                    value={weight}
                    onChange={(e) => setWeight(e.target.value)}
-                   placeholder="Pes (kg)"
+                   placeholder={`Pes (${unit})`}
                    className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                </div>
@@ -254,6 +258,31 @@ export default function PerfilPage() {
                   <span className="text-base">{theme === 'dark' ? '☀️' : '🌙'}</span>
                   <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                 </button>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+                <span className="text-sm font-light text-[var(--color-text-primary)]">Unitat de pes</span>
+                <div className="flex bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setUnit('kg')}
+                    className={`px-4 py-2 text-xs uppercase tracking-wider min-h-[44px] transition-colors ${
+                      unit === 'kg'
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'text-[var(--foreground)]/70 hover:bg-[var(--accent)]/10'
+                    }`}
+                  >
+                    kg
+                  </button>
+                  <button
+                    onClick={() => setUnit('lb')}
+                    className={`px-4 py-2 text-xs uppercase tracking-wider min-h-[44px] transition-colors ${
+                      unit === 'lb'
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'text-[var(--foreground)]/70 hover:bg-[var(--accent)]/10'
+                    }`}
+                  >
+                    lb
+                  </button>
+                </div>
               </div>
             </div>
           </div>

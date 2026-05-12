@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS } from '@/types'
 import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
+import { useUnit } from './contexts/UnitContext'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
@@ -41,10 +42,11 @@ export default function HomePage() {
   const { user } = useAuth()
   const { t } = useTranslation()
   const { theme } = useTheme()
+  const { unit, toKg, format } = useUnit()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
-  const [rir, setRir] = useState<string>('0')
+  const [rir, setRir] = useState<string>('')
   const [oneRM, setOneRM] = useState<number>(0)
   const [weightType, setWeightType] = useState("pes")
   const [savedSets, setSavedSets] = useState<any[]>([])
@@ -63,11 +65,11 @@ export default function HomePage() {
   useEffect(() => {
     const w = parseFloat(weight), r = parseFloat(reps)
     if (!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
-      setOneRM(calculate1RM(w, r))
+      setOneRM(calculate1RM(toKg(w), r))
     } else {
       setOneRM(0)
     }
-  }, [weight, reps])
+  }, [weight, reps, unit])
 
   useEffect(() => { loadSavedSets() }, [user])
     useEffect(() => {
@@ -115,21 +117,23 @@ export default function HomePage() {
 
     async function handleSave(e: React.FormEvent) {
       e.preventDefault()
-      const w = parseFloat(weight), r = parseFloat(reps)
+      const wInput = parseFloat(weight), r = parseFloat(reps)
       if (isNaN(r) || r <= 0) return
-      if (weightType === "pes" && (isNaN(w) || w <= 0)) return
+      if (weightType === "pes" && (isNaN(wInput) || wInput <= 0)) return
 
       setLoading(true)
       setErrorMsg(null)
-      
+
+      const wKg = toKg(wInput)
+
       // For bodyweight exercises, store with suffix to distinguish in history
       const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
-      
+
       const insertData = {
         exercise: exerciseToStore,
-        weight: weightType === "corporal" ? 0 : w,
+        weight: weightType === "corporal" ? 0 : wKg,
         reps: r,
-        rir: parseFloat(rir),
+        rir: rir === '' ? null : parseFloat(rir),
         one_rm: weightType === "corporal" ? 0 : oneRM,
         user_id: user?.id,
       }
@@ -144,7 +148,7 @@ export default function HomePage() {
         }
         return
       }
-      setWeight(''); setReps(''); setRir('0')
+      setWeight(''); setReps(''); setRir('')
       await loadSavedSets()
     }
 
@@ -198,8 +202,8 @@ export default function HomePage() {
          <div className="py-8">
             <p className="text-[var(--color-text-tertiary)] text-sm mb-1">{t('home.oneRMLabel')}</p>
            <div className="flex items-baseline gap-1">
-             <span className="text-7xl font-light tracking-tight">{oneRM || '\u2014'}</span>
-             <span className="text-[var(--color-text-tertiary)] text-xl">kg</span>
+             <span className="text-7xl font-light tracking-tight">{oneRM ? format(oneRM) : '\u2014'}</span>
+             <span className="text-[var(--color-text-tertiary)] text-xl">{unit}</span>
            </div>
          </div>
 
@@ -243,7 +247,7 @@ export default function HomePage() {
            <div className="space-y-4">
              {/* PES / PES CORPORAL section */}
              <div>
-                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.weight')}</label>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.weight')} ({unit})</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -270,36 +274,56 @@ export default function HomePage() {
 
              {/* REPS section */}
              <div>
-                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.reps')}</label>
-               <input
-                 type="number"
-                 inputMode="numeric"
-                 value={reps}
-                 onChange={(e) => setReps(e.target.value)}
-                 placeholder="0"
-                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
-               />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('workouts.reps')}</label>
+                  <span className="text-[var(--color-text-primary)] text-2xl font-light">{reps || '—'}</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
+                  {Array.from({ length: 30 }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setReps(String(n))}
+                      className={`min-w-[44px] h-11 px-3 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
+                        reps === String(n)
+                          ? 'bg-[var(--card-foreground)] text-[var(--background)]'
+                          : 'bg-[var(--input)] text-[var(--foreground)]'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
             </div>
 
              {/* RIR section */}
              <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('common.rir')}</label>
-                  <span className="text-[var(--color-text-primary)] text-2xl font-light">{rir}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[var(--color-text-primary)] text-2xl font-light">{rir === '' ? '—' : rir}</span>
+                    <button
+                      type="button"
+                      onClick={() => setRir(rir === '' ? '0' : '')}
+                      className="text-xs px-3 py-1.5 rounded-full bg-[var(--input)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                    >
+                      {rir === '' ? 'Activar' : 'Sense RIR'}
+                    </button>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min="0"
-                  max="4"
+                  max="3"
                   step="1"
-                  value={rir}
+                  value={rir === '' ? 0 : rir}
                   onChange={(e) => setRir(e.target.value)}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  className={`w-full h-2 rounded-full appearance-none cursor-pointer transition-opacity ${rir === '' ? 'opacity-30' : ''}`}
                   style={{ accentColor: 'var(--color-text-primary)' }}
                 />
                 <div className="flex justify-between mt-1">
-                  {[0,1,2,3,4].map(v => (
-                    <span key={v} className="text-[var(--color-text-tertiary)] text-xs">{v}</span>
+                  {[0,1,2,3].map(v => (
+                    <span key={v} className={`text-xs ${rir === '' ? 'text-[var(--color-text-tertiary)] opacity-50' : 'text-[var(--color-text-tertiary)]'}`}>{v}</span>
                   ))}
                 </div>
             </div>
@@ -327,8 +351,8 @@ export default function HomePage() {
                     <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
                   </div>
                    <div className="text-right">
-                       <p className="text-[var(--color-text-primary)] font-light">{set.weight}kg x {set.reps}</p>
-                       <p className="text-[var(--color-text-tertiary)] text-xs">{t('workouts.rir')} {set.rir}</p>
+                       <p className="text-[var(--color-text-primary)] font-light">{format(set.weight)}{unit} x {set.reps}</p>
+                       {set.rir != null && <p className="text-[var(--color-text-tertiary)] text-xs">{t('workouts.rir')} {set.rir}</p>}
                    </div>
                 </div>
               ))}
