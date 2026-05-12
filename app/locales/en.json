@@ -79,6 +79,7 @@
   "common.saveError": "Error saving: ",
   "common.login": "Login",
   "common.register": "Register",
+  "common.rir": "RIR",
   "cookies.message": "We use essential cookies for functionality. Learn more in our policies.",
   "cookies.accept": "Accept",
   "cookies.more": "More info"

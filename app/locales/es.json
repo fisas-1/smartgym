@@ -78,6 +78,8 @@
   "common.saveError": "Error al guardar: ",
   "common.login": "Iniciar sesión",
   "common.register": "Registrarse",
+  "common.rir": "RIR",
+  "nav.privacy": "Privacidad",
   "cookies.message": "Usamos cookies esenciales para el funcionamiento. Más información en nuestras políticas.",
   "cookies.accept": "Aceptar",
   "cookies.more": "Más info"
