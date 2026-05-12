@@ -25,7 +25,7 @@ const LanguageSelector = () => {
   </svg>
 </button>
 
-      <div className="absolute top-full right-0 mt-1 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-100" style={{position: 'absolute'}}>
+      <div className="absolute bottom-full right-0 mb-1 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100]">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-lg overflow-hidden">
           {languages.map(({ code, label, full }) => (
             <button

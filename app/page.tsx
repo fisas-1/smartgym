@@ -120,13 +120,12 @@ export default function HomePage() {
       const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
       
       const insertData = {
-        exercise: exerciseToStore, 
-        weight: weightType === "corporal" ? 0 : w, 
-        reps: r, 
-        rir: parseFloat(rir), 
+        exercise: exerciseToStore,
+        weight: weightType === "corporal" ? 0 : w,
+        reps: r,
+        rir: parseFloat(rir),
         one_rm: weightType === "corporal" ? 0 : oneRM,
-        user_id: user?.id, 
-        weightType
+        user_id: user?.id,
       }
       const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
       setLoading(false)
