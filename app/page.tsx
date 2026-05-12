@@ -283,17 +283,25 @@ export default function HomePage() {
 
              {/* RIR section */}
              <div>
-                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('common.rir')}</label>
-               <input
-                 type="number"
-                 inputMode="numeric"
-                 value={rir}
-                 onChange={(e) => setRir(e.target.value)}
-                 placeholder="0"
-                 min="0"
-                 max="5"
-                  className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-2xl font-light rounded-2xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
-               />
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('common.rir')}</label>
+                  <span className="text-[var(--color-text-primary)] text-2xl font-light">{rir}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="4"
+                  step="1"
+                  value={rir}
+                  onChange={(e) => setRir(e.target.value)}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{ accentColor: 'var(--color-text-primary)' }}
+                />
+                <div className="flex justify-between mt-1">
+                  {[0,1,2,3,4].map(v => (
+                    <span key={v} className="text-[var(--color-text-tertiary)] text-xs">{v}</span>
+                  ))}
+                </div>
             </div>
             </div>
 
