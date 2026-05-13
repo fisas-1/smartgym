@@ -803,8 +803,7 @@ export default function RutinesPage() {
                    className="flex-1 text-left min-w-0"
                    onClick={() => handleSelectRoutine(routine)}
                  >
-                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate flex items-center gap-1.5">
-                      {favoriteIds.includes(routine.id) && <span className="text-base">★</span>}
+                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate">
                       {routine.name}
                     </p>
                     <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
