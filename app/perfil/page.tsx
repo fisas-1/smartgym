@@ -3,6 +3,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 import { ThemeContext } from '../contexts/ThemeContext'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useUnit } from '../contexts/UnitContext'
@@ -40,7 +41,8 @@ const LEVELS = [
 type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number }
 
 export default function PerfilPage() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
+  const router = useRouter()
   const { t } = useTranslation()
   const { unit, setUnit, toKg, format } = useUnit()
   const themeContext = useContext(ThemeContext)
@@ -285,6 +287,14 @@ export default function PerfilPage() {
               </div>
             </div>
           </div>
+
+          <button
+            onClick={async () => { await signOut(); router.replace('/login') }}
+            className="w-full py-3 rounded-2xl text-sm font-light transition-colors"
+            style={{ color: 'var(--accent-danger)', backgroundColor: 'color-mix(in srgb, var(--accent-danger) 10%, transparent)' }}
+          >
+            {t('nav.logout')}
+          </button>
        </div>
 
        <div className="h-20" />
