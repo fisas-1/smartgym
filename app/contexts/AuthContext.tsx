@@ -46,12 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(email: string, password: string, username: string) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? ''
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { username },
-        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-dominio.vercel.app'}/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
       } as any,
     })
     if (error) return { error: error.message }
@@ -74,8 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function resetPassword(email: string) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? ''
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || 'https://tu-dominio.vercel.app'}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     } as any);
     if (error) return { error: error.message }
     return {}

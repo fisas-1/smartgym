@@ -75,9 +75,12 @@ export default function HomePage() {
   }, [weight, reps, unit])
 
   useEffect(() => { loadSavedSets() }, [user])
-    useEffect(() => {
+  useEffect(() => {
+    const id = setTimeout(() => {
       if (exercise) analyzeOverload(exercise, t, format, unit).then(setSuggestion)
-    }, [exercise, t, format, unit])
+    }, 400)
+    return () => clearTimeout(id)
+  }, [exercise, t, format, unit])
 
     const getDisplayExercises = () => [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -215,15 +218,31 @@ export default function HomePage() {
     if (!user) {
       return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-          <div className="text-center space-y-6 max-w-sm w-full">
-            <h1 className="text-4xl font-light tracking-tight">gym.</h1>
-            <p className="text-[var(--color-text-tertiary)] text-sm">{t('home.welcome')}</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href="/login" className="flex-1 py-4 px-6 rounded-2xl font-medium border border-[var(--border)] text-[var(--color-text-primary)] hover:bg-[var(--surface-strong)] transition-colors">
-                {t('common.login')}
-              </a>
-              <a href="/login" className="flex-1 py-4 px-6 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity">
+          <div className="max-w-sm w-full space-y-8">
+            <div className="text-center space-y-3">
+              <h1 className="text-4xl font-light tracking-tight">gym.</h1>
+              <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{t('home.welcome')}</p>
+            </div>
+
+            <div className="card-surface divide-y divide-[var(--border)]">
+              {[
+                { icon: '📈', label: t('home.featureProgress') || 'Registra el teu 1RM i progressió' },
+                { icon: '📋', label: t('home.featureRoutines') || 'Crea i segueix les teves rutines' },
+                { icon: '🏆', label: t('home.featureFriends') || 'Compara consistència amb amics' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-3 px-4 py-3">
+                  <span className="text-lg w-7 text-center flex-shrink-0">{icon}</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <a href="/login" className="w-full py-4 px-6 rounded-2xl font-medium text-center bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity">
                 {t('common.register')}
+              </a>
+              <a href="/login" className="w-full py-4 px-6 rounded-2xl font-medium text-center border border-[var(--border)] text-[var(--color-text-primary)] hover:bg-[var(--surface-strong)] transition-colors">
+                {t('common.login')}
               </a>
             </div>
           </div>

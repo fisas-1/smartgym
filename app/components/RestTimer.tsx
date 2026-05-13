@@ -62,7 +62,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
 
   if (!running && remaining === 0) {
     return (
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex gap-1 backdrop-blur-md rounded-full px-2 py-1.5 fade-in" style={surfaceStyle}>
+      <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex gap-1 backdrop-blur-md rounded-full px-2 py-1.5 fade-in" style={surfaceStyle}>
         {PRESETS.map(p => (
           <button
             key={p}
@@ -78,7 +78,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
   }
 
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[220px] fade-in" style={surfaceStyle}>
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[220px] fade-in" style={surfaceStyle}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">{t('timer.rest')}</p>

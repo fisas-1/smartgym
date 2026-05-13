@@ -31,7 +31,7 @@ export default function Navigation() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-xs tracking-wide px-3 py-2 rounded-full whitespace-nowrap transition-colors ${
+              className={`text-xs tracking-wide px-3 py-2 min-h-[44px] flex items-center rounded-full whitespace-nowrap transition-colors ${
                 active
                   ? 'text-[var(--color-text-primary)] bg-[var(--surface-strong)]'
                   : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'

@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npx next *)",
       "Bash(npm install *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(New-Item -Path \"c:\\\\Users\\\\User\\\\smartgym\\\\app\\\\privacy\\\\page.tsx\" -ItemType File -Force)",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"created\")"
     ]
   }
 }
