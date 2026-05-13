@@ -103,7 +103,7 @@
   "routines.completed": "Completed",
   "routines.pending": "Pending",
   "routines.exerciseCompleted": "✅ Exercise Completed (tap to unmark)",
-  "routines.resetForSession": "🔄 Reset for new session",
+  "routines.resetForSession": "↺ Save session & reset",
   "routines.recommendWeight": "💡 Recommend Weight",
   "routines.recommendation": "Recommendation for {{exercise}}: {{weight}}{{unit}} (previous: {{prevWeight}}{{unit}} x {{prevReps}})",
   "routines.noExerciseHistory": "No history for this exercise",

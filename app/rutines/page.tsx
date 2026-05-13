@@ -743,7 +743,7 @@ export default function RutinesPage() {
             onClick={() => setShowRoutineModal(true)}
             className="w-full py-4 rounded-2xl font-medium border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
           >
-            + {t('routines.newBtn')}
+            {t('routines.newBtn')}
           </button>
         </div>
 
@@ -1181,7 +1181,7 @@ export default function RutinesPage() {
 
       <RestTimer />
       <QuickLogFab />
-      <div className="h-20" />
+      <div className="h-40" />
     </div>
   )
 }
