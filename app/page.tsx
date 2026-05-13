@@ -151,55 +151,59 @@ export default function HomePage() {
       setLoading(true)
       setErrorMsg(null)
 
-      const wKg = toKg(wInput)
+      try {
+        const wKg = toKg(wInput)
 
-      // For bodyweight exercises, store with suffix to distinguish in history
-      const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
+        const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
 
-      // PR check: get current max 1RM for this exercise BEFORE inserting
-      let isPr = false
-      if (weightType !== "corporal" && oneRM > 0 && user) {
-        const { data: prev } = await supabase
-          .from('workout_logs')
-          .select('one_rm')
-          .eq('user_id', user.id)
-          .eq('exercise', exerciseToStore)
-          .order('one_rm', { ascending: false })
-          .limit(1)
-        const prevMax = prev?.[0]?.one_rm || 0
-        if (oneRM > prevMax) isPr = true
-      }
-
-      const insertData: any = {
-        exercise: exerciseToStore,
-        weight: weightType === "corporal" ? 0 : wKg,
-        reps: r,
-        rir: rir === '' ? null : parseFloat(rir),
-        one_rm: weightType === "corporal" ? 0 : oneRM,
-        user_id: user?.id,
-      }
-      if (note.trim()) insertData.note = note.trim()
-      const { data, error } = await supabase.from('workout_logs').insert(insertData).select().maybeSingle()
-      setLoading(false)
-      if (error) {
-        console.error('Error saving set:', error)
-        if (error.message.includes('column') || error.message.includes('exercise')) {
-          setErrorMsg('Error: La base de dades necessita configuració. Veure SOLUZIONE.md')
-        } else {
-          setErrorMsg('Error al guardar: ' + error.message)
+        let isPr = false
+        if (weightType !== "corporal" && oneRM > 0 && user) {
+          const { data: prev } = await supabase
+            .from('workout_logs')
+            .select('one_rm')
+            .eq('user_id', user.id)
+            .eq('exercise', exerciseToStore)
+            .order('one_rm', { ascending: false })
+            .limit(1)
+          const prevMax = prev?.[0]?.one_rm || 0
+          if (oneRM > prevMax) isPr = true
         }
-        return
+
+        const insertData: any = {
+          exercise: exerciseToStore,
+          weight: weightType === "corporal" ? 0 : wKg,
+          reps: r,
+          rir: rir === '' ? null : parseFloat(rir),
+          one_rm: weightType === "corporal" ? 0 : oneRM,
+          user_id: user?.id,
+        }
+        if (note.trim()) insertData.note = note.trim()
+        const { error } = await supabase.from('workout_logs').insert(insertData)
+        if (error) {
+          console.error('Error saving set:', error)
+          if (error.message.includes('note') || error.message.includes('column')) {
+            setErrorMsg('Error: Cal afegir la columna "note" a Supabase. Executa add-note-column.sql al SQL Editor.')
+          } else {
+            setErrorMsg('Error al guardar: ' + error.message)
+          }
+          return
+        }
+        setWeight(''); setReps(''); setRir(''); setNote('')
+        setActiveInput(null)
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          navigator.vibrate(isPr ? [60, 40, 60, 40, 120] : 40)
+        }
+        if (isPr) {
+          setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(oneRM), unit }))
+          setTimeout(() => setPrMsg(null), 6000)
+        }
+        await loadSavedSets()
+      } catch (err: any) {
+        console.error('Unexpected error saving set:', err)
+        setErrorMsg('Error inesperat: ' + (err?.message || String(err)))
+      } finally {
+        setLoading(false)
       }
-      setWeight(''); setReps(''); setRir(''); setNote('')
-      setActiveInput(null)
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate(isPr ? [60, 40, 60, 40, 120] : 40)
-      }
-      if (isPr) {
-        setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(oneRM), unit }))
-        setTimeout(() => setPrMsg(null), 6000)
-      }
-      await loadSavedSets()
     }
 
   function handleAddExercise() {
