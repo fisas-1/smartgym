@@ -7,6 +7,7 @@ import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS }
 import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
 import { useUnit } from './contexts/UnitContext'
+import NumericKeyboard from './components/NumericKeyboard'
 
 function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
@@ -59,6 +60,7 @@ export default function HomePage() {
   const [note, setNote] = useState<string>('')
   const [prMsg, setPrMsg] = useState<string | null>(null)
   const [bestPerExercise, setBestPerExercise] = useState<Record<string, number>>({})
+  const [activeInput, setActiveInput] = useState<'weight' | 'reps' | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
@@ -187,6 +189,10 @@ export default function HomePage() {
         return
       }
       setWeight(''); setReps(''); setRir(''); setNote('')
+      setActiveInput(null)
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(isPr ? [60, 40, 60, 40, 120] : 40)
+      }
       if (isPr) {
         setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(oneRM), unit }))
         setTimeout(() => setPrMsg(null), 6000)
@@ -335,18 +341,17 @@ export default function HomePage() {
              <div>
                 <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
                 <input
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
+                  type="text"
+                  inputMode="none"
+                  readOnly
                   value={weight}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    if (v === '' || parseFloat(v) >= 0) setWeight(v)
+                  onClick={() => {
+                    const isDisabled = EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"
+                    if (!isDisabled) setActiveInput('weight')
                   }}
-                  onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault() }}
                   placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
                   disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
-                  className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)] disabled:opacity-50"
+                  className={`w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none disabled:opacity-50 cursor-pointer ${activeInput === 'weight' ? 'border-[var(--border)]' : ''}`}
                 />
                 {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
                   <button
@@ -379,17 +384,12 @@ export default function HomePage() {
                   >
                     −
                   </button>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={reps}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/[^0-9]/g, '')
-                      setReps(v)
-                    }}
-                    placeholder="0"
-                    className="flex-1 mx-2 bg-transparent text-center text-4xl font-light focus:outline-none text-[var(--color-text-primary)] tabular-nums"
-                  />
+                  <div
+                    onClick={() => setActiveInput('reps')}
+                    className="flex-1 mx-2 text-center text-4xl font-light text-[var(--color-text-primary)] tabular-nums cursor-pointer select-none"
+                  >
+                    {reps || <span className="text-[var(--color-text-tertiary)]">0</span>}
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -503,6 +503,27 @@ export default function HomePage() {
           )}
         </div>
       </div>
+
+      {activeInput === 'weight' && (
+        <NumericKeyboard
+          value={weight}
+          onChange={setWeight}
+          onClose={() => setActiveInput(null)}
+          allowDecimal
+          label={`${t('workouts.weight')} (${unit})`}
+          maxLength={5}
+        />
+      )}
+      {activeInput === 'reps' && (
+        <NumericKeyboard
+          value={reps}
+          onChange={setReps}
+          onClose={() => setActiveInput(null)}
+          allowDecimal={false}
+          label={t('workouts.reps')}
+          maxLength={3}
+        />
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowModal(false)}>
