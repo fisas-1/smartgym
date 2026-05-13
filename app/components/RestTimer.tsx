@@ -3,33 +3,114 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '../contexts/LanguageContext'
 
-type Props = {
-  defaultSeconds?: number
-}
-
 const PRESETS = [60, 90, 120, 180]
+const STORAGE_KEY = 'rest_timer_state'
 
-export type RestTimerHandle = {
-  start: (seconds?: number) => void
+async function sendToSW(message: object) {
+  if (!('serviceWorker' in navigator)) return
+  try {
+    const reg = await navigator.serviceWorker.ready
+    reg.active?.postMessage(message)
+  } catch {}
 }
 
-export default function RestTimer({ defaultSeconds = 90 }: Props) {
+function playAlarmSound(ctx: AudioContext) {
+  ;[0, 0.45, 0.9].forEach(t => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = 880
+    gain.gain.setValueAtTime(0, ctx.currentTime + t)
+    gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + t + 0.04)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.35)
+    osc.start(ctx.currentTime + t)
+    osc.stop(ctx.currentTime + t + 0.35)
+  })
+}
+
+function vibrate() {
+  if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 600])
+}
+
+export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: number }) {
   const { t } = useTranslation()
   const [duration, setDuration] = useState(defaultSeconds)
   const [remaining, setRemaining] = useState(0)
   const [running, setRunning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
 
+  function fireAlarm() {
+    if (audioCtxRef.current) {
+      audioCtxRef.current.resume().then(() => playAlarmSound(audioCtxRef.current!)).catch(() => {})
+    }
+    vibrate()
+    sendToSW({ type: 'TIMER_CANCEL' })
+  }
+
+  // Register SW once on mount
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [])
+
+  // Restore timer from localStorage on mount (handles page refresh)
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return
+    try {
+      const { endTime, duration: savedDuration } = JSON.parse(saved)
+      const left = Math.round((endTime - Date.now()) / 1000)
+      if (left > 0) {
+        setDuration(savedDuration)
+        setRemaining(left)
+        setRunning(true)
+      } else {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }, [])
+
+  // Recalculate when app comes back to foreground (after screen lock)
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState !== 'visible') return
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (!saved) return
+      try {
+        const { endTime, duration: savedDuration } = JSON.parse(saved)
+        const left = Math.round((endTime - Date.now()) / 1000)
+        if (left > 0) {
+          setDuration(savedDuration)
+          setRemaining(left)
+          setRunning(true)
+        } else {
+          localStorage.removeItem(STORAGE_KEY)
+          setRemaining(0)
+          setRunning(false)
+          fireAlarm()
+        }
+      } catch {}
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
+  // Countdown interval
   useEffect(() => {
     if (!running) return
     intervalRef.current = setInterval(() => {
       setRemaining(r => {
         if (r <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current)
+          clearInterval(intervalRef.current!)
           setRunning(false)
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate([200, 100, 200])
-          }
+          localStorage.removeItem(STORAGE_KEY)
+          fireAlarm()
           return 0
         }
         return r - 1
@@ -38,12 +119,40 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [running])
 
+  function startTimer(sec: number) {
+    if (!audioCtxRef.current) {
+      try {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      } catch {}
+    }
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {})
+    }
+    const endTime = Date.now() + sec * 1000
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ endTime, duration: sec }))
+    setDuration(sec)
+    setRemaining(sec)
+    setRunning(true)
+    sendToSW({
+      type: 'TIMER_START',
+      endTime,
+      title: t('timer.restDone'),
+      body: t('timer.backToWork'),
+    })
+  }
+
+  function stopTimer() {
+    setRemaining(0)
+    setRunning(false)
+    localStorage.removeItem(STORAGE_KEY)
+    sendToSW({ type: 'TIMER_CANCEL' })
+  }
+
+  // Listen for rest-timer:start event (fired when a set is completed)
   useEffect(() => {
     function onStart(e: any) {
       const sec = e?.detail?.seconds ?? duration
-      setDuration(sec)
-      setRemaining(sec)
-      setRunning(true)
+      startTimer(sec)
     }
     window.addEventListener('rest-timer:start', onStart as EventListener)
     return () => window.removeEventListener('rest-timer:start', onStart as EventListener)
@@ -66,7 +175,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
         {PRESETS.map(p => (
           <button
             key={p}
-            onClick={() => { setDuration(p); setRemaining(p); setRunning(true) }}
+            onClick={() => startTimer(p)}
             className="text-xs px-2.5 py-1 rounded-full text-[var(--color-text-tertiary)] hover:bg-[var(--surface-hover)] hover:text-[var(--color-text-primary)] transition-colors tabular-nums"
             title={t('timer.seconds', { seconds: String(p) })}
           >
@@ -86,7 +195,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => { setRemaining(0); setRunning(false) }}
+            onClick={stopTimer}
             className="w-9 h-9 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] text-sm transition-colors"
             title={t('timer.stop')}
             aria-label={t('timer.stop')}
@@ -94,7 +203,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
             ✕
           </button>
           <button
-            onClick={() => { setRemaining(duration); setRunning(true) }}
+            onClick={() => startTimer(duration)}
             className="w-9 h-9 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] text-sm transition-colors"
             title={t('timer.restart')}
             aria-label={t('timer.restart')}

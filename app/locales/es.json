@@ -133,6 +133,8 @@
   "timer.stop": "Parar",
   "timer.restart": "Reiniciar",
   "timer.seconds": "Descanso {{seconds}}s",
+  "timer.restDone": "gym. · Descanso acabado",
+  "timer.backToWork": "¡Vuelve a entrenar!",
 
   "fab.quickLog": "Entreno rápido",
 

@@ -133,6 +133,8 @@
   "timer.stop": "Stop",
   "timer.restart": "Restart",
   "timer.seconds": "Rest {{seconds}}s",
+  "timer.restDone": "gym. · Rest done",
+  "timer.backToWork": "Back to work!",
 
   "fab.quickLog": "Quick log",
 
