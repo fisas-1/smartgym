@@ -39,6 +39,8 @@ const LEVELS = [
 ] as const
 
 type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number }
+type FavoriteRoutine = { id: string; name: string; description?: string }
+type DeletedRoutine = { id: string; name: string; description?: string; exercises: { exercise: string; sets_target: number; reps_min: number; reps_max: number; order_index: number }[]; deletedAt: string }
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
@@ -55,9 +57,13 @@ export default function PerfilPage() {
   const [saved, setSaved] = useState(false)
   const [exerciseLevels, setExerciseLevels] = useState<ExerciseLevel[]>([])
   const [overallLevel, setOverallLevel] = useState<string>('')
+  const [favoriteRoutines, setFavoriteRoutines] = useState<FavoriteRoutine[]>([])
+  const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
+  const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
 
   useEffect(() => { loadProfile() }, [unit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
+  useEffect(() => { if (user) loadFavoritesAndDeleted() }, [user])
 
   function loadProfile() {
     const saved = localStorage.getItem('user_profile')
@@ -126,6 +132,48 @@ export default function PerfilPage() {
           else setOverallLevel('novice')
         }
       })
+  }
+
+  async function loadFavoritesAndDeleted() {
+    if (!user) return
+    const favIds: string[] = JSON.parse(localStorage.getItem('favorite_routine_ids') || '[]')
+    if (favIds.length > 0) {
+      const { data } = await supabase.from('routines').select('id, name, description').in('id', favIds).eq('user_id', user.id)
+      setFavoriteRoutines(data || [])
+    } else {
+      setFavoriteRoutines([])
+    }
+    const deleted: DeletedRoutine[] = JSON.parse(localStorage.getItem('deleted_routines') || '[]')
+    setDeletedRoutines(deleted)
+  }
+
+  async function handleRestoreRoutine(dr: DeletedRoutine) {
+    if (!user) return
+    const { data: newRoutine, error } = await supabase
+      .from('routines')
+      .insert({ user_id: user.id, name: dr.name, description: dr.description || '' })
+      .select()
+      .single()
+    if (error || !newRoutine) return
+
+    for (let i = 0; i < dr.exercises.length; i++) {
+      const ex = dr.exercises[i]
+      const { data: newEx } = await supabase
+        .from('routine_exercises')
+        .insert({ routine_id: newRoutine.id, exercise: ex.exercise, sets_target: ex.sets_target, reps_min: ex.reps_min, reps_max: ex.reps_max, order_index: i })
+        .select()
+        .single()
+      if (newEx) {
+        const sets = Array.from({ length: ex.sets_target }, (_, k) => ({ routine_exercise_id: newEx.id, set_number: k + 1, completed: false }))
+        await supabase.from('routine_sets').insert(sets)
+      }
+    }
+
+    const remaining = deletedRoutines.filter(d => d.id !== dr.id)
+    setDeletedRoutines(remaining)
+    localStorage.setItem('deleted_routines', JSON.stringify(remaining))
+    setRestoreMsg(t('routines.restored'))
+    setTimeout(() => setRestoreMsg(null), 3000)
   }
 
   const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || '#666'
@@ -241,6 +289,48 @@ export default function PerfilPage() {
              ))}
            </div>
          </div>
+
+          {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
+            <div>
+              <p className="section-label mb-3">{t('routines.favoriteRoutines')}</p>
+              {favoriteRoutines.length === 0 ? (
+                <p className="text-[var(--color-text-tertiary)] text-sm py-1">{t('routines.noFavorites')}</p>
+              ) : (
+                <div className="space-y-1 mb-4">
+                  {favoriteRoutines.map(r => (
+                    <div key={r.id} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                      <span className="text-yellow-400 text-base flex-shrink-0">★</span>
+                      <span className="text-[var(--color-text-primary)] text-sm font-light truncate">{r.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {deletedRoutines.length > 0 && (
+                <>
+                  <p className="section-label mb-2 mt-3">{t('routines.deletedRoutines')}</p>
+                  <div className="space-y-1">
+                    {deletedRoutines.map(dr => (
+                      <div key={dr.id + dr.deletedAt} className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                        <div className="min-w-0">
+                          <p className="text-[var(--color-text-primary)] text-sm font-light truncate">{dr.name}</p>
+                          <p className="text-[var(--color-text-tertiary)] text-xs">{dr.exercises.length} exercicis</p>
+                        </div>
+                        <button
+                          onClick={() => handleRestoreRoutine(dr)}
+                          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
+                        >
+                          {t('routines.restore')}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              {restoreMsg && (
+                <p className="text-sm mt-2" style={{ color: 'var(--accent-success)' }}>{restoreMsg}</p>
+              )}
+            </div>
+          )}
 
           <div>
             <p className="section-label mb-3">{t('preferences.title')}</p>

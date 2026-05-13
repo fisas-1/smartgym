@@ -6,7 +6,9 @@
       "Bash(npx tsc *)",
       "Bash(New-Item -Path \"c:\\\\Users\\\\User\\\\smartgym\\\\app\\\\privacy\\\\page.tsx\" -ItemType File -Force)",
       "Bash(Out-Null)",
-      "Bash(Write-Output \"created\")"
+      "Bash(Write-Output \"created\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\smartgym\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)"
     ]
   }
 }

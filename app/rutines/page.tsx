@@ -26,6 +26,14 @@ function SortableExerciseItem({ id, children }: { id: string; children: (handleP
 
 type CustomExercises = string[]
 
+type DeletedRoutine = {
+  id: string
+  name: string
+  description?: string
+  exercises: { exercise: string; sets_target: number; reps_min: number; reps_max: number; order_index: number }[]
+  deletedAt: string
+}
+
 export default function RutinesPage() {
   const { user } = useAuth()
   const { t, locale } = useTranslation()
@@ -39,6 +47,8 @@ export default function RutinesPage() {
   const [customExercises, setCustomExercises] = useState<CustomExercises>([])
    const [showExerciseModal, setShowExerciseModal] = useState(false)
    const [newExerciseName, setNewExerciseName] = useState('')
+   const [newExercisePrimary, setNewExercisePrimary] = useState('')
+   const [newExerciseSecondary, setNewExerciseSecondary] = useState('')
    const [showRoutineModal, setShowRoutineModal] = useState(false)
    const [newRoutineName, setNewRoutineName] = useState('')
     const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
@@ -54,6 +64,8 @@ export default function RutinesPage() {
    const [loading, setLoading] = useState(false)
    const [lastSessions, setLastSessions] = useState<Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }>>({})
    const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+   const [favoriteIds, setFavoriteIds] = useState<string[]>([])
+   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -86,6 +98,8 @@ export default function RutinesPage() {
     if (user) {
       loadRoutines()
       loadCustomExercises()
+      const saved = localStorage.getItem('favorite_routine_ids')
+      if (saved) setFavoriteIds(JSON.parse(saved))
     }
   }, [user])
 
@@ -338,6 +352,64 @@ export default function RutinesPage() {
      setSuccessMsg(t('routines.updated'))
    }
 
+   // Toggle preferida
+   function toggleFavorite(routineId: string) {
+     const next = favoriteIds.includes(routineId)
+       ? favoriteIds.filter(id => id !== routineId)
+       : [...favoriteIds, routineId]
+     setFavoriteIds(next)
+     localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
+     setSuccessMsg(favoriteIds.includes(routineId) ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
+   }
+
+   // Eliminar rutina (amb arxiu per recuperar)
+   async function handleDeleteRoutine() {
+     if (!editingRoutine) return
+     setLoading(true)
+
+     // Guardar dades completes a localStorage per poder recuperar-la
+     const { data: exs } = await supabase
+       .from('routine_exercises')
+       .select('exercise, sets_target, reps_min, reps_max, order_index')
+       .eq('routine_id', editingRoutine.id)
+       .order('order_index', { ascending: true })
+
+     const deletedEntry: DeletedRoutine = {
+       id: editingRoutine.id,
+       name: editingRoutine.name,
+       description: editingRoutine.description,
+       exercises: exs || [],
+       deletedAt: new Date().toISOString(),
+     }
+     const existing = JSON.parse(localStorage.getItem('deleted_routines') || '[]') as DeletedRoutine[]
+     localStorage.setItem('deleted_routines', JSON.stringify([deletedEntry, ...existing].slice(0, 20)))
+
+     // Eliminar de BD (cascade a routine_exercises i routine_sets si hi ha FK on delete cascade)
+     await supabase.from('routine_sets').delete().in(
+       'routine_exercise_id',
+       (exs || []).map((e: any) => e.id).filter(Boolean)
+     )
+     await supabase.from('routine_exercises').delete().eq('routine_id', editingRoutine.id)
+     const { error } = await supabase.from('routines').delete().eq('id', editingRoutine.id)
+
+     setLoading(false)
+     if (error) { setErrorMsg(t('routines.errorDeleting')); return }
+
+     // Netejar favorits si estava
+     if (favoriteIds.includes(editingRoutine.id)) {
+       const next = favoriteIds.filter(id => id !== editingRoutine.id)
+       setFavoriteIds(next)
+       localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
+     }
+
+     setShowDeleteConfirm(false)
+     setShowEditRoutineModal(false)
+     setEditingRoutine(null)
+     setEditRoutineName('')
+     setSuccessMsg(t('routines.deleted'))
+     loadRoutines()
+   }
+
    // Obrir modal edició exercici
    function handleOpenEditExercise(exercise: RoutineExercise) {
      setEditingExercise(exercise)
@@ -491,7 +563,15 @@ export default function RutinesPage() {
           [selectedRoutine.id]: count || 0
         }))
 
+        // Save muscle group if provided
+        if (newExercisePrimary && !DEFAULT_EXERCISES.includes(exerciseTrimmed as any)) {
+          const groups: Record<string, { primary: string; secondary?: string }> = JSON.parse(localStorage.getItem('exercise_muscle_groups') || '{}')
+          groups[exerciseTrimmed] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
+          localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
+        }
         setNewExerciseName('')
+        setNewExercisePrimary('')
+        setNewExerciseSecondary('')
         setShowExerciseModal(false)
         setSuccessMsg(t('routines.exerciseAdded'))
       } catch (err) {
@@ -723,18 +803,30 @@ export default function RutinesPage() {
                    className="flex-1 text-left min-w-0"
                    onClick={() => handleSelectRoutine(routine)}
                  >
-                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate">{routine.name}</p>
+                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate flex items-center gap-1.5">
+                      {favoriteIds.includes(routine.id) && <span className="text-base">★</span>}
+                      {routine.name}
+                    </p>
                     <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
                       {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
                     </p>
                  </button>
-                 <button
-                   onClick={() => handleOpenEditRoutine(routine)}
-                   className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors flex-shrink-0"
-                   aria-label={t('routines.editBtn')}
-                 >
-                   {t('routines.editBtn')}
-                 </button>
+                 <div className="flex items-center gap-1 flex-shrink-0">
+                   <button
+                     onClick={() => toggleFavorite(routine.id)}
+                     className={`text-lg px-2 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors ${favoriteIds.includes(routine.id) ? 'text-yellow-400' : 'text-[var(--color-text-tertiary)] hover:text-yellow-400'}`}
+                     aria-label={favoriteIds.includes(routine.id) ? t('routines.unfavorite') : t('routines.favorite')}
+                   >
+                     {favoriteIds.includes(routine.id) ? '★' : '☆'}
+                   </button>
+                   <button
+                     onClick={() => handleOpenEditRoutine(routine)}
+                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                     aria-label={t('routines.editBtn')}
+                   >
+                     {t('routines.editBtn')}
+                   </button>
+                 </div>
                </div>
              ))
            )}
@@ -796,7 +888,7 @@ export default function RutinesPage() {
 
          {/* Modal Editar Rutina */}
          {showEditRoutineModal && editingRoutine && (
-           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowEditRoutineModal(false)}>
+           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}>
              <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.edit')}</h3>
                <input
@@ -808,10 +900,29 @@ export default function RutinesPage() {
                  autoFocus
                />
                {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
-               <div className="flex gap-3">
-                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+               <div className="flex gap-3 mb-3">
+                 <button onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
                   <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
                </div>
+               {!showDeleteConfirm ? (
+                 <button
+                   onClick={() => setShowDeleteConfirm(true)}
+                   className="w-full py-2.5 rounded-2xl text-sm font-light transition-colors"
+                   style={{ color: 'var(--accent-danger)', backgroundColor: 'color-mix(in srgb, var(--accent-danger) 10%, transparent)' }}
+                 >
+                   {t('routines.deleteRoutine')}
+                 </button>
+               ) : (
+                 <div className="space-y-2">
+                   <p className="text-sm text-center" style={{ color: 'var(--accent-danger)' }}>
+                     {t('routines.deleteConfirm', { name: editingRoutine.name })}
+                   </p>
+                   <div className="flex gap-2">
+                     <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 rounded-2xl text-sm bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                     <button onClick={handleDeleteRoutine} disabled={loading} className="flex-1 py-2.5 rounded-2xl text-sm font-medium disabled:opacity-50 transition-opacity" style={{ backgroundColor: 'var(--accent-danger)', color: '#fff' }}>{loading ? '…' : t('common.delete')}</button>
+                   </div>
+                 </div>
+               )}
              </div>
            </div>
          )}
@@ -1076,30 +1187,73 @@ export default function RutinesPage() {
 
 {/* Modal Afegir Exercici */}
         {showExerciseModal && (
-          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowExerciseModal(false)}>
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.addExercise')}</h3>
 
               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
 
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={newExerciseName}
-                  onChange={(e) => setNewExerciseName(e.target.value)}
-                  placeholder={t('routines.exerciseNamePlaceholder')}
-                  className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
-                  onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
-                  autoFocus
-                />
-                <button
-                  onClick={() => { if (newExerciseName.trim()) handleAddExercise() }}
-                  disabled={!newExerciseName.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap disabled:opacity-40 hover:opacity-90 transition-opacity"
-                >
-                  + {t('routines.add')}
-                </button>
-              </div>
+              {(() => {
+                const muscleOptions = [
+                  { value: 'Pectoral', key: 'exercise.muscleGroupPectoral' },
+                  { value: 'Esquena', key: 'exercise.muscleGroupEsquena' },
+                  { value: 'Cames', key: 'exercise.muscleGroupCames' },
+                  { value: 'Esquitxos', key: 'exercise.muscleGroupEsquitxos' },
+                  { value: 'Braços', key: 'exercise.muscleGroupBracos' },
+                  { value: 'Abdominals', key: 'exercise.muscleGroupAbdominals' },
+                  { value: 'Gluts', key: 'exercise.muscleGroupGluts' },
+                  { value: 'Full Body', key: 'exercise.muscleGroupFullBody' },
+                ]
+                const isCustom = newExerciseName.trim() && !DEFAULT_EXERCISES.includes(newExerciseName.trim() as any)
+                return (
+                  <div className="mb-3 space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newExerciseName}
+                        onChange={(e) => setNewExerciseName(e.target.value)}
+                        placeholder={t('routines.exerciseNamePlaceholder')}
+                        className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
+                        onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => { if (newExerciseName.trim()) handleAddExercise() }}
+                        disabled={!newExerciseName.trim()}
+                        className="px-4 py-2.5 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap disabled:opacity-40 hover:opacity-90 transition-opacity"
+                      >
+                        + {t('routines.add')}
+                      </button>
+                    </div>
+                    {isCustom && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="section-label block mb-1">{t('exercise.primaryMuscle')}</label>
+                          <select
+                            value={newExercisePrimary}
+                            onChange={(e) => setNewExercisePrimary(e.target.value)}
+                            className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-3 py-2 text-xs border border-transparent focus:outline-none focus:border-[var(--border)]"
+                          >
+                            <option value="">—</option>
+                            {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="section-label block mb-1">{t('exercise.secondaryMuscle')}</label>
+                          <select
+                            value={newExerciseSecondary}
+                            onChange={(e) => setNewExerciseSecondary(e.target.value)}
+                            className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-3 py-2 text-xs border border-transparent focus:outline-none focus:border-[var(--border)]"
+                          >
+                            <option value="">{t('exercise.noSecondary')}</option>
+                            {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               <p className="section-label mb-2">{t('workouts.exercise')}</p>
               <div className="space-y-1.5 overflow-y-auto -mx-1 px-1 flex-1 min-h-0">
@@ -1115,7 +1269,7 @@ export default function RutinesPage() {
               </div>
 
               <div className="flex gap-3 mt-4">
-                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
               </div>
             </div>
           </div>

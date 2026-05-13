@@ -55,6 +55,8 @@ export default function HomePage() {
   const [customExercises, setCustomExercises] = useState<string[]>([])
   const [showModal, setShowModal] = useState(false)
   const [newExerciseName, setNewExerciseName] = useState('')
+  const [newExercisePrimary, setNewExercisePrimary] = useState('')
+  const [newExerciseSecondary, setNewExerciseSecondary] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<string | null>(null)
   const [note, setNote] = useState<string>('')
@@ -202,14 +204,19 @@ export default function HomePage() {
 
   function handleAddExercise() {
     const trimmed = newExerciseName.trim()
-    if (!trimmed) { setErrorMsg('Nom requerit'); return }
+    if (!trimmed) { setErrorMsg(t('common.required')); return }
     if (DEFAULT_EXERCISES.includes(trimmed as Exercise) || customExercises.includes(trimmed)) {
-      setErrorMsg('Ja existeix'); return
+      setErrorMsg(t('common.exists')); return
     }
+    if (!newExercisePrimary) { setErrorMsg(t('exercise.primaryMuscle')); return }
     const updated = [...customExercises, trimmed]
     setCustomExercises(updated)
     localStorage.setItem('custom_exercises', JSON.stringify(updated))
-    setNewExerciseName(''); setErrorMsg(null); setShowModal(false)
+    // Store muscle group info
+    const groups: Record<string, { primary: string; secondary?: string }> = JSON.parse(localStorage.getItem('exercise_muscle_groups') || '{}')
+    groups[trimmed] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
+    localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
+    setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null); setShowModal(false)
   }
 
   function handleDeleteExercise(ex: string) {
@@ -223,8 +230,8 @@ export default function HomePage() {
 
     if (!user) {
       return (
-        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-          <div className="max-w-sm w-full space-y-8">
+        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col px-6 py-16">
+          <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-8">
             <div className="text-center space-y-3">
               <h1 className="text-4xl font-light tracking-tight">gym.</h1>
               <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{t('home.welcome')}</p>
@@ -232,11 +239,11 @@ export default function HomePage() {
 
             <div className="card-surface divide-y divide-[var(--border)]">
               {[
-                { icon: '📈', label: t('home.featureProgress') || 'Registra el teu 1RM i progressió' },
-                { icon: '📋', label: t('home.featureRoutines') || 'Crea i segueix les teves rutines' },
-                { icon: '🏆', label: t('home.featureFriends') || 'Compara consistència amb amics' },
+                { icon: '📈', label: t('home.featureProgress') },
+                { icon: '📋', label: t('home.featureRoutines') },
+                { icon: '🏆', label: t('home.featureFriends') },
               ].map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-3 px-4 py-3">
+                <div key={icon} className="flex items-center gap-3 px-4 py-3">
                   <span className="text-lg w-7 text-center flex-shrink-0">{icon}</span>
                   <span className="text-sm text-[var(--color-text-secondary)]">{label}</span>
                 </div>
@@ -526,7 +533,7 @@ export default function HomePage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('common.newExercise')}</h3>
              <input
@@ -538,9 +545,49 @@ export default function HomePage() {
                 className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                autoFocus
              />
+             <div className="space-y-2 mb-3">
+               {(() => {
+                 const muscleOptions: { value: string; key: string }[] = [
+                   { value: 'Pectoral', key: 'exercise.muscleGroupPectoral' },
+                   { value: 'Esquena', key: 'exercise.muscleGroupEsquena' },
+                   { value: 'Cames', key: 'exercise.muscleGroupCames' },
+                   { value: 'Esquitxos', key: 'exercise.muscleGroupEsquitxos' },
+                   { value: 'Braços', key: 'exercise.muscleGroupBracos' },
+                   { value: 'Abdominals', key: 'exercise.muscleGroupAbdominals' },
+                   { value: 'Gluts', key: 'exercise.muscleGroupGluts' },
+                   { value: 'Full Body', key: 'exercise.muscleGroupFullBody' },
+                 ]
+                 return (
+                   <>
+                     <div>
+                       <label className="section-label block mb-1.5">{t('exercise.primaryMuscle')}</label>
+                       <select
+                         value={newExercisePrimary}
+                         onChange={(e) => setNewExercisePrimary(e.target.value)}
+                         className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
+                       >
+                         <option value="">—</option>
+                         {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                       </select>
+                     </div>
+                     <div>
+                       <label className="section-label block mb-1.5">{t('exercise.secondaryMuscle')}</label>
+                       <select
+                         value={newExerciseSecondary}
+                         onChange={(e) => setNewExerciseSecondary(e.target.value)}
+                         className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
+                       >
+                         <option value="">{t('exercise.noSecondary')}</option>
+                         {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                       </select>
+                     </div>
+                   </>
+                 )
+               })()}
+             </div>
              {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
              <div className="flex gap-3">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                <button onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
                 <button onClick={handleAddExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.add')}</button>
              </div>
            </div>
