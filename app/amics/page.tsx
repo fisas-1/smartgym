@@ -147,7 +147,7 @@ export default function AmicsPage() {
         <h1 className="page-title">amics.</h1>
       </div>
 
-      <div className="px-6 space-y-6 max-w-2xl mx-auto">
+      <div className="px-6 space-y-6 max-w-2xl mx-auto animate-slide-up">
         <div className="flex gap-2">
           <input
             type="text"

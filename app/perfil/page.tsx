@@ -201,7 +201,7 @@ export default function PerfilPage() {
           )}
         </div>
 
-     <div className="px-6 space-y-6 max-w-2xl mx-auto">
+     <div className="px-6 space-y-6 max-w-2xl mx-auto animate-slide-up">
           {exerciseLevels.length > 0 && (
           <div>
              <p className="section-label mb-3">{t('perfil.byExercise')}</p>
@@ -313,7 +313,7 @@ export default function PerfilPage() {
                       <div key={dr.id + dr.deletedAt} className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
                         <div className="min-w-0">
                           <p className="text-[var(--color-text-primary)] text-sm font-light truncate">{dr.name}</p>
-                          <p className="text-[var(--color-text-tertiary)] text-xs">{dr.exercises.length} exercicis</p>
+                          <p className="text-[var(--color-text-tertiary)] text-xs">{t('routines.exercisesCount', { count: String(dr.exercises.length) })}</p>
                         </div>
                         <button
                           onClick={() => handleRestoreRoutine(dr)}

@@ -790,7 +790,7 @@ export default function RutinesPage() {
           <h1 className="page-title">rutines.</h1>
         </div>
 
-         <div className="px-6 space-y-3 max-w-2xl mx-auto">
+         <div className="px-6 space-y-3 max-w-2xl mx-auto animate-slide-up">
            {routines.length === 0 ? (
              <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('routines.noRoutines')}</p>
            ) : (
@@ -841,7 +841,7 @@ export default function RutinesPage() {
          {/* Modal Nova Rutina */}
          {showRoutineModal && (
            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.new')}</h3>
 
                <p className="section-label mb-2">{t('routines.template')}</p>
@@ -888,7 +888,7 @@ export default function RutinesPage() {
          {/* Modal Editar Rutina */}
          {showEditRoutineModal && editingRoutine && (
            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.edit')}</h3>
                <input
                  type="text"
@@ -960,7 +960,7 @@ export default function RutinesPage() {
         <h1 className="page-title mt-2">{selectedRoutine?.name}</h1>
       </div>
 
-      <div className="px-6 space-y-5 max-w-2xl mx-auto">
+      <div className="px-6 space-y-5 max-w-2xl mx-auto animate-slide-up">
         {/* Progres general */}
         <div className="card-surface px-4 py-3">
           <div className="flex items-center justify-between mb-2">
@@ -1187,7 +1187,7 @@ export default function RutinesPage() {
 {/* Modal Afegir Exercici */}
         {showExerciseModal && (
           <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.addExercise')}</h3>
 
               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
@@ -1277,7 +1277,7 @@ export default function RutinesPage() {
        {/* Modal Editar Exercici */}
        {showEditExerciseModal && editingExercise && (
          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowEditExerciseModal(false)}>
-           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
              <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-1">{t('routines.editExercise')}</h3>
              <p className="text-[var(--color-text-tertiary)] text-sm mb-4">{tEx(editingExercise.exercise)}</p>
 
