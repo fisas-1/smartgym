@@ -38,7 +38,18 @@ export default function RutinesPage() {
   const { user } = useAuth()
   const { t, locale } = useTranslation()
   const { unit, toKg, fromKg, format } = useUnit()
-  const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
+  const tEx = (name: string) => {
+    const dotIdx = name.indexOf(' · ')
+    if (dotIdx !== -1) {
+      const base = name.slice(0, dotIdx)
+      const v = name.slice(dotIdx + 3)
+      const baseKey = EXERCISE_KEYS[base]
+      const variantKey = VARIANT_KEYS[v]
+      return `${baseKey ? t(baseKey) : base} · ${variantKey ? t(variantKey) : v}`
+    }
+    const key = EXERCISE_KEYS[name]
+    return key ? t(key) : name
+  }
   const [routines, setRoutines] = useState<Routine[]>([])
   const [routineExerciseCounts, setRoutineExerciseCounts] = useState<Record<string, number>>({})
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null)
@@ -418,7 +429,8 @@ export default function RutinesPage() {
      setEditSetsTarget(exercise.sets_target)
      setEditRepsMin(exercise.reps_min)
      setEditRepsMax(exercise.reps_max)
-     setEditVariant(exercise.variant ?? null)
+     const parts = exercise.exercise.split(' · ')
+     setEditVariant(parts.length > 1 ? parts[1] : null)
      setShowEditExerciseModal(true)
    }
 
@@ -433,13 +445,16 @@ export default function RutinesPage() {
      setLoading(true)
      setErrorMsg(null)
 
+     const baseExerciseName = editingExercise.exercise.split(' · ')[0]
+     const updatedExerciseName = editVariant ? `${baseExerciseName} · ${editVariant}` : baseExerciseName
+
      const { error } = await supabase
        .from('routine_exercises')
        .update({
+         exercise: updatedExerciseName,
          sets_target: editSetsTarget,
          reps_min: editRepsMin,
          reps_max: editRepsMax,
-         variant: editVariant ?? null
        })
        .eq('id', editingExercise.id)
 
@@ -473,10 +488,12 @@ export default function RutinesPage() {
       const exercise = exerciseName || newExerciseName
       if (!exercise || !exercise.trim()) return
 
-      const exerciseTrimmed = exercise.trim()
+      const baseName = exercise.trim()
+      const useVariant = !exerciseName && newExerciseVariant
+      const exerciseWithVariant = useVariant ? `${baseName} · ${newExerciseVariant}` : baseName
 
       // Comprovar duplicats
-      const exerciseExists = routineExercises.some(re => re.exercise === exerciseTrimmed)
+      const exerciseExists = routineExercises.some(re => re.exercise === exerciseWithVariant)
       if (exerciseExists) {
         setErrorMsg(t('routines.exerciseExists'))
         return
@@ -487,20 +504,20 @@ export default function RutinesPage() {
 
       try {
         // Si és un exercici personalitzat (no està en la llista per defecte), desar-lo també a saved_exercises
-        const isDefaultExercise = DEFAULT_EXERCISES.includes(exerciseTrimmed as any)
+        const isDefaultExercise = DEFAULT_EXERCISES.includes(baseName as any)
         if (!isDefaultExercise) {
           // Comprovar si ja existeix a saved_exercises per aquest usuari
           const { data: existing } = await supabase
             .from('saved_exercises')
             .select('id')
             .eq('user_id', user.id)
-            .eq('exercise', exerciseTrimmed)
+            .eq('exercise', baseName)
             .single()
 
           if (!existing) {
             const { error: saveError } = await supabase
               .from('saved_exercises')
-              .insert({ user_id: user.id, exercise: exerciseTrimmed })
+              .insert({ user_id: user.id, exercise: baseName })
 
             if (saveError) {
               console.error('Error saving custom exercise:', saveError)
@@ -508,13 +525,12 @@ export default function RutinesPage() {
           }
         }
 
-         // Inserir l'exercici a la rutina
+         // Inserir l'exercici a la rutina (variant codificada al nom: "Exercici · Variant")
          const { data, error } = await supabase
            .from('routine_exercises')
            .insert({
              routine_id: selectedRoutine.id,
-             exercise: exerciseTrimmed,
-             variant: newExerciseVariant ?? null,
+             exercise: exerciseWithVariant,
              sets_target: 3,
              reps_min: 8,
              reps_max: 12,
@@ -569,9 +585,9 @@ export default function RutinesPage() {
         }))
 
         // Save muscle group if provided
-        if (newExercisePrimary && !DEFAULT_EXERCISES.includes(exerciseTrimmed as any)) {
+        if (newExercisePrimary && !DEFAULT_EXERCISES.includes(baseName as any)) {
           const groups: Record<string, { primary: string; secondary?: string }> = JSON.parse(localStorage.getItem('exercise_muscle_groups') || '{}')
-          groups[exerciseTrimmed] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
+          groups[baseName] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
           localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
         }
         setNewExerciseName('')
@@ -1017,11 +1033,15 @@ export default function RutinesPage() {
                       {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
                       <span className="mx-1.5">·</span>
                       <span className="tabular-nums">{completedSets}/{exercise.sets_target}</span>
-                      {exercise.variant && (
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-tertiary)]">
-                          {VARIANT_KEYS[exercise.variant] ? t(VARIANT_KEYS[exercise.variant]) : exercise.variant}
-                        </span>
-                      )}
+                      {(() => {
+                       const parts = exercise.exercise.split(' · ')
+                       const parsedVariant = parts.length > 1 ? parts[1] : null
+                       return parsedVariant ? (
+                         <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-tertiary)]">
+                           {VARIANT_KEYS[parsedVariant] ? t(VARIANT_KEYS[parsedVariant]) : parsedVariant}
+                         </span>
+                       ) : null
+                     })()}
                    </p>
                  </div>
                  <div className="flex gap-0.5 flex-shrink-0">
@@ -1355,7 +1375,7 @@ export default function RutinesPage() {
                    />
                  </div>
                </div>
-               {editingExercise && EXERCISE_VARIANTS[editingExercise.exercise] && (
+               {editingExercise && EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]] && (
                  <div>
                    <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
                    <div className="flex flex-wrap gap-1.5">
@@ -1365,7 +1385,7 @@ export default function RutinesPage() {
                      >
                        {t('routines.variantAny')}
                      </button>
-                     {EXERCISE_VARIANTS[editingExercise.exercise].map(v => (
+                     {EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]].map(v => (
                        <button
                          key={v}
                          onClick={() => setEditVariant(v)}
