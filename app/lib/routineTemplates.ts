@@ -7,16 +7,16 @@ export type RoutineTemplateExercise = {
 
 export type RoutineTemplate = {
   id: string
-  name: string
-  description: string
+  nameKey: string
+  descKey: string
   routines: { name: string; exercises: RoutineTemplateExercise[] }[]
 }
 
 export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
   {
     id: 'ppl-push',
-    name: 'Push (PPL)',
-    description: 'Pit, espatlla i tríceps',
+    nameKey: 'templates.push.name',
+    descKey: 'templates.push.desc',
     routines: [
       {
         name: 'Push',
@@ -31,8 +31,8 @@ export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
   },
   {
     id: 'ppl-pull',
-    name: 'Pull (PPL)',
-    description: 'Esquena i bíceps',
+    nameKey: 'templates.pull.name',
+    descKey: 'templates.pull.desc',
     routines: [
       {
         name: 'Pull',
@@ -46,8 +46,8 @@ export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
   },
   {
     id: 'ppl-legs',
-    name: 'Legs (PPL)',
-    description: 'Cames i gluts',
+    nameKey: 'templates.legs.name',
+    descKey: 'templates.legs.desc',
     routines: [
       {
         name: 'Legs',
@@ -61,8 +61,8 @@ export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
   },
   {
     id: 'ppl-full',
-    name: 'Push / Pull / Legs (complet)',
-    description: 'Crea les 3 rutines de cop',
+    nameKey: 'templates.ppl.name',
+    descKey: 'templates.ppl.desc',
     routines: [
       {
         name: 'Push',

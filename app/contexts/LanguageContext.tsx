@@ -12,7 +12,10 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string, variables?: Record<string, any>) => string
+  locale: string
 }
+
+const LANGUAGE_LOCALES: Record<Language, string> = { en: 'en-US', ca: 'ca-ES', es: 'es-ES' }
 
 const translationsMap: Record<Language, Translations> = { en, ca, es }
 
@@ -69,7 +72,7 @@ const [translations, setTranslations] = useState<Record<string, any>>(translatio
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, locale: LANGUAGE_LOCALES[language] }}>
       {children}
     </LanguageContext.Provider>
   )

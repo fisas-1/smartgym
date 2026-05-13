@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useTranslation } from '../contexts/LanguageContext'
 
 type FriendStats = {
   id: string
@@ -14,6 +15,7 @@ type FriendStats = {
 
 export default function AmicsPage() {
   const { user } = useAuth()
+  const { t, locale } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<FriendStats[]>([])
   const [searching, setSearching] = useState(false)
@@ -152,7 +154,7 @@ export default function AmicsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Buscar usuari..."
+            placeholder={t('friends.searchUser')}
             className="flex-1 bg-zinc-900 text-sm rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
           />
           <button
@@ -165,10 +167,10 @@ export default function AmicsPage() {
         </div>
 
         <div>
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Ranking</p>
+          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">{t('friends.ranking')}</p>
           <div className="space-y-2">
             {sorted.length === 0 ? (
-              <p className="text-zinc-600 text-sm">Cerca usuaris per veure el ranking</p>
+              <p className="text-zinc-600 text-sm">{t('friends.searchToSeeRanking')}</p>
             ) : (
               sorted.map((user, idx) => (
                 <div key={user.id} className="flex items-center gap-4 py-3 border-b border-zinc-900">
@@ -176,14 +178,14 @@ export default function AmicsPage() {
                   <div className="flex-1">
                     <p className="font-light">{user.username}</p>
                     <p className="text-zinc-600 text-xs">
-                      {user.lastWorkout 
-                        ? new Date(user.lastWorkout).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })
-                        : 'Sense activitat'}
+                      {user.lastWorkout
+                        ? new Date(user.lastWorkout).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+                        : t('friends.noActivity')}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-light">{user.consistency}%</p>
-                    <p className="text-zinc-600 text-xs">consistència</p>
+                    <p className="text-zinc-600 text-xs">{t('friends.consistency')}</p>
                   </div>
                 </div>
               ))

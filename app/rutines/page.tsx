@@ -28,7 +28,7 @@ type CustomExercises = string[]
 
 export default function RutinesPage() {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const { unit, toKg, fromKg, format } = useUnit()
   const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
   const [routines, setRoutines] = useState<Routine[]>([])
@@ -77,7 +77,7 @@ export default function RutinesPage() {
     const firstErr = results.find(r => r.error)
     if (firstErr?.error) {
       console.error('Error reordering:', firstErr.error)
-      setErrorMsg('Error en reordenar exercicis')
+      setErrorMsg(t('routines.errorReordering'))
     }
   }
 
@@ -231,7 +231,7 @@ export default function RutinesPage() {
 
     // If no template and no name, error
     if (!template && !newRoutineName.trim()) {
-      setErrorMsg('Escriu un nom per a la rutina o tria una plantilla')
+      setErrorMsg(t('routines.nameRequired'))
       return
     }
 
@@ -247,10 +247,10 @@ export default function RutinesPage() {
             : r.name
           const { data: newRoutine, error: rErr } = await supabase
             .from('routines')
-            .insert({ user_id: user.id, name: routineName, description: template.name })
+            .insert({ user_id: user.id, name: routineName, description: t(template.nameKey) })
             .select()
             .single()
-          if (rErr || !newRoutine) throw rErr || new Error('No s\'ha pogut crear la rutina')
+          if (rErr || !newRoutine) throw rErr || new Error(t('routines.errorCreating'))
 
           // Insert exercises with sets
           for (let i = 0; i < r.exercises.length; i++) {
@@ -267,7 +267,7 @@ export default function RutinesPage() {
               })
               .select()
               .single()
-            if (eErr || !newEx) throw eErr || new Error('No s\'ha pogut crear l\'exercici')
+            if (eErr || !newEx) throw eErr || new Error(t('routines.errorAddingExercise'))
             const setsToInsert = Array.from({ length: ex.sets_target }, (_, k) => ({
               routine_exercise_id: newEx.id,
               set_number: k + 1,
@@ -276,17 +276,17 @@ export default function RutinesPage() {
             await supabase.from('routine_sets').insert(setsToInsert)
           }
         }
-        setSuccessMsg(template.routines.length > 1 ? 'Rutines creades!' : 'Rutina creada!')
+        setSuccessMsg(template.routines.length > 1 ? t('routines.createdMultiple') : t('routines.created'))
       } else {
         const { error } = await supabase
           .from('routines')
           .insert({ user_id: user.id, name: newRoutineName.trim(), description: '' })
         if (error) throw error
-        setSuccessMsg('Rutina creada!')
+        setSuccessMsg(t('routines.created'))
       }
     } catch (err: any) {
       setLoading(false)
-      setErrorMsg('Error al crear rutina: ' + (err.message || 'desconegut'))
+      setErrorMsg(t('routines.errorCreating') + (err.message || t('routines.unknown')))
       return
     }
 
@@ -324,7 +324,7 @@ export default function RutinesPage() {
      setLoading(false)
 
      if (error) {
-       setErrorMsg('Error en actualitzar: ' + error.message)
+       setErrorMsg(t('routines.errorUpdating') + error.message)
        return
      }
 
@@ -335,7 +335,7 @@ export default function RutinesPage() {
      if (selectedRoutine?.id === editingRoutine.id) {
        setSelectedRoutine(prev => prev ? { ...prev, name: editRoutineName.trim() } : null)
      }
-     setSuccessMsg('Rutina actualitzada')
+     setSuccessMsg(t('routines.updated'))
    }
 
    // Obrir modal edició exercici
@@ -351,7 +351,7 @@ export default function RutinesPage() {
    async function handleUpdateExercise() {
      if (!editingExercise || !selectedRoutine) return
      if (editSetsTarget <= 0 || editRepsMin <= 0 || editRepsMax <= 0 || editRepsMin > editRepsMax) {
-       setErrorMsg('Valors no vàlids')
+       setErrorMsg(t('routines.invalidValues'))
        return
      }
 
@@ -370,13 +370,13 @@ export default function RutinesPage() {
      setLoading(false)
 
      if (error) {
-       setErrorMsg('Error en actualitzar: ' + error.message)
+       setErrorMsg(t('routines.errorUpdating') + error.message)
        return
      }
 
      setShowEditExerciseModal(false)
      setEditingExercise(null)
-     setSuccessMsg('Exercici actualitzat')
+     setSuccessMsg(t('routines.exerciseAdded'))
 
       // Recarregar exercicis i sets per reflectir canvis
       const exercises = await loadRoutineExercises(selectedRoutine.id)
@@ -402,7 +402,7 @@ export default function RutinesPage() {
       // Comprovar duplicats
       const exerciseExists = routineExercises.some(re => re.exercise === exerciseTrimmed)
       if (exerciseExists) {
-        setErrorMsg('Aquest exercici ja està a la rutina')
+        setErrorMsg(t('routines.exerciseExists'))
         return
       }
 
@@ -448,7 +448,7 @@ export default function RutinesPage() {
 
         if (error) {
           console.error('Supabase error adding exercise:', error)
-          setErrorMsg('Error al afegir exercici: ' + error.message)
+          setErrorMsg(t('routines.errorAddingExercise') + error.message)
           return
         }
 
@@ -493,10 +493,10 @@ export default function RutinesPage() {
 
         setNewExerciseName('')
         setShowExerciseModal(false)
-        setSuccessMsg('Exercici afegit')
+        setSuccessMsg(t('routines.exerciseAdded'))
       } catch (err) {
         console.error('Error in handleAddExercise:', err)
-        setErrorMsg('Error inesperat al afegir exercici')
+        setErrorMsg(t('routines.unexpectedError'))
       } finally {
         setLoading(false)
       }
@@ -513,7 +513,7 @@ export default function RutinesPage() {
        .eq('id', exerciseId)
 
      if (error) {
-       setErrorMsg('Error al eliminar exercici')
+       setErrorMsg(t('routines.errorRemovingExercise'))
        return
      }
 
@@ -523,7 +523,7 @@ export default function RutinesPage() {
        delete next[exerciseId]
        return next
      })
-     setSuccessMsg('Exercici eliminat')
+     setSuccessMsg(t('routines.exerciseRemoved'))
    }
 
   // Actualitzar paràmetres de l'exercici
@@ -534,7 +534,7 @@ export default function RutinesPage() {
       .eq('id', exerciseId)
 
     if (error) {
-      setErrorMsg('Error en actualitzar')
+      setErrorMsg(t('routines.errorUpdating').trim())
       return
     }
 
@@ -627,7 +627,7 @@ export default function RutinesPage() {
        .eq('id', set.id)
 
      if (error) {
-       setErrorMsg('Error en actualitzar serie')
+       setErrorMsg(t('routines.errorUpdatingSet'))
        return
      }
 
@@ -693,13 +693,13 @@ export default function RutinesPage() {
       .in('routine_exercise_id', exerciseIds)
 
     if (error) {
-      setErrorMsg('Error en resetear rutina')
+      setErrorMsg(t('routines.errorReset'))
       return
     }
 
     // Recarrega els sets
     loadRoutineSets(selectedRoutine.id)
-    setSuccessMsg('Rutina resetejada per al proper dia!')
+    setSuccessMsg(t('routines.resetDone'))
   }
 
   // Renderitzar llista de rutines
@@ -712,27 +712,27 @@ export default function RutinesPage() {
 
          <div className="px-6 space-y-4">
            {routines.length === 0 ? (
-             <p className="text-zinc-500 text-sm">No tens cap rutina creada</p>
+             <p className="text-zinc-500 text-sm">{t('routines.noRoutines')}</p>
            ) : (
              routines.map(routine => (
                <div
                  key={routine.id}
                  className="border border-zinc-900 rounded-2xl p-4"
                >
-                 <div 
+                 <div
                    className="cursor-pointer hover:text-zinc-300"
                    onClick={() => handleSelectRoutine(routine)}
                  >
                     <p className="text-[var(--color-text-primary)] font-light text-lg">{routine.name}</p>
                     <p className="text-zinc-500 text-xs mt-1">
-                      {routineExerciseCounts[routine.id] || 0} exercicis
+                      {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
                     </p>
                  </div>
                  <button
                    onClick={() => handleOpenEditRoutine(routine)}
                    className="text-zinc-500 hover:text-white text-sm mt-2 px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
                  >
-                   ✏️ Editar
+                   {t('routines.editBtn')}
                  </button>
                </div>
              ))
@@ -742,7 +742,7 @@ export default function RutinesPage() {
             onClick={() => setShowRoutineModal(true)}
             className="w-full py-4 rounded-2xl font-medium bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors"
           >
-            + Nova Rutina
+            {t('routines.newBtn')}
           </button>
         </div>
 
@@ -750,17 +750,17 @@ export default function RutinesPage() {
          {showRoutineModal && (
            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
              <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-white mb-4">Nova Rutina</h3>
+               <h3 className="text-lg font-light text-white mb-4">{t('routines.new')}</h3>
 
-               <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Plantilla</p>
+               <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">{t('routines.template')}</p>
                <div className="space-y-2 mb-4">
                  <button
                    type="button"
                    onClick={() => setSelectedTemplate('')}
                    className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
                  >
-                   <p className="text-sm font-light">Buida</p>
-                   <p className="text-xs text-zinc-500">Començar des de zero</p>
+                   <p className="text-sm font-light">{t('routines.empty')}</p>
+                   <p className="text-xs text-zinc-500">{t('routines.emptyDesc')}</p>
                  </button>
                  {ROUTINE_TEMPLATES.map(tpl => (
                    <button
@@ -769,25 +769,25 @@ export default function RutinesPage() {
                      onClick={() => setSelectedTemplate(tpl.id)}
                      className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
                    >
-                     <p className="text-sm font-light">{tpl.name}</p>
-                     <p className="text-xs text-zinc-500">{tpl.description}</p>
+                     <p className="text-sm font-light">{t(tpl.nameKey)}</p>
+                     <p className="text-xs text-zinc-500">{t(tpl.descKey)}</p>
                    </button>
                  ))}
                </div>
 
-               {(!selectedTemplate || ROUTINE_TEMPLATES.find(t => t.id === selectedTemplate)?.routines.length === 1) && (
+               {(!selectedTemplate || ROUTINE_TEMPLATES.find(tpl => tpl.id === selectedTemplate)?.routines.length === 1) && (
                  <input
                    type="text"
                    value={newRoutineName}
                    onChange={(e) => setNewRoutineName(e.target.value)}
-                   placeholder={selectedTemplate ? 'Nom personalitzat (opcional)' : 'Nom de la rutina'}
+                   placeholder={selectedTemplate ? t('routines.customName') : t('routines.routineName')}
                    className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
                  />
                )}
                {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
                <div className="flex gap-3">
-                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">{loading ? '...' : 'Crear'}</button>
+                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
+                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">{loading ? '...' : t('common.create')}</button>
                </div>
              </div>
            </div>
@@ -797,19 +797,19 @@ export default function RutinesPage() {
          {showEditRoutineModal && editingRoutine && (
            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditRoutineModal(false)}>
              <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-white mb-4">Editar Rutina</h3>
+               <h3 className="text-lg font-light text-white mb-4">{t('routines.edit')}</h3>
                <input
                  type="text"
                  value={editRoutineName}
                  onChange={(e) => setEditRoutineName(e.target.value)}
-                 placeholder="Nom de la rutina"
+                 placeholder={t('routines.routineName')}
                  className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
                  autoFocus
                />
                {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
                <div className="flex gap-3">
-                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Guardar</button>
+                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
+                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">{t('common.save')}</button>
                </div>
              </div>
            </div>
@@ -838,7 +838,7 @@ export default function RutinesPage() {
             onClick={handleBackToList}
             className="text-zinc-400 hover:text-white"
           >
-            ← Tornar
+            {t('common.back')}
           </button>
         </div>
         <h1 className="text-xl font-medium tracking-tight text-zinc-400 mt-2">{selectedRoutine?.name}</h1>
@@ -848,10 +848,13 @@ export default function RutinesPage() {
         {/* Progres general */}
         <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
           <p className="text-zinc-300 text-sm">
-            Progressió: {routineExercises.filter(re => {
-            const sets = routineSets[re.id] || []
-            return sets.length > 0 && sets.every(s => s.completed)
-          }).length}/{routineExercises.length} exercicis completats
+            {t('routines.routineProgressFormat', {
+              done: String(routineExercises.filter(re => {
+                const sets = routineSets[re.id] || []
+                return sets.length > 0 && sets.every(s => s.completed)
+              }).length),
+              total: String(routineExercises.length),
+            })}
           </p>
         </div>
 
@@ -872,29 +875,29 @@ export default function RutinesPage() {
                    {...listeners}
                    type="button"
                    className="touch-none cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-300 px-2 py-1 -ml-2"
-                   aria-label="Arrossegar per reordenar"
-                   title="Arrossegar per reordenar"
+                   aria-label={t('routines.dragToReorder')}
+                   title={t('routines.dragToReorder')}
                  >
                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
                  </button>
                  <div className="flex-1">
                      <p className="text-[var(--color-text-primary)] font-light">{tEx(exercise.exercise)}</p>
                    <p className="text-zinc-500 text-xs">
-                      {exercise.sets_target} sèries x {exercise.reps_min}-{exercise.reps_max} reps
+                      {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
                    </p>
                  </div>
                  <div className="flex gap-1">
                    <button
                      onClick={() => handleOpenEditExercise(exercise)}
                      className="text-zinc-500 hover:text-yellow-400 text-lg px-2"
-                     title="Editar exercici"
+                     title={t('routines.editExerciseTitle')}
                    >
                      ✏️
                    </button>
                     <button
                       onClick={() => handleRemoveExercise(exercise.id)}
                       className="text-zinc-500 hover:text-red-400 text-lg px-2"
-                      title="Eliminar exercici"
+                      title={t('routines.removeExerciseTitle')}
                     >
                       x
                     </button>
@@ -905,9 +908,9 @@ export default function RutinesPage() {
               {lastSessions[exercise.exercise] && (
                 <div className="px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] uppercase tracking-wider text-zinc-500">Última sessió</p>
+                    <p className="text-[10px] uppercase tracking-wider text-zinc-500">{t('workouts.lastSession')}</p>
                     <p className="text-[10px] text-zinc-600">
-                      {new Date(lastSessions[exercise.exercise].date).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}
+                      {new Date(lastSessions[exercise.exercise].date).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -926,14 +929,14 @@ export default function RutinesPage() {
                   onClick={async () => {
                      const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
                       if (rec) {
-                        setSuccessMsg(`Recomanació per ${tEx(exercise.exercise)}: ${format(rec.recommended_weight)}${unit} (anterior: ${format(rec.previous_weight)}${unit} x ${rec.previous_reps})`)
+                        setSuccessMsg(t('routines.recommendation', { exercise: tEx(exercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
                       } else {
-                        setSuccessMsg('No hi ha historial per a aquest exercici')
+                        setSuccessMsg(t('routines.noExerciseHistory'))
                       }
                   }}
                   className="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                 >
-                💡 Recomanar Pes
+                {t('routines.recommendWeight')}
               </button>
 
 {/* Llista de series */}
@@ -986,14 +989,14 @@ export default function RutinesPage() {
                            const r = parseInt(e.target.value) || 0
                            handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
                          }}
-                         placeholder={prev ? String(prev.reps) : 'reps'}
+                         placeholder={prev ? String(prev.reps) : t('routines.repsLabel')}
                          className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
                        />
                      </>
                    )}
 
                    {set.completed && (
-                     <span className="text-zinc-400 text-sm">{format(set.weight)}{unit} x {set.reps} reps</span>
+                     <span className="text-zinc-400 text-sm">{format(set.weight)}{unit} x {set.reps} {t('routines.repsLabel')}</span>
                    )}
 
                    {/* Comparador amb la sessió anterior */}
@@ -1006,17 +1009,17 @@ export default function RutinesPage() {
                              ? 'bg-zinc-800 text-zinc-500'
                              : 'bg-yellow-900/40 text-yellow-400'
                        }`}
-                       title={`Anterior: ${format(prev.weight)}${unit} × ${prev.reps}`}
+                       title={`${t('workouts.previous')}: ${format(prev.weight)}${unit} × ${prev.reps}`}
                      >
-                       {diff > 0 ? `▲ +${diffPct}%` : diff < 0 ? `▼ ${diffPct}%` : '= igual'}
+                       {diff > 0 ? `▲ +${diffPct}%` : diff < 0 ? `▼ ${diffPct}%` : `= ${t('workouts.equal')}`}
                      </span>
                    )}
-                   <span className="text-zinc-400 text-sm ml-auto">Sèrie {set.set_number}</span>
-                   
+                   <span className="text-zinc-400 text-sm ml-auto">{t('routines.set')} {set.set_number}</span>
+
                    {set.completed ? (
-                     <span className="text-green-400 text-xs">Completada</span>
+                     <span className="text-green-400 text-xs">{t('routines.completed')}</span>
                    ) : (
-                     <span className="text-zinc-600 text-xs">Pendent</span>
+                     <span className="text-zinc-600 text-xs">{t('routines.pending')}</span>
                    )}
                  </div>
                  )
@@ -1028,13 +1031,13 @@ export default function RutinesPage() {
                   onClick={() => autoCompleteExercise(exercise.id)}
                   className="w-full text-xs py-2 rounded-lg bg-green-900/30 text-green-400 border border-green-800 hover:bg-green-900/50"
                 >
-                  ✅ Exercici Completat (toc per desmarcar)
+                  {t('routines.exerciseCompleted')}
                 </button>
               )}
 
               {/* Stats ràpides */}
               <div className="text-xs text-zinc-500 pt-2 border-t border-zinc-800">
-                Progrés: {completedSets}/{exercise.sets_target} series
+                {t('routines.progress')}: {completedSets}/{exercise.sets_target} {t('routines.seriesLabel')}
               </div>
             </div>
               )}
@@ -1049,7 +1052,7 @@ export default function RutinesPage() {
           onClick={() => setShowExerciseModal(true)}
           className="w-full py-3 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
         >
-          + Afegir Exercici
+          + {t('routines.addExercise')}
         </button>
 
         {/* Reset per demà */}
@@ -1057,7 +1060,7 @@ export default function RutinesPage() {
           onClick={resetRoutineForNextDay}
           className="w-full py-3 rounded-2xl bg-zinc-900 text-zinc-400 text-sm"
         >
-          🔄 Reset per a nova sessió
+          {t('routines.resetForSession')}
         </button>
       </div>
 
@@ -1065,7 +1068,7 @@ export default function RutinesPage() {
         {showExerciseModal && (
           <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-white mb-4">Afegir Exercici</h3>
+              <h3 className="text-lg font-light text-white mb-4">{t('routines.addExercise')}</h3>
 
               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
 
@@ -1075,7 +1078,7 @@ export default function RutinesPage() {
       type="text"
       value={newExerciseName}
       onChange={(e) => setNewExerciseName(e.target.value)}
-      placeholder="Nom de l'exercici..."
+      placeholder={t('routines.exerciseNamePlaceholder')}
       className="flex-1 bg-black text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700"
       onKeyDown={(e) => {
         if (e.key === 'Enter' && newExerciseName.trim()) {
@@ -1091,7 +1094,7 @@ export default function RutinesPage() {
       }}
       className="px-4 py-2 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap"
     >
-      + Afegir
+      + {t('routines.add')}
     </button>
   </div>
 
@@ -1111,7 +1114,7 @@ export default function RutinesPage() {
                </div>
 
               <div className="flex gap-3">
-                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null); }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
+                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null); }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
               </div>
             </div>
           </div>
@@ -1121,12 +1124,12 @@ export default function RutinesPage() {
        {showEditExerciseModal && editingExercise && (
          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditExerciseModal(false)}>
            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-             <h3 className="text-lg font-light text-white mb-4">Editar Exercici</h3>
+             <h3 className="text-lg font-light text-white mb-4">{t('routines.editExercise')}</h3>
              <p className="text-zinc-400 text-sm mb-4">{tEx(editingExercise.exercise)}</p>
-             
+
              <div className="space-y-4">
                <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Sèries objectiu</label>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.setsTarget')}</label>
                  <input
                    type="number"
                    min="1"
@@ -1136,7 +1139,7 @@ export default function RutinesPage() {
                  />
                </div>
                <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Repeticions mínimes</label>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.repsMin')}</label>
                  <input
                    type="number"
                    min="1"
@@ -1146,7 +1149,7 @@ export default function RutinesPage() {
                  />
                </div>
                <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">Repeticions màximes</label>
+                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.repsMax')}</label>
                  <input
                    type="number"
                    min="1"
@@ -1160,8 +1163,8 @@ export default function RutinesPage() {
              {errorMsg && <p className="text-red-400 text-sm mb-3 mt-4">{errorMsg}</p>}
 
              <div className="flex gap-3 mt-6">
-               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">Cancel·lar</button>
-                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">Guardar</button>
+               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
+                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">{t('common.save')}</button>
              </div>
            </div>
          </div>

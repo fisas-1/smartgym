@@ -13,7 +13,7 @@ function calculate1RM(weight: number, reps: number): number {
   return Math.round(weight / (1.0278 - 0.0278 * reps))
 }
 
-async function analyzeOverload(exerciseName: string, t: (key: string, variables?: Record<string, any>) => string): Promise<string | null> {
+async function analyzeOverload(exerciseName: string, t: (key: string, variables?: Record<string, any>) => string, format: (kg: number) => string, unit: string): Promise<string | null> {
   const { data: logs } = await supabase
     .from('workout_logs')
     .select('*')
@@ -33,14 +33,14 @@ async function analyzeOverload(exerciseName: string, t: (key: string, variables?
   if (avgRecent <= avgPrevious) return null
 
   const improvement = ((avgRecent - avgPrevious) / avgPrevious) * 100
-  const targetWeight = Math.round((avgRecent + 2.5) * 10) / 10
+  const targetWeightKg = Math.round((avgRecent + 2.5) * 10) / 10
 
-  return t('home.suggestionFormat', { weight: targetWeight, improvement: Math.round(improvement) })
+  return t('home.suggestionFormat', { weight: format(targetWeightKg), unit, improvement: Math.round(improvement) })
 }
 
 export default function HomePage() {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const { theme } = useTheme()
   const { unit, toKg, format } = useUnit()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
@@ -76,8 +76,8 @@ export default function HomePage() {
 
   useEffect(() => { loadSavedSets() }, [user])
     useEffect(() => {
-      if (exercise) analyzeOverload(exercise, t).then(setSuggestion)
-    }, [exercise, t])
+      if (exercise) analyzeOverload(exercise, t, format, unit).then(setSuggestion)
+    }, [exercise, t, format, unit])
 
     const getDisplayExercises = () => [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -185,7 +185,7 @@ export default function HomePage() {
       }
       setWeight(''); setReps(''); setRir(''); setNote('')
       if (isPr) {
-        setPrMsg(`🏆 Nou rècord personal a ${tEx(exerciseToStore)}: ${format(oneRM)}${unit}!`)
+        setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(oneRM), unit }))
         setTimeout(() => setPrMsg(null), 6000)
       }
       await loadSavedSets()
@@ -334,7 +334,7 @@ export default function HomePage() {
                     }}
                     className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-light bg-[var(--card)] border border-[var(--border)] text-[var(--color-text-primary)] hover:opacity-80 active:scale-95 transition-all disabled:opacity-30"
                     disabled={!reps || parseInt(reps) <= 0}
-                    aria-label="Reduir reps"
+                    aria-label={t('workouts.decreaseReps')}
                   >
                     −
                   </button>
@@ -356,7 +356,7 @@ export default function HomePage() {
                       setReps(String(n + 1))
                     }}
                     className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-light bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-80 active:scale-95 transition-all"
-                    aria-label="Augmentar reps"
+                    aria-label={t('workouts.increaseReps')}
                   >
                     +
                   </button>
@@ -390,7 +390,7 @@ export default function HomePage() {
                       onClick={() => setRir(rir === '' ? '0' : '')}
                       className="text-xs px-3 py-1.5 rounded-full bg-[var(--input)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                     >
-                      {rir === '' ? 'Activar' : 'Sense RIR'}
+                      {rir === '' ? t('workouts.activate') : t('workouts.noRir')}
                     </button>
                   </div>
                 </div>
@@ -413,12 +413,12 @@ export default function HomePage() {
 
              {/* NOTES section (optional) */}
              <div>
-                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">Notes <span className="opacity-60 normal-case">(opcional)</span></label>
+                <label className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider block mb-2">{t('workouts.notes')} <span className="opacity-60 normal-case">{t('workouts.notesOptional')}</span></label>
                 <input
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Sensació, tècnica, dolor…"
+                  placeholder={t('workouts.notesPlaceholder')}
                   maxLength={200}
                   className={`w-full ${theme === 'light' ? 'text-zinc-900 bg-zinc-100' : 'bg-[var(--input)] text-[var(--foreground)]'} text-sm font-light rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)]`}
                 />
@@ -446,10 +446,10 @@ export default function HomePage() {
                 <div key={set.id} className="flex justify-between items-start py-3 border-b border-zinc-900">
                   <div className="flex-1 min-w-0">
                     <p className="text-[var(--color-text-primary)] font-light flex items-center gap-1.5">
-                      {isPr && <span title="Rècord personal">🏆</span>}
+                      {isPr && <span title={t('home.personalRecord')}>🏆</span>}
                       <span>{tEx(set.exercise)}</span>
                     </p>
-                    <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</p>
+                    <p className="text-[var(--color-text-tertiary)] text-xs">{new Date(set.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</p>
                     {set.note && <p className="text-[var(--color-text-tertiary)] text-xs italic mt-1 truncate">"{set.note}"</p>}
                   </div>
                    <div className="text-right ml-2">

@@ -31,7 +31,7 @@ type LogEntry = { id: string; exercise: string; weight: number; reps: number; ri
 export default function EstadistiquesPage() {
   const { user } = useAuth()
   const { unit, format } = useUnit()
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const tEx = (name: string) => { const key = EXERCISE_KEYS[name]; return key ? t(key) : name }
   const [stats, setStats] = useState<MuscleStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -200,22 +200,22 @@ export default function EstadistiquesPage() {
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-zinc-600">Carregant...</div>
+          <div className="py-20 text-center text-zinc-600">{t('stats.loading')}</div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-zinc-900/50 rounded-2xl p-4">
-                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Millora Total</p>
+                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">{t('stats.totalImprovement')}</p>
                 <p className="text-3xl font-light">{totalImprovement}%</p>
               </div>
               <div className="bg-zinc-900/50 rounded-2xl p-4">
-                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Grups Millorats</p>
+                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">{t('stats.groupsImproved')}</p>
                 <p className="text-3xl font-light">{improvedCount}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">Per Grup Muscular</p>
+              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">{t('stats.byMuscleGroup')}</p>
               <div className="space-y-3">
                 {stats.sort((a, b) => b.improvement - a.improvement).map((stat) => (
                   <div key={stat.muscle}>
@@ -244,7 +244,7 @@ export default function EstadistiquesPage() {
         {/* Volum setmanal per grup muscular */}
         {weeklyVolume.length > 0 && (
           <div className="pt-4 border-t border-zinc-900">
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Volum setmanal (pes × reps)</p>
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">{t('stats.weeklyVolume')}</p>
             <div className="space-y-3">
               {weeklyVolume.sort((a, b) => b.thisWeek - a.thisWeek).map(v => {
                 const max = Math.max(v.thisWeek, v.lastWeek, 1)
@@ -270,14 +270,14 @@ export default function EstadistiquesPage() {
                 )
               })}
             </div>
-            <p className="text-[10px] text-zinc-600 mt-3">Barra fosca: setmana anterior · Verda: aquesta setmana</p>
+            <p className="text-[10px] text-zinc-600 mt-3">{t('stats.weeklyVolumeLegend')}</p>
           </div>
         )}
 
         {/* Historial per exercici */}
         {exerciseList.length > 0 && (
           <div className="pt-4 border-t border-zinc-900">
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Historial per exercici</p>
+            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">{t('stats.exerciseHistory')}</p>
 
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden mb-4">
               {exerciseList.map(ex => (
@@ -296,14 +296,14 @@ export default function EstadistiquesPage() {
             </div>
 
             {historyLoading ? (
-              <div className="py-10 text-center text-zinc-600 text-sm">Carregant historial...</div>
+              <div className="py-10 text-center text-zinc-600 text-sm">{t('stats.loadingHistory')}</div>
             ) : exerciseLogs.length === 0 ? (
-              <p className="text-zinc-600 text-sm py-6 text-center">Sense historial</p>
+              <p className="text-zinc-600 text-sm py-6 text-center">{t('stats.noHistory')}</p>
             ) : (
               <>
                 {/* Mini-gràfic d'evolució 1RM */}
                 {chartData.length >= 2 && (
-                  <ProgressChart points={chartData} unit={unit} format={format} />
+                  <ProgressChart points={chartData} unit={unit} format={format} label={t('stats.oneRMEvolution')} locale={locale} />
                 )}
 
                 {/* Sessions agrupades per dia */}
@@ -319,8 +319,8 @@ export default function EstadistiquesPage() {
                       <div key={day} className={`bg-zinc-900/40 border rounded-xl p-3 ${isPrDay ? 'border-yellow-700/50' : 'border-zinc-900'}`}>
                         <div className="flex justify-between items-center mb-2">
                           <p className="text-sm font-light text-zinc-300 flex items-center gap-1.5">
-                            {isPrDay && <span title="Rècord personal">🏆</span>}
-                            {new Date(day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {isPrDay && <span title={t('home.personalRecord')}>🏆</span>}
+                            {new Date(day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                           {maxOneRM > 0 && (
                             <p className="text-xs text-zinc-500">1RM: <span className="text-zinc-300">{format(maxOneRM)}{unit}</span></p>
@@ -359,7 +359,7 @@ export default function EstadistiquesPage() {
   )
 }
 
-function ProgressChart({ points, unit, format }: { points: { day: string; max: number }[]; unit: string; format: (kg: number) => string }) {
+function ProgressChart({ points, unit, format, label, locale }: { points: { day: string; max: number }[]; unit: string; format: (kg: number) => string; label: string; locale: string }) {
   const W = 320, H = 100, P = 12
   const xs = points.map((_, i) => P + (i * (W - 2 * P)) / Math.max(1, points.length - 1))
   const maxY = Math.max(...points.map(p => p.max))
@@ -375,7 +375,7 @@ function ProgressChart({ points, unit, format }: { points: { day: string; max: n
   return (
     <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-4">
       <div className="flex justify-between items-baseline mb-2">
-        <p className="text-xs uppercase tracking-wider text-zinc-500">Evolució 1RM</p>
+        <p className="text-xs uppercase tracking-wider text-zinc-500">{label}</p>
         <p className={`text-xs ${trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-zinc-500'}`}>
           {trend > 0 ? '+' : ''}{format(trend)}{unit} ({trendPct > 0 ? '+' : ''}{trendPct}%)
         </p>
@@ -394,9 +394,9 @@ function ProgressChart({ points, unit, format }: { points: { day: string; max: n
         ))}
       </svg>
       <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
-        <span>{new Date(points[0].day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</span>
+        <span>{new Date(points[0].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>
         <span>{format(minY)}–{format(maxY)}{unit}</span>
-        <span>{new Date(points[points.length - 1].day).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}</span>
+        <span>{new Date(points[points.length - 1].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>
       </div>
     </div>
   )

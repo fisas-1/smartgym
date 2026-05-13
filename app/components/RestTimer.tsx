@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from '../contexts/LanguageContext'
 
 type Props = {
   defaultSeconds?: number
@@ -13,6 +14,7 @@ export type RestTimerHandle = {
 }
 
 export default function RestTimer({ defaultSeconds = 90 }: Props) {
+  const { t } = useTranslation()
   const [duration, setDuration] = useState(defaultSeconds)
   const [remaining, setRemaining] = useState(0)
   const [running, setRunning] = useState(false)
@@ -60,7 +62,7 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
             key={p}
             onClick={() => { setDuration(p); setRemaining(p); setRunning(true) }}
             className="text-xs px-2.5 py-1 rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-            title={`Descans ${p}s`}
+            title={t('timer.seconds', { seconds: String(p) })}
           >
             {p < 60 ? `${p}s` : `${Math.floor(p / 60)}'${p % 60 ? p % 60 : ''}`}
           </button>
@@ -73,21 +75,21 @@ export default function RestTimer({ defaultSeconds = 90 }: Props) {
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-zinc-900/95 backdrop-blur border border-zinc-700 rounded-2xl px-4 py-3 shadow-xl min-w-[220px]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-zinc-500">Descans</p>
+          <p className="text-[10px] uppercase tracking-wider text-zinc-500">{t('timer.rest')}</p>
           <p className="text-2xl font-light text-white tabular-nums">{display}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => { setRemaining(0); setRunning(false) }}
             className="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 hover:text-white text-sm"
-            title="Aturar"
+            title={t('timer.stop')}
           >
             ✕
           </button>
           <button
             onClick={() => { setRemaining(duration); setRunning(true) }}
             className="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 hover:text-white text-sm"
-            title="Reiniciar"
+            title={t('timer.restart')}
           >
             ↺
           </button>

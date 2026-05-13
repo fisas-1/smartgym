@@ -29,15 +29,15 @@ const STRENGTH_STANDARDS: Record<string, Record<string, { m: number; f: number }
 }
 
 const LEVELS = [
-  { key: 'novice', label: 'Novato', color: '#666' },
-  { key: 'beginner', label: 'Principiant', color: '#22c55e' },
-  { key: 'intermediate', label: 'Intermedi', color: '#3b82f6' },
-  { key: 'advanced', label: 'Avançat', color: '#a855f7' },
-  { key: 'elite', label: 'Elit', color: '#f97316' },
-  { key: 'worldclass', label: 'Mundial', color: '#ef4444' },
-]
+  { key: 'novice', color: '#666' },
+  { key: 'beginner', color: '#22c55e' },
+  { key: 'intermediate', color: '#3b82f6' },
+  { key: 'advanced', color: '#a855f7' },
+  { key: 'elite', color: '#f97316' },
+  { key: 'worldclass', color: '#ef4444' },
+] as const
 
-type ExerciseLevel = { exercise: string; level: string; levelLabel: string; levelColor: string; oneRM: number }
+type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number }
 
 export default function PerfilPage() {
   const { user } = useAuth()
@@ -109,37 +109,33 @@ export default function PerfilPage() {
           else if (ratio >= stdg.intermediate) level = 'intermediate'
           else if (ratio >= stdg.beginner) level = 'beginner'
           const lv = LEVELS.find(l => l.key === level)
-          return { exercise: ex, level, levelLabel: lv?.label || level, levelColor: lv?.color || '#666', oneRM: d.oneRM }
+          return { exercise: ex, level, levelColor: lv?.color || '#666', oneRM: d.oneRM }
         }).filter(Boolean) as ExerciseLevel[]
 
         setExerciseLevels(levels.sort((a, b) => (LEVELS.findIndex(l => l.key === b.level)) - (LEVELS.findIndex(l => l.key === a.level))))
 
         if (levels.length) {
           const avgPct = levels.reduce((s, l) => s + (LEVELS.findIndex(x => x.key === l.level) + 1) * 17, 0) / levels.length
-          if (avgPct > 80) setOverallLevel('Mundial')
-          else if (avgPct > 65) setOverallLevel('Elit')
-          else if (avgPct > 50) setOverallLevel('Avançat')
-          else if (avgPct > 35) setOverallLevel('Intermedi')
-          else if (avgPct > 20) setOverallLevel('Principiant')
-          else setOverallLevel('Novato')
+          if (avgPct > 80) setOverallLevel('worldclass')
+          else if (avgPct > 65) setOverallLevel('elite')
+          else if (avgPct > 50) setOverallLevel('advanced')
+          else if (avgPct > 35) setOverallLevel('intermediate')
+          else if (avgPct > 20) setOverallLevel('beginner')
+          else setOverallLevel('novice')
         }
       })
   }
 
-  const levelColor = overallLevel === 'Mundial' ? '#ef4444' :
-                     overallLevel === 'Elit' ? '#f97316' :
-                     overallLevel === 'Avançat' ? '#a855f7' :
-                     overallLevel === 'Intermedi' ? '#3b82f6' :
-                     overallLevel === 'Principiant' ? '#22c55e' : '#666'
+  const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || '#666'
 
   if (!user) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
         <div className="text-center">
-          <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
-          <p className="text-zinc-500 mb-8">Inicia sessió per veure el teu perfil</p>
+          <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">{t('perfil.title')}</h1>
+          <p className="text-zinc-500 mb-8">{t('perfil.loginRequired')}</p>
            <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
-             Entrar
+             {t('perfil.enter')}
            </a>
          </div>
        </div>
@@ -149,26 +145,26 @@ export default function PerfilPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
        <div className="px-6 pt-8 pb-6">
-          <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">perfil.</h1>
+          <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">{t('perfil.title')}</h1>
         </div>
 
      <div className="px-6 space-y-6">
           {exerciseLevels.length > 0 && (
           <div>
-             <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Per Exercici</p>
+             <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('perfil.byExercise')}</p>
              <div className="space-y-2">
                {exerciseLevels.map((ex) => (
                  <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-[var(--border)] rounded-lg px-3 hover:bg-[var(--input)] transition-colors">
                    <span className="font-light text-[var(--color-text-primary)]">{ex.exercise}</span>
-                   <span className="text-sm" style={{ color: ex.levelColor }}>{ex.levelLabel}</span>
+                   <span className="text-sm" style={{ color: ex.levelColor }}>{t(`level.${ex.level}`)}</span>
                  </div>
                ))}
               </div>
             </div>
           )}
- 
+
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Dades</p>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('perfil.data')}</p>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                  <input
@@ -176,29 +172,29 @@ export default function PerfilPage() {
                    inputMode="numeric"
                    value={age}
                    onChange={(e) => setAge(e.target.value)}
-                   placeholder="Edat"
+                   placeholder={t('perfil.age')}
                    className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                  <div className="flex gap-2">
                    <button
                      onClick={() => setGender('m')}
                      className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
-                       gender === 'm' 
-                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                       gender === 'm'
+                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
                          : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
                      }`}
                    >
-                     Home
+                     {t('perfil.male')}
                    </button>
                    <button
                      onClick={() => setGender('f')}
                      className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
-                       gender === 'f' 
-                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' 
+                       gender === 'f'
+                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
                          : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
                      }`}
                    >
-                     Dona
+                     {t('perfil.female')}
                    </button>
                  </div>
                </div>
@@ -208,7 +204,7 @@ export default function PerfilPage() {
                    inputMode="numeric"
                    value={height}
                    onChange={(e) => setHeight(e.target.value)}
-                   placeholder="Altura (cm)"
+                   placeholder={t('perfil.heightCm')}
                    className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                  <input
@@ -216,7 +212,7 @@ export default function PerfilPage() {
                    inputMode="numeric"
                    value={weight}
                    onChange={(e) => setWeight(e.target.value)}
-                   placeholder={`Pes (${unit})`}
+                   placeholder={`${t('perfil.weightLabel')} (${unit})`}
                    className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
                  />
                </div>
@@ -226,23 +222,23 @@ export default function PerfilPage() {
                type="button"
                className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors"
              >
-               {saved ? 'Guardat' : 'Guardar'}
+               {saved ? t('perfil.saved') : t('perfil.save')}
              </button>
           </div>
- 
+
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-3">Escala</p>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-3">{t('perfil.scale')}</p>
            <div className="flex flex-wrap gap-2">
              {LEVELS.map((l) => (
                <span key={l.key} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: l.color + '22', color: l.color }}>
-                 {l.label}
+                 {t(`level.${l.key}`)}
                </span>
              ))}
            </div>
          </div>
 
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">Preferències</p>
+            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('preferences.title')}</p>
             <div className="space-y-3">
               <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
                 <span className="text-sm font-light text-[var(--color-text-primary)]">{t('nav.language')}</span>
@@ -260,7 +256,7 @@ export default function PerfilPage() {
                 </button>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-                <span className="text-sm font-light text-[var(--color-text-primary)]">Unitat de pes</span>
+                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('preferences.weightUnit')}</span>
                 <div className="flex bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
                   <button
                     onClick={() => setUnit('kg')}
