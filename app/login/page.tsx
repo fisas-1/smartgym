@@ -131,7 +131,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6 py-10">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm animate-slide-up">
         <h1 className="text-3xl font-light tracking-tight mb-5 text-center">gym.</h1>
 
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-3xl p-6 sm:p-8" style={{ boxShadow: 'var(--shadow-soft)' }}>

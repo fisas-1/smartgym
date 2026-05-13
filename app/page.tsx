@@ -231,7 +231,7 @@ export default function HomePage() {
     if (!user) {
       return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col px-6 py-16">
-          <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-8">
+          <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-8 animate-slide-up">
             <div className="text-center space-y-3">
               <h1 className="text-4xl font-light tracking-tight">gym.</h1>
               <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{t('home.welcome')}</p>
@@ -239,11 +239,11 @@ export default function HomePage() {
 
             <div className="card-surface divide-y divide-[var(--border)]">
               {[
-                { icon: '📈', label: t('home.featureProgress') },
-                { icon: '📋', label: t('home.featureRoutines') },
-                { icon: '🏆', label: t('home.featureFriends') },
-              ].map(({ icon, label }) => (
-                <div key={icon} className="flex items-center gap-3 px-4 py-3">
+                { icon: '📈', label: t('home.featureProgress'), delay: 'stagger-2' },
+                { icon: '📋', label: t('home.featureRoutines'), delay: 'stagger-3' },
+                { icon: '🏆', label: t('home.featureFriends'), delay: 'stagger-4' },
+              ].map(({ icon, label, delay }) => (
+                <div key={icon} className={`flex items-center gap-3 px-4 py-3 animate-slide-up ${delay}`}>
                   <span className="text-lg w-7 text-center flex-shrink-0">{icon}</span>
                   <span className="text-sm text-[var(--color-text-secondary)]">{label}</span>
                 </div>
@@ -276,7 +276,7 @@ export default function HomePage() {
         )}
       </div>
 
-       <div className="px-6 space-y-4 max-w-2xl mx-auto">
+       <div className="px-6 space-y-4 max-w-2xl mx-auto animate-slide-up">
 
         {suggestion && (
           <div className="px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl fade-in">
@@ -291,7 +291,7 @@ export default function HomePage() {
         )}
 
         {prMsg && (
-          <div className="px-4 py-3 rounded-2xl fade-in" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-warn) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-warn) 45%, transparent)' }}>
+          <div className="px-4 py-3 rounded-2xl animate-bounce-in" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-warn) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-warn) 45%, transparent)' }}>
             <p className="text-sm font-medium" style={{ color: 'var(--accent-warn)' }}>\ud83c\udfc6 {prMsg}</p>
           </div>
         )}
@@ -534,7 +534,7 @@ export default function HomePage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
-           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('common.newExercise')}</h3>
              <input
                type="text"

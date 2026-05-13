@@ -73,7 +73,13 @@ export default function Navigation() {
                   : 'text-[var(--color-text-tertiary)]'
               }`}
             >
-              <Icon />
+              {/* Icon with animated pill background */}
+              <div
+                className="flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200"
+                style={active ? { backgroundColor: 'var(--surface-strong)', transform: 'scale(1.08)' } : {}}
+              >
+                <Icon />
+              </div>
               <span className="text-[9px] leading-none tracking-wide truncate w-full text-center px-0.5">
                 {t(`nav.${key}`)}
               </span>

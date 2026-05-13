@@ -180,7 +180,7 @@ export default function EstadistiquesPage() {
         <h1 className="page-title">stats.</h1>
       </div>
 
-      <div className="px-6 space-y-6 max-w-2xl mx-auto">
+      <div className="px-6 space-y-6 max-w-2xl mx-auto animate-slide-up">
         <div className="flex gap-1.5 p-1 rounded-full bg-[var(--surface-strong)]">
           {[
             { key: '30', label: '1M' },
@@ -206,11 +206,11 @@ export default function EstadistiquesPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <div className="card-surface p-4">
+              <div className="card-surface p-4 animate-slide-up stagger-1">
                 <p className="section-label mb-1">{t('stats.totalImprovement')}</p>
                 <p className="text-3xl font-light tabular-nums" style={{ color: totalImprovement > 0 ? 'var(--accent-success)' : 'var(--color-text-primary)' }}>{totalImprovement}%</p>
               </div>
-              <div className="card-surface p-4">
+              <div className="card-surface p-4 animate-slide-up stagger-2">
                 <p className="section-label mb-1">{t('stats.groupsImproved')}</p>
                 <p className="text-3xl font-light tabular-nums">{improvedCount}</p>
               </div>
@@ -229,7 +229,7 @@ export default function EstadistiquesPage() {
                     </div>
                     <div className="h-1 bg-[var(--surface-strong)] rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-500"
+                        className="h-full rounded-full progress-fill"
                         style={{
                           width: `${Math.min(Math.abs(stat.improvement), 100)}%`,
                           backgroundColor: stat.improvement > 0 ? 'var(--accent-success)' : stat.improvement < 0 ? 'var(--accent-danger)' : 'var(--border)',
@@ -265,8 +265,8 @@ export default function EstadistiquesPage() {
                       </span>
                     </div>
                     <div className="relative h-1.5 bg-[var(--surface-strong)] rounded-full overflow-hidden">
-                      <div className="absolute h-full rounded-full" style={{ width: `${(v.lastWeek / max) * 100}%`, backgroundColor: 'var(--border)' }} />
-                      <div className="absolute h-full rounded-full" style={{ width: `${(v.thisWeek / max) * 100}%`, backgroundColor: 'var(--accent-success)', opacity: 0.85 }} />
+                      <div className="absolute h-full rounded-full progress-fill" style={{ width: `${(v.lastWeek / max) * 100}%`, backgroundColor: 'var(--border)' }} />
+                      <div className="absolute h-full rounded-full progress-fill stagger-1" style={{ width: `${(v.thisWeek / max) * 100}%`, backgroundColor: 'var(--accent-success)', opacity: 0.85 }} />
                     </div>
                   </div>
                 )
