@@ -43,6 +43,8 @@
   "workouts.notes": "Notes",
   "workouts.notesOptional": "(opcional)",
   "workouts.notesPlaceholder": "Sensació, tècnica, dolor…",
+  "workouts.moreOptions": "més opcions",
+  "workouts.lessOptions": "menys opcions",
   "workouts.lastSession": "Última sessió",
   "workouts.previous": "Anterior",
   "workouts.equal": "igual",

@@ -1046,23 +1046,8 @@ export default function RutinesPage() {
                  </div>
                  <div className="flex gap-0.5 flex-shrink-0">
                    <button
-                     onClick={async () => {
-                        const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
-                         if (rec) {
-                           setSuccessMsg(t('routines.recommendation', { exercise: tEx(exercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
-                         } else {
-                           setSuccessMsg(t('routines.noExerciseHistory'))
-                         }
-                     }}
-                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                     title={t('routines.recommendWeight')}
-                     aria-label={t('routines.recommendWeight')}
-                   >
-                     💡
-                   </button>
-                   <button
                      onClick={() => handleOpenEditExercise(exercise)}
-                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                      title={t('routines.editExerciseTitle')}
                      aria-label={t('routines.editExerciseTitle')}
                    >
@@ -1070,7 +1055,7 @@ export default function RutinesPage() {
                    </button>
                     <button
                       onClick={() => handleRemoveExercise(exercise.id)}
-                      className="text-[var(--color-text-tertiary)] hover:text-[var(--accent-danger)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                      className="text-[var(--color-text-tertiary)] hover:text-[var(--accent-danger)] text-sm w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                       title={t('routines.removeExerciseTitle')}
                       aria-label={t('routines.removeExerciseTitle')}
                     >
@@ -1401,7 +1386,23 @@ export default function RutinesPage() {
 
              {errorMsg && <p className="text-sm mt-4" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
 
-             <div className="flex gap-3 mt-6">
+             <button
+               onClick={async () => {
+                 if (!editingExercise) return
+                 const rec = await getWeightRecommendation(editingExercise.exercise, editRepsMin)
+                 if (rec) {
+                   setSuccessMsg(t('routines.recommendation', { exercise: tEx(editingExercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
+                 } else {
+                   setSuccessMsg(t('routines.noExerciseHistory'))
+                 }
+                 setShowEditExerciseModal(false)
+               }}
+               className="w-full mt-4 py-2.5 rounded-2xl text-sm transition-colors text-[var(--color-text-tertiary)] bg-[var(--surface)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)]"
+             >
+               💡 {t('routines.recommendWeight')}
+             </button>
+
+             <div className="flex gap-3 mt-3">
                <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
                 <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
              </div>

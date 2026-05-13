@@ -94,7 +94,7 @@ input, button, select, textarea {
 }
 
 .section-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -179,6 +179,17 @@ input, button, select, textarea {
 .progress-fill {
   transform-origin: left;
   animation: fillBar 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ─── Timer pulse (últims 5s) ───────────────────────────────── */
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.timer-pulse {
+  animation: timerPulse 0.8s ease-in-out infinite;
 }
 
 /* ─── Skeleton shimmer ──────────────────────────────────────── */

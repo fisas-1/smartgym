@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
 import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS, EXERCISE_VARIANTS, VARIANT_KEYS } from '@/types'
@@ -64,6 +64,9 @@ export default function HomePage() {
   const [prMsg, setPrMsg] = useState<string | null>(null)
   const [bestPerExercise, setBestPerExercise] = useState<Record<string, number>>({})
   const [activeInput, setActiveInput] = useState<'weight' | 'reps' | null>(null)
+  const [showExtraOptions, setShowExtraOptions] = useState(false)
+  const [displayedOneRM, setDisplayedOneRM] = useState(0)
+  const animRef = useRef<number | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
@@ -86,6 +89,22 @@ export default function HomePage() {
     }, 400)
     return () => clearTimeout(id)
   }, [exercise, t, format, unit])
+
+  useEffect(() => {
+    if (animRef.current) cancelAnimationFrame(animRef.current)
+    const start = displayedOneRM
+    const end = oneRM
+    if (start === end) return
+    const duration = 400
+    const startTime = performance.now()
+    const step = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1)
+      setDisplayedOneRM(Math.round(start + (end - start) * progress))
+      if (progress < 1) animRef.current = requestAnimationFrame(step)
+    }
+    animRef.current = requestAnimationFrame(step)
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
+  }, [oneRM])
 
     const getDisplayExercises = () => [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -281,9 +300,9 @@ export default function HomePage() {
      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="px-6 pt-5 pb-2 flex items-center justify-between">
         <h1 className="page-title">gym.</h1>
-        {oneRM > 0 && (
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-light tracking-tight tabular-nums">{format(oneRM)}</span>
+        {displayedOneRM > 0 && (
+          <div className="flex items-baseline gap-1 fade-in">
+            <span className="text-2xl font-light tracking-tight tabular-nums">{format(displayedOneRM)}</span>
             <span className="text-[var(--color-text-tertiary)] text-sm">{unit}</span>
             <span className="text-[var(--color-text-tertiary)] text-xs ml-1">1RM</span>
           </div>
@@ -448,7 +467,7 @@ export default function HomePage() {
                       key={n}
                       type="button"
                       onClick={() => setReps(String(n))}
-                      className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
+                      className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
                         reps === String(n)
                           ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
                           : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'
@@ -460,60 +479,57 @@ export default function HomePage() {
                 </div>
             </div>
 
-             {/* RIR section */}
+             {/* + opcions (RIR + Notes col·lapsats) */}
              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="section-label">{t('common.rir')}</label>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{rir === '' ? '—' : rir}</span>
-                    <button
-                      type="button"
-                      onClick={() => setRir(rir === '' ? '0' : '')}
-                      className="text-[11px] px-2.5 py-1 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                    >
-                      {rir === '' ? t('workouts.activate') : t('workouts.noRir')}
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="3"
-                  step="1"
-                  value={rir === '' ? 0 : rir}
-                  onChange={(e) => setRir(e.target.value)}
-                  className={`w-full h-1.5 rounded-full appearance-none cursor-pointer transition-opacity ${rir === '' ? 'opacity-30' : ''}`}
-                  style={{ accentColor: 'var(--color-text-primary)' }}
-                />
-                <div className="flex justify-between mt-1">
-                  {[0,1,2,3].map(v => (
-                    <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>
-                  ))}
-                </div>
-            </div>
+               <button
+                 type="button"
+                 onClick={() => setShowExtraOptions(v => !v)}
+                 className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1"
+               >
+                 <span className={`inline-block transition-transform duration-200 ${showExtraOptions ? 'rotate-45' : ''}`}>+</span>
+                 {showExtraOptions ? t('workouts.lessOptions') : t('workouts.moreOptions')}
+               </button>
+             </div>
 
-             {/* 1RM inline */}
-             {oneRM > 0 && (
-               <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl fade-in">
-                 <span className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('home.oneRMLabel')}</span>
-                 <span className="text-[var(--color-text-primary)] font-light tabular-nums">
-                   {format(oneRM)}<span className="text-[var(--color-text-tertiary)] text-xs ml-0.5">{unit}</span>
-                 </span>
+             {showExtraOptions && (
+               <div className="space-y-4 animate-slide-up">
+                 {/* RIR section */}
+                 <div>
+                   <div className="flex justify-between items-center mb-2">
+                     <label className="section-label">{t('common.rir')}</label>
+                     <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{rir === '' ? '—' : rir}</span>
+                   </div>
+                   <input
+                     type="range"
+                     min="0"
+                     max="3"
+                     step="1"
+                     value={rir === '' ? 0 : rir}
+                     onChange={(e) => setRir(e.target.value)}
+                     className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                     style={{ accentColor: 'var(--color-text-primary)' }}
+                   />
+                   <div className="flex justify-between mt-1">
+                     {[0,1,2,3].map(v => (
+                       <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>
+                     ))}
+                   </div>
+                 </div>
+
+                 {/* NOTES section */}
+                 <div>
+                   <label className="section-label block mb-2">{t('workouts.notes')}</label>
+                   <input
+                     type="text"
+                     value={note}
+                     onChange={(e) => setNote(e.target.value)}
+                     placeholder={t('workouts.notesPlaceholder')}
+                     maxLength={200}
+                     className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                   />
+                 </div>
                </div>
              )}
-
-             {/* NOTES section (optional) */}
-             <div>
-                <label className="section-label block mb-2">{t('workouts.notes')} <span className="opacity-60 normal-case font-normal">{t('workouts.notesOptional')}</span></label>
-                <input
-                  type="text"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder={t('workouts.notesPlaceholder')}
-                  maxLength={200}
-                  className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                />
-            </div>
             </div>
 
            <button

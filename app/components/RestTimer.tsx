@@ -172,6 +172,11 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
   const secs = remaining % 60
   const display = `${mins}:${secs.toString().padStart(2, '0')}`
   const pct = duration > 0 ? (remaining / duration) * 100 : 0
+  const barColor = remaining <= 10
+    ? 'var(--accent-danger)'
+    : remaining <= 30
+    ? '#f97316'
+    : 'var(--accent-success)'
 
   const surfaceStyle = {
     backgroundColor: 'color-mix(in srgb, var(--card) 90%, transparent)',
@@ -197,7 +202,7 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
   }
 
   return (
-    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[220px] fade-in" style={surfaceStyle}>
+    <div className={`fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[220px] fade-in${remaining <= 5 && remaining > 0 ? ' timer-pulse' : ''}`} style={surfaceStyle}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">{t('timer.rest')}</p>
@@ -223,7 +228,7 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
         </div>
       </div>
       <div className="mt-2 h-1 bg-[var(--surface-strong)] rounded-full overflow-hidden">
-        <div className="h-full transition-all duration-1000 ease-linear" style={{ width: `${pct}%`, backgroundColor: 'var(--accent-success)' }} />
+        <div className="h-full" style={{ width: `${pct}%`, backgroundColor: barColor, transition: 'width 1s linear, background-color 0.5s ease' }} />
       </div>
     </div>
   )

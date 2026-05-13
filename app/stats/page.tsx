@@ -201,7 +201,20 @@ export default function EstadistiquesPage() {
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-[var(--color-text-tertiary)] text-sm">{t('stats.loading')}</div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="card-surface p-4 space-y-2"><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-8 w-16 rounded" /></div>
+              <div className="card-surface p-4 space-y-2"><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-8 w-10 rounded" /></div>
+            </div>
+            <div className="space-y-3">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex justify-between"><div className="skeleton h-3 w-24 rounded" /><div className="skeleton h-3 w-10 rounded" /></div>
+                  <div className="skeleton h-1.5 w-full rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
@@ -297,7 +310,14 @@ export default function EstadistiquesPage() {
             </div>
 
             {historyLoading ? (
-              <div className="py-10 text-center text-[var(--color-text-tertiary)] text-sm">{t('stats.loadingHistory')}</div>
+              <div className="space-y-2">
+                {[1,2,3].map(i => (
+                  <div key={i} className="flex justify-between py-2">
+                    <div className="skeleton h-3 w-32 rounded" />
+                    <div className="skeleton h-3 w-20 rounded" />
+                  </div>
+                ))}
+              </div>
             ) : exerciseLogs.length === 0 ? (
               <p className="text-[var(--color-text-tertiary)] text-sm py-6 text-center">{t('stats.noHistory')}</p>
             ) : (
