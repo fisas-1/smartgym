@@ -252,18 +252,18 @@ export default function HomePage() {
 
   return (
      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-5 pb-2 flex items-center justify-between">
         <h1 className="page-title">gym.</h1>
+        {oneRM > 0 && (
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-light tracking-tight tabular-nums">{format(oneRM)}</span>
+            <span className="text-[var(--color-text-tertiary)] text-sm">{unit}</span>
+            <span className="text-[var(--color-text-tertiary)] text-xs ml-1">1RM</span>
+          </div>
+        )}
       </div>
 
-       <div className="px-6 space-y-6 max-w-2xl mx-auto">
-         <div className="py-6">
-            <p className="section-label mb-2">{t('home.oneRMLabel')}</p>
-           <div className="flex items-baseline gap-2">
-             <span className="text-7xl font-light tracking-tight tabular-nums">{oneRM ? format(oneRM) : '\u2014'}</span>
-             <span className="text-[var(--color-text-tertiary)] text-xl">{unit}</span>
-           </div>
-         </div>
+       <div className="px-6 space-y-4 max-w-2xl mx-auto">
 
         {suggestion && (
           <div className="px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl fade-in">
@@ -283,7 +283,7 @@ export default function HomePage() {
           </div>
         )}
 
-         <form onSubmit={handleSave} className="space-y-5">
+         <form onSubmit={handleSave} className="space-y-4">
            <div>
               <label className="section-label block mb-3">{t('workouts.exercise')}</label>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
@@ -330,7 +330,7 @@ export default function HomePage() {
             </div>
           </div>
 
-           <div className="space-y-5">
+           <div className="space-y-4">
              {/* PES / PES CORPORAL section */}
              <div>
                 <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
@@ -346,7 +346,7 @@ export default function HomePage() {
                   onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault() }}
                   placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === "corporal" ? `0 (${t('workouts.bodyweight')})` : "0") : "0"}
                   disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === "corporal"}
-                  className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-4 border border-transparent focus:outline-none focus:border-[var(--border)] disabled:opacity-50"
+                  className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)] disabled:opacity-50"
                 />
                 {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
                   <button
