@@ -127,11 +127,11 @@ export default function AmicsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-light mb-8">amics.</h1>
-          <p className="text-zinc-500 mb-8">Inicia sessió per veure el ranking</p>
-           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
-             Entrar
+        <div className="text-center max-w-sm space-y-6">
+          <h1 className="text-3xl font-light">amics.</h1>
+          <p className="text-[var(--color-text-tertiary)] text-sm">{t('friends.searchToSeeRanking')}</p>
+           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity">
+             {t('common.login')}
            </a>
         </div>
       </div>
@@ -143,11 +143,11 @@ export default function AmicsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-6">
-        <h1 className="text-xl font-medium tracking-tight text-zinc-400">amics.</h1>
+      <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
+        <h1 className="page-title">amics.</h1>
       </div>
 
-      <div className="px-6 space-y-6">
+      <div className="px-6 space-y-6 max-w-2xl mx-auto">
         <div className="flex gap-2">
           <input
             type="text"
@@ -155,40 +155,48 @@ export default function AmicsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={t('friends.searchUser')}
-            className="flex-1 bg-zinc-900 text-sm rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+            className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-full px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
           />
           <button
             onClick={handleSearch}
-            disabled={searching}
-            className="px-4 py-3 bg-zinc-900 rounded-full text-sm"
+            disabled={searching || !searchQuery.trim()}
+            className="px-5 py-3 bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] rounded-full text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+            aria-label="Search"
           >
-            {searching ? '...' : '🔍'}
+            {searching ? '…' : '🔍'}
           </button>
         </div>
 
         <div>
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">{t('friends.ranking')}</p>
-          <div className="space-y-2">
+          <p className="section-label mb-3">{t('friends.ranking')}</p>
+          <div className="space-y-1">
             {sorted.length === 0 ? (
-              <p className="text-zinc-600 text-sm">{t('friends.searchToSeeRanking')}</p>
+              <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('friends.searchToSeeRanking')}</p>
             ) : (
-              sorted.map((user, idx) => (
-                <div key={user.id} className="flex items-center gap-4 py-3 border-b border-zinc-900">
-                  <span className="text-zinc-600 text-sm w-4">{idx + 1}</span>
-                  <div className="flex-1">
-                    <p className="font-light">{user.username}</p>
-                    <p className="text-zinc-600 text-xs">
-                      {user.lastWorkout
-                        ? new Date(user.lastWorkout).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
-                        : t('friends.noActivity')}
-                    </p>
+              sorted.map((u, idx) => {
+                const isMe = myStats && u.id === myStats.id
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null
+                return (
+                  <div key={u.id} className={`flex items-center gap-3 py-3 px-3 rounded-xl border-b border-[var(--border)] ${isMe ? 'bg-[var(--surface)]' : ''}`}>
+                    <span className="text-[var(--color-text-tertiary)] text-sm w-6 text-center tabular-nums">{medal || (idx + 1)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-light truncate flex items-center gap-2">
+                        {u.username}
+                        {isMe && <span className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">tu</span>}
+                      </p>
+                      <p className="text-[var(--color-text-tertiary)] text-xs">
+                        {u.lastWorkout
+                          ? new Date(u.lastWorkout).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+                          : t('friends.noActivity')}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-lg font-light tabular-nums" style={{ color: u.consistency >= 70 ? 'var(--accent-success)' : u.consistency >= 40 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>{u.consistency}%</p>
+                      <p className="text-[var(--color-text-tertiary)] text-[10px] uppercase tracking-wider">{t('friends.consistency')}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-light">{user.consistency}%</p>
-                    <p className="text-zinc-600 text-xs">{t('friends.consistency')}</p>
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>

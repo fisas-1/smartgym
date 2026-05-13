@@ -706,31 +706,32 @@ export default function RutinesPage() {
   if (!selectedRoutine) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-        <div className="px-6 pt-8 pb-6">
-          <h1 className="text-xl font-medium tracking-tight text-zinc-400">rutines.</h1>
+        <div className="px-6 pt-8 pb-4">
+          <h1 className="page-title">rutines.</h1>
         </div>
 
-         <div className="px-6 space-y-4">
+         <div className="px-6 space-y-3 max-w-2xl mx-auto">
            {routines.length === 0 ? (
-             <p className="text-zinc-500 text-sm">{t('routines.noRoutines')}</p>
+             <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('routines.noRoutines')}</p>
            ) : (
              routines.map(routine => (
                <div
                  key={routine.id}
-                 className="border border-zinc-900 rounded-2xl p-4"
+                 className="card-surface p-4 flex items-center justify-between gap-3 hover:bg-[var(--surface-strong)] transition-colors group"
                >
-                 <div
-                   className="cursor-pointer hover:text-zinc-300"
+                 <button
+                   className="flex-1 text-left min-w-0"
                    onClick={() => handleSelectRoutine(routine)}
                  >
-                    <p className="text-[var(--color-text-primary)] font-light text-lg">{routine.name}</p>
-                    <p className="text-zinc-500 text-xs mt-1">
+                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate">{routine.name}</p>
+                    <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
                       {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
                     </p>
-                 </div>
+                 </button>
                  <button
                    onClick={() => handleOpenEditRoutine(routine)}
-                   className="text-zinc-500 hover:text-white text-sm mt-2 px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                   className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors flex-shrink-0"
+                   aria-label={t('routines.editBtn')}
                  >
                    {t('routines.editBtn')}
                  </button>
@@ -740,37 +741,37 @@ export default function RutinesPage() {
 
           <button
             onClick={() => setShowRoutineModal(true)}
-            className="w-full py-4 rounded-2xl font-medium bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors"
+            className="w-full py-4 rounded-2xl font-medium border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
           >
-            {t('routines.newBtn')}
+            + {t('routines.newBtn')}
           </button>
         </div>
 
          {/* Modal Nova Rutina */}
          {showRoutineModal && (
-           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
-             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-white mb-4">{t('routines.new')}</h3>
+           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.new')}</h3>
 
-               <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">{t('routines.template')}</p>
+               <p className="section-label mb-2">{t('routines.template')}</p>
                <div className="space-y-2 mb-4">
                  <button
                    type="button"
                    onClick={() => setSelectedTemplate('')}
-                   className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
+                   className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-[var(--surface-strong)] border-[var(--color-text-tertiary)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] border-[var(--border)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)]'}`}
                  >
                    <p className="text-sm font-light">{t('routines.empty')}</p>
-                   <p className="text-xs text-zinc-500">{t('routines.emptyDesc')}</p>
+                   <p className="text-xs text-[var(--color-text-tertiary)]">{t('routines.emptyDesc')}</p>
                  </button>
                  {ROUTINE_TEMPLATES.map(tpl => (
                    <button
                      key={tpl.id}
                      type="button"
                      onClick={() => setSelectedTemplate(tpl.id)}
-                     className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}
+                     className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-[var(--surface-strong)] border-[var(--color-text-tertiary)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] border-[var(--border)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)]'}`}
                    >
                      <p className="text-sm font-light">{t(tpl.nameKey)}</p>
-                     <p className="text-xs text-zinc-500">{t(tpl.descKey)}</p>
+                     <p className="text-xs text-[var(--color-text-tertiary)]">{t(tpl.descKey)}</p>
                    </button>
                  ))}
                </div>
@@ -781,13 +782,13 @@ export default function RutinesPage() {
                    value={newRoutineName}
                    onChange={(e) => setNewRoutineName(e.target.value)}
                    placeholder={selectedTemplate ? t('routines.customName') : t('routines.routineName')}
-                   className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                   className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  />
                )}
-               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
                <div className="flex gap-3">
-                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
-                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light disabled:opacity-50">{loading ? '...' : t('common.create')}</button>
+                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">{loading ? '…' : t('common.create')}</button>
                </div>
              </div>
            </div>
@@ -795,29 +796,29 @@ export default function RutinesPage() {
 
          {/* Modal Editar Rutina */}
          {showEditRoutineModal && editingRoutine && (
-           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditRoutineModal(false)}>
-             <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-white mb-4">{t('routines.edit')}</h3>
+           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowEditRoutineModal(false)}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.edit')}</h3>
                <input
                  type="text"
                  value={editRoutineName}
                  onChange={(e) => setEditRoutineName(e.target.value)}
                  placeholder={t('routines.routineName')}
-                 className="w-full bg-black text-white rounded-2xl px-4 py-3 mb-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                 className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  autoFocus
                />
-               {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
                <div className="flex gap-3">
-                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
-                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">{t('common.save')}</button>
+                 <button onClick={() => setShowEditRoutineModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
                </div>
              </div>
            </div>
          )}
 
         {successMsg && (
-          <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800 rounded-2xl">
-            <p className="text-green-400 text-sm text-center">{successMsg}</p>
+          <div className="fixed bottom-24 left-6 right-6 px-4 py-3 rounded-2xl fade-in z-50 backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent-success) 40%, transparent)' }}>
+            <p className="text-sm text-center" style={{ color: 'var(--accent-success)' }}>{successMsg}</p>
           </div>
         )}
 
@@ -830,37 +831,43 @@ export default function RutinesPage() {
   // Renderitzar detall de rutina
   const screens = [{ label: 'Llista' }]
 
+  const completedExercises = routineExercises.filter(re => {
+    const sets = routineSets[re.id] || []
+    return sets.length > 0 && sets.every(s => s.completed)
+  }).length
+  const totalExercises = routineExercises.length
+  const progressPct = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0
+
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-6">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={handleBackToList}
-            className="text-zinc-400 hover:text-white"
-          >
-            {t('common.back')}
-          </button>
-        </div>
-        <h1 className="text-xl font-medium tracking-tight text-zinc-400 mt-2">{selectedRoutine?.name}</h1>
+      <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
+        <button
+          onClick={handleBackToList}
+          className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm transition-colors inline-flex items-center gap-1"
+        >
+          <span aria-hidden>‹</span> {t('common.back')}
+        </button>
+        <h1 className="page-title mt-2">{selectedRoutine?.name}</h1>
       </div>
 
-      <div className="px-6 space-y-6">
+      <div className="px-6 space-y-5 max-w-2xl mx-auto">
         {/* Progres general */}
-        <div className="px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
-          <p className="text-zinc-300 text-sm">
-            {t('routines.routineProgressFormat', {
-              done: String(routineExercises.filter(re => {
-                const sets = routineSets[re.id] || []
-                return sets.length > 0 && sets.every(s => s.completed)
-              }).length),
-              total: String(routineExercises.length),
-            })}
-          </p>
+        <div className="card-surface px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[var(--color-text-secondary)] text-sm">
+              {t('routines.routineProgressFormat', { done: String(completedExercises), total: String(totalExercises) })}
+            </p>
+            <p className="text-xs text-[var(--color-text-tertiary)] tabular-nums">{progressPct}%</p>
+          </div>
+          <div className="h-1 rounded-full overflow-hidden bg-[var(--surface-hover)]">
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progressPct}%`, backgroundColor: 'var(--accent-success)' }} />
+          </div>
         </div>
 
         {/* Llista d'exercicis */}
         <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
           <SortableContext items={routineExercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3">
         {routineExercises.map(exercise => {
           const sets = routineSets[exercise.id] || []
           const completedSets = sets.filter(s => s.completed).length
@@ -869,78 +876,91 @@ export default function RutinesPage() {
           return (
             <SortableExerciseItem key={exercise.id} id={exercise.id}>
               {({ ref, style, attributes, listeners, isDragging }) => (
-            <div ref={ref} style={style} {...attributes} className={`border rounded-2xl p-4 space-y-3 ${isDragging ? 'border-zinc-600 bg-zinc-900/80' : 'border-zinc-900'}`}>
-               <div className="flex justify-between items-start">
+            <div
+              ref={ref}
+              style={style}
+              {...attributes}
+              className={`card-surface p-4 space-y-3 ${isDragging ? 'border-[var(--color-text-tertiary)] bg-[var(--surface-strong)]' : ''} ${allCompleted ? 'opacity-75' : ''}`}
+            >
+               <div className="flex items-start gap-2">
                  <button
                    {...listeners}
                    type="button"
-                   className="touch-none cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-300 px-2 py-1 -ml-2"
+                   className="touch-none cursor-grab active:cursor-grabbing text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] -ml-1 p-1 flex-shrink-0"
                    aria-label={t('routines.dragToReorder')}
                    title={t('routines.dragToReorder')}
                  >
-                   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
+                   <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
                  </button>
-                 <div className="flex-1">
-                     <p className="text-[var(--color-text-primary)] font-light">{tEx(exercise.exercise)}</p>
-                   <p className="text-zinc-500 text-xs">
+                 <div className="flex-1 min-w-0">
+                   <p className="text-[var(--color-text-primary)] font-light truncate flex items-center gap-2">
+                     {tEx(exercise.exercise)}
+                     {allCompleted && <span className="text-xs" style={{ color: 'var(--accent-success)' }}>✓</span>}
+                   </p>
+                   <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
                       {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
+                      <span className="mx-1.5">·</span>
+                      <span className="tabular-nums">{completedSets}/{exercise.sets_target}</span>
                    </p>
                  </div>
-                 <div className="flex gap-1">
+                 <div className="flex gap-0.5 flex-shrink-0">
+                   <button
+                     onClick={async () => {
+                        const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
+                         if (rec) {
+                           setSuccessMsg(t('routines.recommendation', { exercise: tEx(exercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
+                         } else {
+                           setSuccessMsg(t('routines.noExerciseHistory'))
+                         }
+                     }}
+                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                     title={t('routines.recommendWeight')}
+                     aria-label={t('routines.recommendWeight')}
+                   >
+                     💡
+                   </button>
                    <button
                      onClick={() => handleOpenEditExercise(exercise)}
-                     className="text-zinc-500 hover:text-yellow-400 text-lg px-2"
+                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                      title={t('routines.editExerciseTitle')}
+                     aria-label={t('routines.editExerciseTitle')}
                    >
-                     ✏️
+                     ✎
                    </button>
                     <button
                       onClick={() => handleRemoveExercise(exercise.id)}
-                      className="text-zinc-500 hover:text-red-400 text-lg px-2"
+                      className="text-[var(--color-text-tertiary)] hover:text-[var(--accent-danger)] text-sm px-2 py-1 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                       title={t('routines.removeExerciseTitle')}
+                      aria-label={t('routines.removeExerciseTitle')}
                     >
-                      x
+                      ✕
                     </button>
                  </div>
                </div>
 
               {/* Última sessió */}
               {lastSessions[exercise.exercise] && (
-                <div className="px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] uppercase tracking-wider text-zinc-500">{t('workouts.lastSession')}</p>
-                    <p className="text-[10px] text-zinc-600">
+                <div className="px-3 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">{t('workouts.lastSession')}</p>
+                    <p className="text-[10px] text-[var(--color-text-tertiary)]">
                       {new Date(lastSessions[exercise.exercise].date).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {lastSessions[exercise.exercise].sets.map((s, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-zinc-800/60 text-zinc-300 font-light">
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light tabular-nums">
                         {format(s.weight)}{unit} × {s.reps}
-                        {s.rir != null && <span className="text-zinc-500"> · RIR {s.rir}</span>}
+                        {s.rir != null && <span className="text-[var(--color-text-tertiary)]"> · RIR {s.rir}</span>}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Botó de recomanació de pes */}
-<button
-                  onClick={async () => {
-                     const rec = await getWeightRecommendation(exercise.exercise, exercise.reps_min)
-                      if (rec) {
-                        setSuccessMsg(t('routines.recommendation', { exercise: tEx(exercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
-                      } else {
-                        setSuccessMsg(t('routines.noExerciseHistory'))
-                      }
-                  }}
-                  className="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                >
-                {t('routines.recommendWeight')}
-              </button>
-
-{/* Llista de series */}
-               {sets.map((set, idx) => {
+              {/* Llista de series */}
+              <div className="space-y-1.5">
+               {sets.map((set) => {
                  const prev = lastSessions[exercise.exercise]?.sets[set.set_number - 1]
                  const curW = set.weight || 0, curR = set.reps || 0
                  const hasCurrent = curR > 0 && (curW > 0 || (prev?.weight === 0))
@@ -952,24 +972,27 @@ export default function RutinesPage() {
                  return (
                  <div
                    key={set.id}
-                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                   className={`flex items-center gap-2 p-2 rounded-xl border transition-colors ${
                      set.completed
-                       ? 'bg-green-900/30 border-green-800'
-                       : 'bg-zinc-900 border-zinc-800'
+                       ? 'border-transparent'
+                       : 'bg-[var(--surface)] border-[var(--border)]'
                    }`}
+                   style={set.completed ? { backgroundColor: 'color-mix(in srgb, var(--accent-success) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-success) 25%, transparent)' } : undefined}
                  >
+                   <span className="text-[var(--color-text-tertiary)] text-[11px] font-medium tabular-nums w-5 text-center flex-shrink-0">{set.set_number}</span>
+
                    <button
                      onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
-                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                       set.completed
-                         ? 'bg-green-500 border-green-500 text-black'
-                         : 'border-zinc-600 hover:border-zinc-400'
-                     }`}
+                     className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
+                     style={set.completed
+                       ? { backgroundColor: 'var(--accent-success)', borderColor: 'var(--accent-success)', color: '#fff' }
+                       : { borderColor: 'var(--border)' }}
+                     aria-label={set.completed ? t('routines.completed') : t('routines.pending')}
                    >
-                     {set.completed && '✓'}
+                     {set.completed && <span className="text-xs leading-none">✓</span>}
                    </button>
 
-                   {!set.completed && (
+                   {!set.completed ? (
                      <>
                        <input
                          type="number"
@@ -979,9 +1002,9 @@ export default function RutinesPage() {
                            handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
                          }}
                          placeholder={prev ? format(prev.weight) : unit}
-                         className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
+                         className="w-16 bg-[var(--card)] text-[var(--color-text-primary)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--border)] focus:outline-none focus:border-[var(--color-text-tertiary)]"
                        />
-                       <span className="text-zinc-500 text-xs">x</span>
+                       <span className="text-[var(--color-text-tertiary)] text-xs">×</span>
                        <input
                          type="number"
                          value={set.reps || ''}
@@ -990,67 +1013,54 @@ export default function RutinesPage() {
                            handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
                          }}
                          placeholder={prev ? String(prev.reps) : t('routines.repsLabel')}
-                         className="w-16 bg-black text-white rounded px-2 py-1 text-sm focus:outline-none"
+                         className="w-14 bg-[var(--card)] text-[var(--color-text-primary)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--border)] focus:outline-none focus:border-[var(--color-text-tertiary)]"
                        />
                      </>
-                   )}
-
-                   {set.completed && (
-                     <span className="text-zinc-400 text-sm">{format(set.weight)}{unit} x {set.reps} {t('routines.repsLabel')}</span>
-                   )}
-
-                   {/* Comparador amb la sessió anterior */}
-                   {prev && hasCurrent && prevMetric > 0 && (
-                     <span
-                       className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-                         diff > 0
-                           ? 'bg-green-900/50 text-green-400'
-                           : diff < 0
-                             ? 'bg-zinc-800 text-zinc-500'
-                             : 'bg-yellow-900/40 text-yellow-400'
-                       }`}
-                       title={`${t('workouts.previous')}: ${format(prev.weight)}${unit} × ${prev.reps}`}
-                     >
-                       {diff > 0 ? `▲ +${diffPct}%` : diff < 0 ? `▼ ${diffPct}%` : `= ${t('workouts.equal')}`}
-                     </span>
-                   )}
-                   <span className="text-zinc-400 text-sm ml-auto">{t('routines.set')} {set.set_number}</span>
-
-                   {set.completed ? (
-                     <span className="text-green-400 text-xs">{t('routines.completed')}</span>
                    ) : (
-                     <span className="text-zinc-600 text-xs">{t('routines.pending')}</span>
+                     <span className="text-[var(--color-text-secondary)] text-sm tabular-nums">{format(set.weight)}{unit} × {set.reps}</span>
                    )}
+
+                   <div className="ml-auto flex items-center gap-1.5">
+                     {prev && hasCurrent && prevMetric > 0 && diff !== 0 && (
+                       <span
+                         className="text-[10px] px-1.5 py-0.5 rounded font-medium tabular-nums"
+                         style={diff > 0
+                           ? { backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, transparent)', color: 'var(--accent-success)' }
+                           : { color: 'var(--color-text-tertiary)' }}
+                         title={`${t('workouts.previous')}: ${format(prev.weight)}${unit} × ${prev.reps}`}
+                       >
+                         {diff > 0 ? `▲${diffPct}%` : `▼${Math.abs(diffPct)}%`}
+                       </span>
+                     )}
+                   </div>
                  </div>
                  )
                })}
+              </div>
 
               {/* Auto-completar quan totes les series estan fetes */}
               {allCompleted && (
                 <button
                   onClick={() => autoCompleteExercise(exercise.id)}
-                  className="w-full text-xs py-2 rounded-lg bg-green-900/30 text-green-400 border border-green-800 hover:bg-green-900/50"
+                  className="w-full text-xs py-2 rounded-xl transition-colors"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 12%, transparent)', color: 'var(--accent-success)', border: '1px solid color-mix(in srgb, var(--accent-success) 30%, transparent)' }}
                 >
-                  {t('routines.exerciseCompleted')}
+                  ✓ {t('routines.exerciseCompleted')}
                 </button>
               )}
-
-              {/* Stats ràpides */}
-              <div className="text-xs text-zinc-500 pt-2 border-t border-zinc-800">
-                {t('routines.progress')}: {completedSets}/{exercise.sets_target} {t('routines.seriesLabel')}
-              </div>
             </div>
               )}
             </SortableExerciseItem>
           )
         })}
+        </div>
           </SortableContext>
         </DndContext>
 
         {/* Afegir exercici */}
         <button
           onClick={() => setShowExerciseModal(true)}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+          className="w-full py-3 rounded-2xl border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           + {t('routines.addExercise')}
         </button>
@@ -1058,63 +1068,54 @@ export default function RutinesPage() {
         {/* Reset per demà */}
         <button
           onClick={resetRoutineForNextDay}
-          className="w-full py-3 rounded-2xl bg-zinc-900 text-zinc-400 text-sm"
+          className="w-full py-3 rounded-2xl bg-[var(--surface)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)] text-sm transition-colors"
         >
-          {t('routines.resetForSession')}
+          ↺ {t('routines.resetForSession')}
         </button>
       </div>
 
 {/* Modal Afegir Exercici */}
         {showExerciseModal && (
-          <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-6" onClick={() => setShowExerciseModal(false)}>
-            <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-white mb-4">{t('routines.addExercise')}</h3>
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowExerciseModal(false)}>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.addExercise')}</h3>
 
-              {errorMsg && <p className="text-red-400 text-sm mb-3">{errorMsg}</p>}
+              {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
 
-<div className="space-y-3 mb-4">
-  <div className="flex gap-2">
-    <input
-      type="text"
-      value={newExerciseName}
-      onChange={(e) => setNewExerciseName(e.target.value)}
-      placeholder={t('routines.exerciseNamePlaceholder')}
-      className="flex-1 bg-black text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700"
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' && newExerciseName.trim()) {
-          handleAddExercise();
-        }
-      }}
-    />
-    <button
-      onClick={() => {
-        if (newExerciseName.trim()) {
-          handleAddExercise();
-        }
-      }}
-      className="px-4 py-2 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap"
-    >
-      + {t('routines.add')}
-    </button>
-  </div>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={newExerciseName}
+                  onChange={(e) => setNewExerciseName(e.target.value)}
+                  placeholder={t('routines.exerciseNamePlaceholder')}
+                  className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
+                  autoFocus
+                />
+                <button
+                  onClick={() => { if (newExerciseName.trim()) handleAddExercise() }}
+                  disabled={!newExerciseName.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap disabled:opacity-40 hover:opacity-90 transition-opacity"
+                >
+                  + {t('routines.add')}
+                </button>
+              </div>
 
-                 {allExercises.map(ex => (
-                   <button
-                     key={ex}
-                     onClick={() => handleAddExercise(ex)}
-                      className={`w-full px-4 py-2 rounded-xl text-sm text-left ${
-                        newExerciseName === ex
-                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                          : 'bg-zinc-800 text-zinc-300'
-                      }`}
-                   >
-                     {ex}
-                   </button>
-                 ))}
-               </div>
+              <p className="section-label mb-2">{t('workouts.exercise')}</p>
+              <div className="space-y-1.5 overflow-y-auto -mx-1 px-1 flex-1 min-h-0">
+                {allExercises.map(ex => (
+                  <button
+                    key={ex}
+                    onClick={() => handleAddExercise(ex)}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm text-left bg-[var(--surface)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    {tEx(ex)}
+                  </button>
+                ))}
+              </div>
 
-              <div className="flex gap-3">
-                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null); }} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
               </div>
             </div>
           </div>
@@ -1122,57 +1123,59 @@ export default function RutinesPage() {
 
        {/* Modal Editar Exercici */}
        {showEditExerciseModal && editingExercise && (
-         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" onClick={() => setShowEditExerciseModal(false)}>
-           <div className="bg-zinc-900 rounded-3xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-             <h3 className="text-lg font-light text-white mb-4">{t('routines.editExercise')}</h3>
-             <p className="text-zinc-400 text-sm mb-4">{tEx(editingExercise.exercise)}</p>
+         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowEditExerciseModal(false)}>
+           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+             <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-1">{t('routines.editExercise')}</h3>
+             <p className="text-[var(--color-text-tertiary)] text-sm mb-4">{tEx(editingExercise.exercise)}</p>
 
              <div className="space-y-4">
                <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.setsTarget')}</label>
+                 <label className="section-label block mb-2">{t('routines.setsTarget')}</label>
                  <input
                    type="number"
                    min="1"
                    value={editSetsTarget}
                    onChange={(e) => setEditSetsTarget(parseInt(e.target.value) || 1)}
-                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+                   className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  />
                </div>
-               <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.repsMin')}</label>
-                 <input
-                   type="number"
-                   min="1"
-                   value={editRepsMin}
-                   onChange={(e) => setEditRepsMin(parseInt(e.target.value) || 1)}
-                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                 />
-               </div>
-               <div>
-                 <label className="text-zinc-500 text-xs uppercase tracking-wider block mb-2">{t('routines.repsMax')}</label>
-                 <input
-                   type="number"
-                   min="1"
-                   value={editRepsMax}
-                   onChange={(e) => setEditRepsMax(parseInt(e.target.value) || 1)}
-                   className="w-full bg-black text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-                 />
+               <div className="grid grid-cols-2 gap-3">
+                 <div>
+                   <label className="section-label block mb-2">{t('routines.repsMin')}</label>
+                   <input
+                     type="number"
+                     min="1"
+                     value={editRepsMin}
+                     onChange={(e) => setEditRepsMin(parseInt(e.target.value) || 1)}
+                     className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                   />
+                 </div>
+                 <div>
+                   <label className="section-label block mb-2">{t('routines.repsMax')}</label>
+                   <input
+                     type="number"
+                     min="1"
+                     value={editRepsMax}
+                     onChange={(e) => setEditRepsMax(parseInt(e.target.value) || 1)}
+                     className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                   />
+                 </div>
                </div>
              </div>
 
-             {errorMsg && <p className="text-red-400 text-sm mb-3 mt-4">{errorMsg}</p>}
+             {errorMsg && <p className="text-sm mt-4" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
 
              <div className="flex gap-3 mt-6">
-               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-400 font-light">{t('common.cancel')}</button>
-                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-light">{t('common.save')}</button>
+               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
              </div>
            </div>
          </div>
        )}
 
       {successMsg && (
-        <div className="fixed bottom-8 left-6 right-6 px-4 py-3 bg-green-900/50 border border-green-800 rounded-2xl z-50">
-          <p className="text-green-400 text-sm text-center">{successMsg}</p>
+        <div className="fixed bottom-24 left-6 right-6 px-4 py-3 rounded-2xl z-50 fade-in backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent-success) 40%, transparent)' }}>
+          <p className="text-sm text-center" style={{ color: 'var(--accent-success)' }}>{successMsg}</p>
         </div>
       )}
 

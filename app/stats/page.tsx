@@ -176,12 +176,12 @@ export default function EstadistiquesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-6">
-        <h1 className="text-xl font-medium tracking-tight text-zinc-400">stats.</h1>
+      <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
+        <h1 className="page-title">stats.</h1>
       </div>
 
-      <div className="px-6 space-y-6">
-        <div className="flex gap-2">
+      <div className="px-6 space-y-6 max-w-2xl mx-auto">
+        <div className="flex gap-1.5 p-1 rounded-full bg-[var(--surface-strong)]">
           {[
             { key: '30', label: '1M' },
             { key: '90', label: '3M' },
@@ -190,8 +190,10 @@ export default function EstadistiquesPage() {
             <button
               key={p.key}
               onClick={() => setPeriod(p.key as '30' | '90' | 'all')}
-               className={`flex-1 py-2 rounded-full text-xs uppercase tracking-wider transition-colors ${
-                period === p.key ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-zinc-900 text-zinc-500'
+              className={`flex-1 py-2 rounded-full text-xs uppercase tracking-wider transition-colors ${
+                period === p.key
+                  ? 'bg-[var(--card)] text-[var(--color-text-primary)] shadow-sm'
+                  : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               {p.label}
@@ -200,37 +202,37 @@ export default function EstadistiquesPage() {
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-zinc-600">{t('stats.loading')}</div>
+          <div className="py-20 text-center text-[var(--color-text-tertiary)] text-sm">{t('stats.loading')}</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-zinc-900/50 rounded-2xl p-4">
-                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">{t('stats.totalImprovement')}</p>
-                <p className="text-3xl font-light">{totalImprovement}%</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="card-surface p-4">
+                <p className="section-label mb-1">{t('stats.totalImprovement')}</p>
+                <p className="text-3xl font-light tabular-nums" style={{ color: totalImprovement > 0 ? 'var(--accent-success)' : 'var(--color-text-primary)' }}>{totalImprovement}%</p>
               </div>
-              <div className="bg-zinc-900/50 rounded-2xl p-4">
-                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">{t('stats.groupsImproved')}</p>
-                <p className="text-3xl font-light">{improvedCount}</p>
+              <div className="card-surface p-4">
+                <p className="section-label mb-1">{t('stats.groupsImproved')}</p>
+                <p className="text-3xl font-light tabular-nums">{improvedCount}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-4">{t('stats.byMuscleGroup')}</p>
+              <p className="section-label mb-3">{t('stats.byMuscleGroup')}</p>
               <div className="space-y-3">
                 {stats.sort((a, b) => b.improvement - a.improvement).map((stat) => (
                   <div key={stat.muscle}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-zinc-300 font-light">{stat.label}</span>
-                      <span className={stat.improvement > 0 ? 'text-green-500' : 'text-zinc-600'}>
+                      <span className="text-[var(--color-text-secondary)] font-light">{stat.label}</span>
+                      <span className="tabular-nums" style={{ color: stat.improvement > 0 ? 'var(--accent-success)' : 'var(--color-text-tertiary)' }}>
                         {stat.improvement > 0 ? '+' : ''}{stat.improvement}%
                       </span>
                     </div>
-                    <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
+                    <div className="h-1 bg-[var(--surface-strong)] rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all"
+                        className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(Math.abs(stat.improvement), 100)}%`,
-                          backgroundColor: stat.improvement > 0 ? '#22c55e' : stat.improvement < 0 ? '#ef4444' : '#333',
+                          backgroundColor: stat.improvement > 0 ? 'var(--accent-success)' : stat.improvement < 0 ? 'var(--accent-danger)' : 'var(--border)',
                         }}
                       />
                     </div>
@@ -243,8 +245,8 @@ export default function EstadistiquesPage() {
 
         {/* Volum setmanal per grup muscular */}
         {weeklyVolume.length > 0 && (
-          <div className="pt-4 border-t border-zinc-900">
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">{t('stats.weeklyVolume')}</p>
+          <div className="pt-4 border-t border-[var(--border)]">
+            <p className="section-label mb-3">{t('stats.weeklyVolume')}</p>
             <div className="space-y-3">
               {weeklyVolume.sort((a, b) => b.thisWeek - a.thisWeek).map(v => {
                 const max = Math.max(v.thisWeek, v.lastWeek, 1)
@@ -252,32 +254,32 @@ export default function EstadistiquesPage() {
                 return (
                   <div key={v.muscle}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-zinc-300 font-light">{v.label}</span>
+                      <span className="text-[var(--color-text-secondary)] font-light">{v.label}</span>
                       <span className="flex items-center gap-2">
-                        <span className="text-zinc-300">{format(v.thisWeek)}{unit}</span>
+                        <span className="text-[var(--color-text-primary)] tabular-nums">{format(v.thisWeek)}{unit}</span>
                         {v.lastWeek > 0 && (
-                          <span className={`text-xs ${diff > 0 ? 'text-green-500' : diff < 0 ? 'text-red-500' : 'text-zinc-500'}`}>
+                          <span className="text-xs tabular-nums" style={{ color: diff > 0 ? 'var(--accent-success)' : diff < 0 ? 'var(--accent-danger)' : 'var(--color-text-tertiary)' }}>
                             {diff > 0 ? '+' : ''}{diff}%
                           </span>
                         )}
                       </span>
                     </div>
-                    <div className="relative h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                      <div className="absolute h-full bg-zinc-700 rounded-full" style={{ width: `${(v.lastWeek / max) * 100}%` }} />
-                      <div className="absolute h-full bg-green-500 rounded-full" style={{ width: `${(v.thisWeek / max) * 100}%`, opacity: 0.85 }} />
+                    <div className="relative h-1.5 bg-[var(--surface-strong)] rounded-full overflow-hidden">
+                      <div className="absolute h-full rounded-full" style={{ width: `${(v.lastWeek / max) * 100}%`, backgroundColor: 'var(--border)' }} />
+                      <div className="absolute h-full rounded-full" style={{ width: `${(v.thisWeek / max) * 100}%`, backgroundColor: 'var(--accent-success)', opacity: 0.85 }} />
                     </div>
                   </div>
                 )
               })}
             </div>
-            <p className="text-[10px] text-zinc-600 mt-3">{t('stats.weeklyVolumeLegend')}</p>
+            <p className="text-[10px] text-[var(--color-text-tertiary)] mt-3">{t('stats.weeklyVolumeLegend')}</p>
           </div>
         )}
 
         {/* Historial per exercici */}
         {exerciseList.length > 0 && (
-          <div className="pt-4 border-t border-zinc-900">
-            <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">{t('stats.exerciseHistory')}</p>
+          <div className="pt-4 border-t border-[var(--border)]">
+            <p className="section-label mb-3">{t('stats.exerciseHistory')}</p>
 
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden mb-4">
               {exerciseList.map(ex => (
@@ -287,7 +289,7 @@ export default function EstadistiquesPage() {
                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
                     selectedExercise === ex
                       ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                      : 'bg-zinc-900 text-zinc-400'
+                      : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
                   }`}
                 >
                   {tEx(ex)}
@@ -296,9 +298,9 @@ export default function EstadistiquesPage() {
             </div>
 
             {historyLoading ? (
-              <div className="py-10 text-center text-zinc-600 text-sm">{t('stats.loadingHistory')}</div>
+              <div className="py-10 text-center text-[var(--color-text-tertiary)] text-sm">{t('stats.loadingHistory')}</div>
             ) : exerciseLogs.length === 0 ? (
-              <p className="text-zinc-600 text-sm py-6 text-center">{t('stats.noHistory')}</p>
+              <p className="text-[var(--color-text-tertiary)] text-sm py-6 text-center">{t('stats.noHistory')}</p>
             ) : (
               <>
                 {/* Mini-gràfic d'evolució 1RM */}
@@ -310,34 +312,38 @@ export default function EstadistiquesPage() {
                 {(() => {
                   const allTimeMax = Math.max(...exerciseLogs.map(l => l.one_rm || 0))
                   return (
-                <div className="space-y-3 mt-4">
+                <div className="space-y-2 mt-4">
                   {groupedByDay.map(([day, logs]) => {
                     const maxOneRM = Math.max(...logs.map(l => l.one_rm || 0))
                     const isPrDay = maxOneRM > 0 && maxOneRM === allTimeMax
                     const notes = logs.map(l => l.note).filter(Boolean) as string[]
                     return (
-                      <div key={day} className={`bg-zinc-900/40 border rounded-xl p-3 ${isPrDay ? 'border-yellow-700/50' : 'border-zinc-900'}`}>
+                      <div
+                        key={day}
+                        className="card-surface p-3"
+                        style={isPrDay ? { borderColor: 'color-mix(in srgb, var(--accent-warn) 50%, transparent)' } : undefined}
+                      >
                         <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-light text-zinc-300 flex items-center gap-1.5">
+                          <p className="text-sm font-light text-[var(--color-text-secondary)] flex items-center gap-1.5">
                             {isPrDay && <span title={t('home.personalRecord')}>🏆</span>}
                             {new Date(day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                           {maxOneRM > 0 && (
-                            <p className="text-xs text-zinc-500">1RM: <span className="text-zinc-300">{format(maxOneRM)}{unit}</span></p>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">1RM: <span className="text-[var(--color-text-primary)] tabular-nums">{format(maxOneRM)}{unit}</span></p>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {logs.map(l => (
-                            <span key={l.id} className="text-xs px-2 py-1 rounded-md bg-zinc-800/60 text-zinc-300 font-light">
+                            <span key={l.id} className="text-xs px-2 py-1 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light tabular-nums">
                               {format(l.weight)}{unit} × {l.reps}
-                              {l.rir != null && <span className="text-zinc-500"> · RIR {l.rir}</span>}
+                              {l.rir != null && <span className="text-[var(--color-text-tertiary)]"> · RIR {l.rir}</span>}
                             </span>
                           ))}
                         </div>
                         {notes.length > 0 && (
                           <div className="mt-2 space-y-0.5">
                             {notes.map((n, i) => (
-                              <p key={i} className="text-xs text-zinc-500 italic">"{n}"</p>
+                              <p key={i} className="text-xs text-[var(--color-text-tertiary)] italic">“{n}”</p>
                             ))}
                           </div>
                         )}
@@ -373,27 +379,27 @@ function ProgressChart({ points, unit, format, label, locale }: { points: { day:
   const trendPct = first > 0 ? Math.round((trend / first) * 100) : 0
 
   return (
-    <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-4">
+    <div className="card-surface p-4">
       <div className="flex justify-between items-baseline mb-2">
-        <p className="text-xs uppercase tracking-wider text-zinc-500">{label}</p>
-        <p className={`text-xs ${trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-zinc-500'}`}>
+        <p className="section-label">{label}</p>
+        <p className="text-xs tabular-nums" style={{ color: trend > 0 ? 'var(--accent-success)' : trend < 0 ? 'var(--accent-danger)' : 'var(--color-text-tertiary)' }}>
           {trend > 0 ? '+' : ''}{format(trend)}{unit} ({trendPct > 0 ? '+' : ''}{trendPct}%)
         </p>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24">
         <defs>
           <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--accent-success)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="var(--accent-success)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#chartGrad)" />
-        <path d={path} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="var(--accent-success)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {xs.map((x, i) => (
-          <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 3 : 2} fill="#22c55e" />
+          <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 3 : 2} fill="var(--accent-success)" />
         ))}
       </svg>
-      <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+      <div className="flex justify-between text-[10px] text-[var(--color-text-tertiary)] mt-1 tabular-nums">
         <span>{new Date(points[0].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>
         <span>{format(minY)}–{format(maxY)}{unit}</span>
         <span>{new Date(points[points.length - 1].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>

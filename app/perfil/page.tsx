@@ -144,19 +144,22 @@ export default function PerfilPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-       <div className="px-6 pt-8 pb-6">
+       <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
           <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">{t('perfil.title')}</h1>
+          {overallLevel && (
+            <p className="mt-1 text-sm" style={{ color: levelColor }}>{t(`level.${overallLevel}`)}</p>
+          )}
         </div>
 
-     <div className="px-6 space-y-6">
+     <div className="px-6 space-y-6 max-w-2xl mx-auto">
           {exerciseLevels.length > 0 && (
           <div>
-             <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('perfil.byExercise')}</p>
-             <div className="space-y-2">
+             <p className="section-label mb-3">{t('perfil.byExercise')}</p>
+             <div className="space-y-1">
                {exerciseLevels.map((ex) => (
-                 <div key={ex.exercise} className="flex justify-between items-center py-3 border-b border-[var(--border)] rounded-lg px-3 hover:bg-[var(--input)] transition-colors">
-                   <span className="font-light text-[var(--color-text-primary)]">{ex.exercise}</span>
-                   <span className="text-sm" style={{ color: ex.levelColor }}>{t(`level.${ex.level}`)}</span>
+                 <div key={ex.exercise} className="flex justify-between items-center py-3 px-3 rounded-xl hover:bg-[var(--surface)] transition-colors">
+                   <span className="font-light text-[var(--color-text-primary)] truncate">{ex.exercise}</span>
+                   <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3" style={{ backgroundColor: ex.levelColor + '22', color: ex.levelColor }}>{t(`level.${ex.level}`)}</span>
                  </div>
                ))}
               </div>
@@ -164,7 +167,7 @@ export default function PerfilPage() {
           )}
 
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('perfil.data')}</p>
+            <p className="section-label mb-3">{t('perfil.data')}</p>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                  <input
@@ -173,7 +176,7 @@ export default function PerfilPage() {
                    value={age}
                    onChange={(e) => setAge(e.target.value)}
                    placeholder={t('perfil.age')}
-                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
+                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  />
                  <div className="flex gap-2">
                    <button
@@ -181,7 +184,7 @@ export default function PerfilPage() {
                      className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
                        gender === 'm'
                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                         : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
+                         : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
                      }`}
                    >
                      {t('perfil.male')}
@@ -191,7 +194,7 @@ export default function PerfilPage() {
                      className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
                        gender === 'f'
                          ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                         : 'bg-[var(--input)] text-[var(--color-text-primary)] border border-[var(--border)]'
+                         : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
                      }`}
                    >
                      {t('perfil.female')}
@@ -205,7 +208,7 @@ export default function PerfilPage() {
                    value={height}
                    onChange={(e) => setHeight(e.target.value)}
                    placeholder={t('perfil.heightCm')}
-                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
+                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  />
                  <input
                    type="text"
@@ -213,24 +216,24 @@ export default function PerfilPage() {
                    value={weight}
                    onChange={(e) => setWeight(e.target.value)}
                    placeholder={`${t('perfil.weightLabel')} (${unit})`}
-                   className="bg-[var(--input)] text-[var(--foreground)] text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--border)] border border-[var(--border)]"
+                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  />
                </div>
              </div>
              <button
                onClick={saveProfile}
                type="button"
-               className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors"
+               className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
              >
-               {saved ? t('perfil.saved') : t('perfil.save')}
+               {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
              </button>
           </div>
 
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-3">{t('perfil.scale')}</p>
-           <div className="flex flex-wrap gap-2">
+            <p className="section-label mb-3">{t('perfil.scale')}</p>
+           <div className="flex flex-wrap gap-1.5">
              {LEVELS.map((l) => (
-               <span key={l.key} className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: l.color + '22', color: l.color }}>
+               <span key={l.key} className="px-2.5 py-1 rounded-full text-[11px] font-medium" style={{ backgroundColor: l.color + '22', color: l.color }}>
                  {t(`level.${l.key}`)}
                </span>
              ))}
@@ -238,42 +241,42 @@ export default function PerfilPage() {
          </div>
 
           <div>
-            <p className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider mb-4">{t('preferences.title')}</p>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+            <p className="section-label mb-3">{t('preferences.title')}</p>
+            <div className="card-surface divide-y divide-[var(--border)]">
+              <div className="flex justify-between items-center px-4 py-3">
                 <span className="text-sm font-light text-[var(--color-text-primary)]">{t('nav.language')}</span>
                 <LanguageSelector />
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+              <div className="flex justify-between items-center px-4 py-3">
                 <span className="text-sm font-light text-[var(--color-text-primary)]">{t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}</span>
                 <button
                   onClick={toggleTheme}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]/10 transition-colors min-h-[44px]"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--surface-strong)] text-sm text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
                   aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
                 >
-                  <span className="text-base">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                  <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
                   <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                 </button>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+              <div className="flex justify-between items-center px-4 py-3">
                 <span className="text-sm font-light text-[var(--color-text-primary)]">{t('preferences.weightUnit')}</span>
-                <div className="flex bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
+                <div className="flex bg-[var(--surface-strong)] rounded-lg overflow-hidden p-0.5">
                   <button
                     onClick={() => setUnit('kg')}
-                    className={`px-4 py-2 text-xs uppercase tracking-wider min-h-[44px] transition-colors ${
+                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
                       unit === 'kg'
                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--foreground)]/70 hover:bg-[var(--accent)]/10'
+                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     kg
                   </button>
                   <button
                     onClick={() => setUnit('lb')}
-                    className={`px-4 py-2 text-xs uppercase tracking-wider min-h-[44px] transition-colors ${
+                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
                       unit === 'lb'
                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--foreground)]/70 hover:bg-[var(--accent)]/10'
+                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
                     lb

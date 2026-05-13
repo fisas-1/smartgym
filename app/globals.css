@@ -6,24 +6,38 @@
   --card: #ffffff;
   --card-foreground: #000000;
   --border: #e5e5e5;
-  --input: #e5e5e5;
+  --input: #f4f4f5;
   --color-bg-primary: #ffffff;
-  --color-text-primary: #000000;
+  --color-text-primary: #0a0a0a;
   --color-text-secondary: #525252;
   --color-text-tertiary: #737373;
+  --surface: #fafafa;
+  --surface-strong: #f4f4f5;
+  --surface-hover: #ececef;
+  --accent-success: #16a34a;
+  --accent-danger: #dc2626;
+  --accent-warn: #ca8a04;
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #000000;
-  --card-foreground: #ffffff;
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #0f0f10;
+  --card-foreground: #fafafa;
   --border: #272727;
-  --input: #272727;
-  --color-bg-primary: #000000;
-  --color-text-primary: #ffffff;
+  --input: #1c1c1d;
+  --color-bg-primary: #0a0a0a;
+  --color-text-primary: #fafafa;
   --color-text-secondary: #a3a3a3;
   --color-text-tertiary: #737373;
+  --surface: #121213;
+  --surface-strong: #1c1c1d;
+  --surface-hover: #232325;
+  --accent-success: #22c55e;
+  --accent-danger: #ef4444;
+  --accent-warn: #eab308;
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
 }
 
 * {
@@ -33,6 +47,11 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+input, button, select, textarea {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
 @layer components {
@@ -56,4 +75,47 @@ body {
 }
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
+}
+
+.bg-surface { background-color: var(--surface); }
+.bg-surface-strong { background-color: var(--surface-strong); }
+.bg-surface-hover:hover { background-color: var(--surface-hover); }
+.text-muted { color: var(--color-text-tertiary); }
+.text-secondary { color: var(--color-text-secondary); }
+.border-app { border-color: var(--border); }
+
+.page-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-text-secondary);
+}
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.card-surface {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+.btn-primary {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; }
+
+.fade-in {
+  animation: fadeIn 0.18s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -24,39 +24,52 @@ export default function Navigation() {
   const signOut = authContext?.signOut ?? (async () => {})
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--card)] border-t border-[var(--border)] px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-50 overflow-visible">
-      <div className="flex gap-1 sm:gap-4 flex-nowrap overflow-x-auto scrollbar-hidden min-w-0">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`text-xs sm:text-base tracking-wider transition-colors px-2 sm:px-3 py-1 sm:py-2 whitespace-nowrap flex-shrink-0 ${
-               pathname === item.href ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-            }`}
-          >
-              {t(`nav.${item.key}`)}
-            </Link>
-          ))}
-      </div>
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--card) 88%, transparent)',
+        borderTop: '1px solid var(--border)',
+      }}
+    >
+      <div className="max-w-3xl mx-auto flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hidden min-w-0">
+          {navItems.map((item) => {
+            const active = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative text-xs sm:text-sm tracking-wide px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 transition-colors ${
+                  active
+                    ? 'text-[var(--color-text-primary)] bg-[var(--surface-strong)]'
+                    : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                }`}
+              >
+                {t(`nav.${item.key}`)}
+              </Link>
+            )
+          })}
+        </div>
+        <div className="flex items-center flex-shrink-0">
           {loading ? (
-            <span className="text-xs text-zinc-400">...</span>
+            <span className="text-xs text-[var(--color-text-tertiary)] px-2">…</span>
           ) : user ? (
             <button
               onClick={() => signOut()}
-              className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
+              className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] px-3 py-2 rounded-full whitespace-nowrap"
             >
               {t('nav.logout')}
             </button>
           ) : (
             <Link
               href="/login"
-              className="text-xs text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors px-2 py-1 min-h-[44px] flex items-center whitespace-nowrap"
+              className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] px-3 py-2 rounded-full whitespace-nowrap"
             >
               {t('nav.login')}
             </Link>
           )}
         </div>
+      </div>
     </nav>
   )
 }
