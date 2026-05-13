@@ -18,8 +18,9 @@ self.addEventListener('message', event => {
           badge: '/icon-192.png',
           tag: 'rest-timer',
           renotify: true,
-          vibrate: [400, 100, 400, 100, 600],
+          vibrate: [500, 150, 500, 150, 500, 150, 800, 200, 800, 200, 800],
           silent: false,
+          requireInteraction: true,
         })
       } catch {}
     }, delay)

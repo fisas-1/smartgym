@@ -15,23 +15,25 @@ async function sendToSW(message: object) {
 }
 
 function playAlarmSound(ctx: AudioContext) {
-  ;[0, 0.45, 0.9].forEach(t => {
+  const times = [0, 0.55, 1.1, 1.65, 2.2, 2.75]
+  const freqs = [880, 1100, 880, 1100, 880, 1100]
+  times.forEach((t, i) => {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.type = 'sine'
-    osc.frequency.value = 880
+    osc.frequency.value = freqs[i]
     gain.gain.setValueAtTime(0, ctx.currentTime + t)
-    gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + t + 0.04)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.35)
+    gain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + t + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.45)
     osc.start(ctx.currentTime + t)
-    osc.stop(ctx.currentTime + t + 0.35)
+    osc.stop(ctx.currentTime + t + 0.45)
   })
 }
 
 function vibrate() {
-  if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 600])
+  if (navigator.vibrate) navigator.vibrate([500, 150, 500, 150, 500, 150, 800, 200, 800, 200, 800])
 }
 
 export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: number }) {
@@ -41,12 +43,20 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
   const [running, setRunning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const alarmTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
   function fireAlarm() {
-    if (audioCtxRef.current) {
-      audioCtxRef.current.resume().then(() => playAlarmSound(audioCtxRef.current!)).catch(() => {})
+    alarmTimersRef.current.forEach(clearTimeout)
+    alarmTimersRef.current = []
+    const fire = () => {
+      if (audioCtxRef.current) {
+        audioCtxRef.current.resume().then(() => playAlarmSound(audioCtxRef.current!)).catch(() => {})
+      }
+      vibrate()
     }
-    vibrate()
+    fire()
+    alarmTimersRef.current.push(setTimeout(fire, 3500))
+    alarmTimersRef.current.push(setTimeout(fire, 7000))
     sendToSW({ type: 'TIMER_CANCEL' })
   }
 
