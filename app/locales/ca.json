@@ -103,7 +103,7 @@
   "routines.completed": "Completada",
   "routines.pending": "Pendent",
   "routines.exerciseCompleted": "✅ Exercici Completat (toc per desmarcar)",
-  "routines.resetForSession": "↺ Guardar sessió i reiniciar",
+  "routines.resetForSession": "Guardar sessió i reiniciar",
   "routines.recommendWeight": "💡 Recomanar Pes",
   "routines.recommendation": "Recomanació per {{exercise}}: {{weight}}{{unit}} (anterior: {{prevWeight}}{{unit}} x {{prevReps}})",
   "routines.noExerciseHistory": "No hi ha historial per a aquest exercici",
