@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS, EXERCISE_VARIANTS, VARIANT_KEYS } from '@/types'
 import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
 import { useUnit } from './contexts/UnitContext'
@@ -45,6 +45,7 @@ export default function HomePage() {
   const { theme } = useTheme()
   const { unit, toKg, format } = useUnit()
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
+  const [variant, setVariant] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
   const [rir, setRir] = useState<string>('')
@@ -89,18 +90,30 @@ export default function HomePage() {
     const getDisplayExercises = () => [...DEFAULT_EXERCISES, ...customExercises]
 
     const tEx = (name: string) => {
-      const bodywaterSuffix = ' - Pes corporal'
-      if (name.endsWith(bodywaterSuffix)) {
-        const base = name.slice(0, -bodywaterSuffix.length)
-        const key = EXERCISE_KEYS[base]
-        return `${key ? t(key) : base} - ${t('workouts.bodyweight')}`
+      const bwSuffix = ' - Pes corporal'
+      let displayName = name
+      let isBw = false
+      if (displayName.endsWith(bwSuffix)) {
+        displayName = displayName.slice(0, -bwSuffix.length)
+        isBw = true
       }
-      const key = EXERCISE_KEYS[name]
-      return key ? t(key) : name
+      const dotIdx = displayName.indexOf(' · ')
+      let result: string
+      if (dotIdx !== -1) {
+        const base = displayName.slice(0, dotIdx)
+        const v = displayName.slice(dotIdx + 3)
+        const baseKey = EXERCISE_KEYS[base]
+        const variantKey = VARIANT_KEYS[v]
+        result = `${baseKey ? t(baseKey) : base} · ${variantKey ? t(variantKey) : v}`
+      } else {
+        const key = EXERCISE_KEYS[displayName]
+        result = key ? t(key) : displayName
+      }
+      return isBw ? `${result} - ${t('workouts.bodyweight')}` : result
     }
 
-    // Reset weightType to "pes" when exercise changes if it doesn't support bodyweight
     useEffect(() => {
+      setVariant('')
       const info = EXERCISE_INFO[exercise as Exercise]
       if (info && (!info.hasBodyweight || !info.hasWeight)) {
         setWeightType("pes")
@@ -154,7 +167,8 @@ export default function HomePage() {
       try {
         const wKg = toKg(wInput)
 
-        const exerciseToStore = weightType === "corporal" ? `${exercise} - Pes corporal` : exercise
+        const exerciseBase = variant ? `${exercise} · ${variant}` : exercise
+        const exerciseToStore = weightType === "corporal" ? `${exerciseBase} - Pes corporal` : exerciseBase
 
         let isPr = false
         if (weightType !== "corporal" && oneRM > 0 && user) {
@@ -341,6 +355,25 @@ export default function HomePage() {
                  +
                </button>
             </div>
+
+          {EXERCISE_VARIANTS[exercise as string] && (
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden">
+              {EXERCISE_VARIANTS[exercise as string].map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setVariant(variant === v ? '' : v)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors ${
+                    variant === v
+                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                      : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                </button>
+              ))}
+            </div>
+          )}
           </div>
 
            <div className="space-y-4">

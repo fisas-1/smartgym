@@ -50,8 +50,11 @@ export default function PerfilPage() {
   const themeContext = useContext(ThemeContext)
   const theme = themeContext?.theme ?? 'dark'
   const toggleTheme = themeContext?.toggleTheme ?? (() => {})
+  const [heightUnit, setHeightUnitState] = useState<'cm' | 'ftin'>('cm')
   const [age, setAge] = useState<string>('')
   const [height, setHeight] = useState<string>('')
+  const [heightFt, setHeightFt] = useState<string>('')
+  const [heightIn, setHeightIn] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
   const [gender, setGender] = useState<'m' | 'f'>('m')
   const [saved, setSaved] = useState(false)
@@ -61,16 +64,49 @@ export default function PerfilPage() {
   const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
 
-  useEffect(() => { loadProfile() }, [unit])
+  useEffect(() => {
+    const savedUnit = localStorage.getItem('height_unit') as 'cm' | 'ftin'
+    if (savedUnit === 'cm' || savedUnit === 'ftin') setHeightUnitState(savedUnit)
+  }, [])
+
+  useEffect(() => { loadProfile() }, [unit, heightUnit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
   useEffect(() => { if (user) loadFavoritesAndDeleted() }, [user])
+
+  function setHeightUnit(u: 'cm' | 'ftin') {
+    // Convert current height value when switching units
+    if (u === 'ftin' && height) {
+      const cm = parseFloat(height)
+      if (!isNaN(cm)) {
+        const totalInches = cm / 2.54
+        setHeightFt(Math.floor(totalInches / 12).toString())
+        setHeightIn(Math.round(totalInches % 12).toString())
+      }
+    } else if (u === 'cm' && (heightFt || heightIn)) {
+      const ft = parseInt(heightFt) || 0
+      const inches = parseInt(heightIn) || 0
+      const cm = Math.round((ft * 12 + inches) * 2.54)
+      setHeight(cm.toString())
+    }
+    setHeightUnitState(u)
+    localStorage.setItem('height_unit', u)
+  }
 
   function loadProfile() {
     const saved = localStorage.getItem('user_profile')
     if (saved) {
       const p: UserProfile = JSON.parse(saved)
       setAge(p.age?.toString() || '')
-      setHeight(p.height?.toString() || '')
+      const currentHeightUnit = (localStorage.getItem('height_unit') as 'cm' | 'ftin') || 'cm'
+      if (p.height != null) {
+        if (currentHeightUnit === 'ftin') {
+          const totalInches = p.height / 2.54
+          setHeightFt(Math.floor(totalInches / 12).toString())
+          setHeightIn(Math.round(totalInches % 12).toString())
+        } else {
+          setHeight(p.height.toString())
+        }
+      }
       setWeight(p.weight != null ? format(p.weight) : '')
       setGender(p.gender || 'm')
     }
@@ -78,9 +114,17 @@ export default function PerfilPage() {
 
   function saveProfile() {
     const wInput = parseFloat(weight)
+    let heightCm: number | null = null
+    if (heightUnit === 'ftin') {
+      const ft = parseInt(heightFt) || 0
+      const inches = parseInt(heightIn) || 0
+      if (ft > 0 || inches > 0) heightCm = Math.round((ft * 12 + inches) * 2.54)
+    } else {
+      heightCm = parseFloat(height) || null
+    }
     localStorage.setItem('user_profile', JSON.stringify({
       age: parseInt(age) || null,
-      height: parseFloat(height) || null,
+      height: heightCm,
       weight: isNaN(wInput) ? null : toKg(wInput),
       gender,
     }))
@@ -252,14 +296,35 @@ export default function PerfilPage() {
                  </div>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 <input
-                   type="text"
-                   inputMode="numeric"
-                   value={height}
-                   onChange={(e) => setHeight(e.target.value)}
-                   placeholder={t('perfil.heightCm')}
-                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 />
+                 {heightUnit === 'ftin' ? (
+                   <div className="flex gap-2">
+                     <input
+                       type="text"
+                       inputMode="numeric"
+                       value={heightFt}
+                       onChange={(e) => setHeightFt(e.target.value)}
+                       placeholder={t('perfil.heightFt')}
+                       className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                     />
+                     <input
+                       type="text"
+                       inputMode="numeric"
+                       value={heightIn}
+                       onChange={(e) => setHeightIn(e.target.value)}
+                       placeholder={t('perfil.heightIn')}
+                       className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                     />
+                   </div>
+                 ) : (
+                   <input
+                     type="text"
+                     inputMode="numeric"
+                     value={height}
+                     onChange={(e) => setHeight(e.target.value)}
+                     placeholder={t('perfil.heightCm')}
+                     className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
+                   />
+                 )}
                  <input
                    type="text"
                    inputMode="numeric"
@@ -372,6 +437,31 @@ export default function PerfilPage() {
                     }`}
                   >
                     lb
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center px-4 py-3">
+                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('preferences.heightUnit')}</span>
+                <div className="flex bg-[var(--surface-strong)] rounded-lg overflow-hidden p-0.5">
+                  <button
+                    onClick={() => setHeightUnit('cm')}
+                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
+                      heightUnit === 'cm'
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    cm
+                  </button>
+                  <button
+                    onClick={() => setHeightUnit('ftin')}
+                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
+                      heightUnit === 'ftin'
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    ft·in
                   </button>
                 </div>
               </div>
