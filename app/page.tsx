@@ -181,11 +181,7 @@ export default function HomePage() {
         const { error } = await supabase.from('workout_logs').insert(insertData)
         if (error) {
           console.error('Error saving set:', error)
-          if (error.message.includes('note') || error.message.includes('column')) {
-            setErrorMsg('Error: Cal afegir la columna "note" a Supabase. Executa add-note-column.sql al SQL Editor.')
-          } else {
-            setErrorMsg('Error al guardar: ' + error.message)
-          }
+          setErrorMsg(t('common.saveError') + error.message)
           return
         }
         setWeight(''); setReps(''); setRir(''); setNote('')
@@ -200,7 +196,7 @@ export default function HomePage() {
         await loadSavedSets()
       } catch (err: any) {
         console.error('Unexpected error saving set:', err)
-        setErrorMsg('Error inesperat: ' + (err?.message || String(err)))
+        setErrorMsg(t('common.error') + ': ' + (err?.message || String(err)))
       } finally {
         setLoading(false)
       }
@@ -462,6 +458,16 @@ export default function HomePage() {
                   ))}
                 </div>
             </div>
+
+             {/* 1RM inline */}
+             {oneRM > 0 && (
+               <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl fade-in">
+                 <span className="text-[var(--color-text-tertiary)] text-xs uppercase tracking-wider">{t('home.oneRMLabel')}</span>
+                 <span className="text-[var(--color-text-primary)] font-light tabular-nums">
+                   {format(oneRM)}<span className="text-[var(--color-text-tertiary)] text-xs ml-0.5">{unit}</span>
+                 </span>
+               </div>
+             )}
 
              {/* NOTES section (optional) */}
              <div>

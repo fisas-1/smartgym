@@ -52,6 +52,7 @@
   "workouts.increaseReps": "Augmentar reps",
 
   "stats.title": "Estadístiques",
+  "stats.periodAll": "Tot",
   "stats.totalWorkouts": "Total d'entrenaments",
   "stats.totalSets": "Total de sèries",
   "stats.totalReps": "Total de repeticions",
@@ -224,6 +225,8 @@
   "exercise.muscleGroupAbdominals": "Abdominals",
   "exercise.muscleGroupGluts": "Gluts",
   "exercise.muscleGroupFullBody": "Cos sencer",
+  "exercise.muscleGroupBiceps": "Bíceps",
+  "exercise.muscleGroupTriceps": "Tríceps",
   "exercise.noSecondary": "Cap",
 
   "common.send": "Enviar",

@@ -370,7 +370,7 @@ export default function RutinesPage() {
      // Guardar dades completes a localStorage per poder recuperar-la
      const { data: exs } = await supabase
        .from('routine_exercises')
-       .select('exercise, sets_target, reps_min, reps_max, order_index')
+       .select('id, exercise, sets_target, reps_min, reps_max, order_index')
        .eq('routine_id', editingRoutine.id)
        .order('order_index', { ascending: true })
 
@@ -841,7 +841,7 @@ export default function RutinesPage() {
          {/* Modal Nova Rutina */}
          {showRoutineModal && (
            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.new')}</h3>
 
                <p className="section-label mb-2">{t('routines.template')}</p>
@@ -888,7 +888,7 @@ export default function RutinesPage() {
          {/* Modal Editar Rutina */}
          {showEditRoutineModal && editingRoutine && (
            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
+             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
                <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.edit')}</h3>
                <input
                  type="text"

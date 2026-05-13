@@ -9,14 +9,14 @@ import { useTranslation } from '../contexts/LanguageContext'
 import QuickLogFab from '../components/QuickLogFab'
 
 const MUSCLE_GROUPS = [
-  { id: 'pit', label: 'Pit', color: '#888' },
-  { id: 'esquena', label: 'Esquena', color: '#888' },
-  { id: 'cames', label: 'Cames', color: '#888' },
-  { id: 'espatles', label: 'Espatles', color: '#888' },
-  { id: 'biceps', label: 'Bíceps', color: '#888' },
-  { id: 'triceps', label: 'Tríceps', color: '#888' },
-  { id: 'abdominals', label: 'Abs', color: '#888' },
-  { id: 'gluts', label: 'Gluts', color: '#888' },
+  { id: 'pit', tKey: 'exercise.muscleGroupPectoral' },
+  { id: 'esquena', tKey: 'exercise.muscleGroupEsquena' },
+  { id: 'cames', tKey: 'exercise.muscleGroupCames' },
+  { id: 'espatles', tKey: 'exercise.muscleGroupEsquitxos' },
+  { id: 'biceps', tKey: 'exercise.muscleGroupBiceps' },
+  { id: 'triceps', tKey: 'exercise.muscleGroupTriceps' },
+  { id: 'abdominals', tKey: 'exercise.muscleGroupAbdominals' },
+  { id: 'gluts', tKey: 'exercise.muscleGroupGluts' },
 ]
 
 const EXERCISE_MUSCLE_MAP: Record<string, string> = {
@@ -66,8 +66,7 @@ export default function EstadistiquesPage() {
     for (const m of MUSCLE_GROUPS) byMuscle[m.id] = { thisWeek: 0, lastWeek: 0 }
 
     for (const log of data || []) {
-      // Strip "- Pes corporal" suffix to find muscle group
-      const cleanName = (log.exercise as string).replace(' - Pes corporal', '')
+      const cleanName = (log.exercise as string).replace(/ - Pes corporal$/, '')
       const muscle = EXERCISE_MUSCLE_MAP[cleanName]
       if (!muscle) continue
       const vol = (log.weight || 0) * (log.reps || 0)
@@ -79,7 +78,7 @@ export default function EstadistiquesPage() {
 
     const result = MUSCLE_GROUPS.map(m => ({
       muscle: m.id,
-      label: m.label,
+      label: t(m.tKey),
       thisWeek: byMuscle[m.id].thisWeek,
       lastWeek: byMuscle[m.id].lastWeek,
     })).filter(r => r.thisWeek > 0 || r.lastWeek > 0)
@@ -119,7 +118,7 @@ export default function EstadistiquesPage() {
       const imp = d.previous > 0 && d.current > d.previous
         ? Math.round(((d.current - d.previous) / d.previous) * 100)
         : d.current > 0 ? 100 : 0
-      return { muscle: m.id, label: m.label, improvement: imp, currentMax: d.current, previousMax: d.previous }
+      return { muscle: m.id, label: t(m.tKey), improvement: imp, currentMax: d.current, previousMax: d.previous }
     })
 
     setStats(calculated)
@@ -185,7 +184,7 @@ export default function EstadistiquesPage() {
           {[
             { key: '30', label: '1M' },
             { key: '90', label: '3M' },
-            { key: 'all', label: 'All' },
+            { key: 'all', label: t('stats.periodAll') },
           ].map((p) => (
             <button
               key={p.key}

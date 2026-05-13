@@ -52,6 +52,7 @@
   "workouts.increaseReps": "Increase reps",
 
   "stats.title": "Statistics",
+  "stats.periodAll": "All",
   "stats.totalWorkouts": "Total Workouts",
   "stats.totalSets": "Total Sets",
   "stats.totalReps": "Total Reps",
@@ -224,6 +225,8 @@
   "exercise.muscleGroupAbdominals": "Abs",
   "exercise.muscleGroupGluts": "Glutes",
   "exercise.muscleGroupFullBody": "Full Body",
+  "exercise.muscleGroupBiceps": "Biceps",
+  "exercise.muscleGroupTriceps": "Triceps",
   "exercise.noSecondary": "None",
 
   "common.send": "Send",
