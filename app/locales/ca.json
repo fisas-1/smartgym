@@ -137,6 +137,9 @@
   "routines.restored": "Rutina recuperada",
   "routines.noFavorites": "Sense rutines preferides",
   "routines.noDeleted": "Sense rutines eliminades",
+  "routines.variant": "Variant",
+  "routines.variantAny": "Qualsevol",
+  "routines.variantLabel": "Variant de l'exercici",
 
   "templates.push.name": "Push (PPL)",
   "templates.push.desc": "Pit, espatlla i tríceps",

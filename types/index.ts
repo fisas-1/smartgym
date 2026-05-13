@@ -199,6 +199,7 @@ export interface RoutineExercise {
   id: string
   routine_id: string
   exercise: string
+  variant?: string | null
   name?: string
   muscleGroup: MuscleGroup
   sets_target: number

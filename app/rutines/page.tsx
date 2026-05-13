@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM, EXERCISE_KEYS } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, Routine, RoutineExercise, RoutineSet, WorkoutLog, calculate1RM, EXERCISE_KEYS, EXERCISE_VARIANTS, VARIANT_KEYS } from '@/types'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useUnit } from '../contexts/UnitContext'
 import { ROUTINE_TEMPLATES } from '../lib/routineTemplates'
@@ -47,6 +47,7 @@ export default function RutinesPage() {
   const [customExercises, setCustomExercises] = useState<CustomExercises>([])
    const [showExerciseModal, setShowExerciseModal] = useState(false)
    const [newExerciseName, setNewExerciseName] = useState('')
+   const [newExerciseVariant, setNewExerciseVariant] = useState<string | null>(null)
    const [newExercisePrimary, setNewExercisePrimary] = useState('')
    const [newExerciseSecondary, setNewExerciseSecondary] = useState('')
    const [showRoutineModal, setShowRoutineModal] = useState(false)
@@ -59,6 +60,7 @@ export default function RutinesPage() {
    const [editSetsTarget, setEditSetsTarget] = useState<number>(3)
    const [editRepsMin, setEditRepsMin] = useState<number>(8)
    const [editRepsMax, setEditRepsMax] = useState<number>(12)
+   const [editVariant, setEditVariant] = useState<string | null>(null)
    const [errorMsg, setErrorMsg] = useState<string | null>(null)
    const [successMsg, setSuccessMsg] = useState<string | null>(null)
    const [loading, setLoading] = useState(false)
@@ -416,6 +418,7 @@ export default function RutinesPage() {
      setEditSetsTarget(exercise.sets_target)
      setEditRepsMin(exercise.reps_min)
      setEditRepsMax(exercise.reps_max)
+     setEditVariant(exercise.variant ?? null)
      setShowEditExerciseModal(true)
    }
 
@@ -435,7 +438,8 @@ export default function RutinesPage() {
        .update({
          sets_target: editSetsTarget,
          reps_min: editRepsMin,
-         reps_max: editRepsMax
+         reps_max: editRepsMax,
+         variant: editVariant ?? null
        })
        .eq('id', editingExercise.id)
 
@@ -510,6 +514,7 @@ export default function RutinesPage() {
            .insert({
              routine_id: selectedRoutine.id,
              exercise: exerciseTrimmed,
+             variant: newExerciseVariant ?? null,
              sets_target: 3,
              reps_min: 8,
              reps_max: 12,
@@ -570,6 +575,7 @@ export default function RutinesPage() {
           localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
         }
         setNewExerciseName('')
+        setNewExerciseVariant(null)
         setNewExercisePrimary('')
         setNewExerciseSecondary('')
         setShowExerciseModal(false)
@@ -1011,6 +1017,11 @@ export default function RutinesPage() {
                       {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
                       <span className="mx-1.5">·</span>
                       <span className="tabular-nums">{completedSets}/{exercise.sets_target}</span>
+                      {exercise.variant && (
+                        <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-tertiary)]">
+                          {VARIANT_KEYS[exercise.variant] ? t(VARIANT_KEYS[exercise.variant]) : exercise.variant}
+                        </span>
+                      )}
                    </p>
                  </div>
                  <div className="flex gap-0.5 flex-shrink-0">
@@ -1186,7 +1197,7 @@ export default function RutinesPage() {
 
 {/* Modal Afegir Exercici */}
         {showExerciseModal && (
-          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.addExercise')}</h3>
 
@@ -1204,13 +1215,14 @@ export default function RutinesPage() {
                   { value: 'Full Body', key: 'exercise.muscleGroupFullBody' },
                 ]
                 const isCustom = newExerciseName.trim() && !DEFAULT_EXERCISES.includes(newExerciseName.trim() as any)
+                const exerciseVariants = EXERCISE_VARIANTS[newExerciseName.trim()] ?? null
                 return (
                   <div className="mb-3 space-y-2">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newExerciseName}
-                        onChange={(e) => setNewExerciseName(e.target.value)}
+                        onChange={(e) => { setNewExerciseName(e.target.value); setNewExerciseVariant(null) }}
                         placeholder={t('routines.exerciseNamePlaceholder')}
                         className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
                         onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
@@ -1224,6 +1236,28 @@ export default function RutinesPage() {
                         + {t('routines.add')}
                       </button>
                     </div>
+                    {exerciseVariants && (
+                      <div>
+                        <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            onClick={() => setNewExerciseVariant(null)}
+                            className={`px-3 py-1 rounded-lg text-xs transition-colors ${newExerciseVariant === null ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+                          >
+                            {t('routines.variantAny')}
+                          </button>
+                          {exerciseVariants.map(v => (
+                            <button
+                              key={v}
+                              onClick={() => setNewExerciseVariant(v)}
+                              className={`px-3 py-1 rounded-lg text-xs transition-colors ${newExerciseVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+                            >
+                              {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {isCustom && (
                       <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -1259,8 +1293,15 @@ export default function RutinesPage() {
                 {allExercises.map(ex => (
                   <button
                     key={ex}
-                    onClick={() => handleAddExercise(ex)}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm text-left bg-[var(--surface)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)] transition-colors"
+                    onClick={() => {
+                      if (EXERCISE_VARIANTS[ex]) {
+                        setNewExerciseName(ex)
+                        setNewExerciseVariant(null)
+                      } else {
+                        handleAddExercise(ex)
+                      }
+                    }}
+                    className={`w-full px-4 py-2.5 rounded-xl text-sm text-left transition-colors ${newExerciseName === ex ? 'bg-[var(--surface-strong)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)]'}`}
                   >
                     {tEx(ex)}
                   </button>
@@ -1268,7 +1309,7 @@ export default function RutinesPage() {
               </div>
 
               <div className="flex gap-3 mt-4">
-                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
               </div>
             </div>
           </div>
@@ -1314,6 +1355,28 @@ export default function RutinesPage() {
                    />
                  </div>
                </div>
+               {editingExercise && EXERCISE_VARIANTS[editingExercise.exercise] && (
+                 <div>
+                   <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
+                   <div className="flex flex-wrap gap-1.5">
+                     <button
+                       onClick={() => setEditVariant(null)}
+                       className={`px-3 py-1 rounded-lg text-xs transition-colors ${editVariant === null ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+                     >
+                       {t('routines.variantAny')}
+                     </button>
+                     {EXERCISE_VARIANTS[editingExercise.exercise].map(v => (
+                       <button
+                         key={v}
+                         onClick={() => setEditVariant(v)}
+                         className={`px-3 py-1 rounded-lg text-xs transition-colors ${editVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+                       >
+                         {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               )}
              </div>
 
              {errorMsg && <p className="text-sm mt-4" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}

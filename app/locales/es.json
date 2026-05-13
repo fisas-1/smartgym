@@ -137,6 +137,9 @@
   "routines.restored": "Rutina recuperada",
   "routines.noFavorites": "Sin rutinas favoritas",
   "routines.noDeleted": "Sin rutinas eliminadas",
+  "routines.variant": "Variante",
+  "routines.variantAny": "Cualquiera",
+  "routines.variantLabel": "Variante del ejercicio",
 
   "templates.push.name": "Push (PPL)",
   "templates.push.desc": "Pecho, hombro y tríceps",
