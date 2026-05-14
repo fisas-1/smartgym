@@ -10,7 +10,7 @@ import { useUnit } from './contexts/UnitContext'
 import NumericKeyboard from './components/NumericKeyboard'
 
 function calculate1RM(weight: number, reps: number): number {
-  if (weight <= 0 || reps <= 0 || reps >= 37) return 0
+  if (weight <= 0 || reps <= 0 || reps > 20) return 0
   const denom = 1.0278 - 0.0278 * reps
   if (denom <= 0) return 0
   return Math.round(weight / denom)
