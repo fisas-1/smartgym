@@ -104,18 +104,25 @@ export const EXERCISE_VARIANTS: Record<string, string[]> = {
   'Press Banca':          ['Barra', 'Mancuernes', 'Màquina', 'Politja'],
   'Press Banca Inclinat': ['Barra', 'Mancuernes', 'Màquina'],
   'Chest Fly':            ['Politja', 'Mancuernes', 'Màquina'],
+  'Flexions':             ['Normal', 'Inclinat', 'Declinat', 'Diamant'],
   'Press Military':       ['Barra', 'Mancuernes', 'Màquina'],
+  'Face Pull':            ['Corda', 'Banda Elàstica'],
   'Elevació Lateral':     ['Mancuernes', 'Politja', 'Politja Unilateral', 'Màquina'],
   'Elevació Frontal':     ['Mancuernes', 'Politja', 'Politja Unilateral', 'Barra'],
+  'Lat Pulldown':         ['Barra', 'Barra Estreta', 'Corda', 'Neutre'],
+  'Dominades':            ['Pronat', 'Supinat', 'Neutre'],
   'Rem':                  ['Barra', 'Mancuerna', 'Politja', 'Politja Unilateral', 'Màquina'],
+  'Pes Mort':             ['Convencional', 'Sumó'],
   'Curl de Bíceps':       ['Mancuernes', 'Barra', 'Martell', 'Politja', 'Politja Unilateral'],
   'Extensió Tríceps':     ['Politja', 'Politja Unilateral', 'Barra', 'Mancuerna', 'Corda'],
+  'Dips':                 ['Pit', 'Tríceps'],
   'Sentadilles':          ['Barra', 'Goblet', 'Frontal'],
   'Zancades':             ['Mancuernes', 'Barra', 'Búlgara'],
   'Pes Mort Romanès':     ['Barra', 'Mancuernes'],
   'Leg Curl':             ['Assegut', 'Ajagut'],
   'Elevació de Turmell':  ['Dempeus', 'Assegut'],
   'Hip Thrust':           ['Barra', 'Màquina', 'Banda Elàstica'],
+  'Abducció de Maluc':    ['Màquina', 'Banda Elàstica'],
 }
 
 // Variants que impliquen càrrega unilateral (pes registrat = per extremitat)
@@ -144,6 +151,18 @@ export const VARIANT_KEYS: Record<string, string> = {
   'Dempeus':        'variant.dempeus',
   'Banda Elàstica':    'variant.bandaElastica',
   'Politja Unilateral': 'variant.politjaUnilateral',
+  'Pronat':            'variant.pronat',
+  'Supinat':           'variant.supinat',
+  'Neutre':            'variant.neutre',
+  'Barra Estreta':     'variant.barraEstreta',
+  'Convencional':      'variant.convencional',
+  'Sumó':              'variant.sumo',
+  'Pit':               'variant.pit',
+  'Tríceps':           'variant.triceps',
+  'Normal':            'variant.normal',
+  'Inclinat':          'variant.inclinat',
+  'Declinat':          'variant.declinat',
+  'Diamant':           'variant.diamant',
 }
 
 export const EXERCISE_INFO: Record<string, ExerciseInfo> = {
@@ -292,8 +311,10 @@ export const EXERCISE_KEYS: Record<string, string> = {
 
 // Funcions auxiliars
 export function calculate1RM(weight: number, reps: number): number {
-  if (weight <= 0 || reps <= 0) return 0
-  return Math.round(weight / (1.0278 - 0.0278 * reps) * 10) / 10
+  if (weight <= 0 || reps <= 0 || reps >= 37) return 0
+  const denom = 1.0278 - 0.0278 * reps
+  if (denom <= 0) return 0
+  return Math.round(weight / denom * 10) / 10
 }
 
 // Retorna cert si la variant donada és unilateral per aquell exercici

@@ -40,6 +40,7 @@
   "workouts.addSet": "Add Set",
   "workouts.restTime": "Rest Time (seconds)",
   "workouts.bodyweight": "Bodyweight",
+  "workouts.bodyweightShort": "BW",
   "workouts.notes": "Notes",
   "workouts.notesOptional": "(optional)",
   "workouts.notesPlaceholder": "Feeling, technique, pain…",
@@ -316,5 +317,17 @@
   "variant.ajagut": "Lying",
   "variant.dempeus": "Standing",
   "variant.bandaElastica": "Band",
-  "variant.politjaUnilateral": "Unilateral Cable"
+  "variant.politjaUnilateral": "Unilateral Cable",
+  "variant.pronat": "Overhand",
+  "variant.supinat": "Underhand",
+  "variant.neutre": "Neutral",
+  "variant.barraEstreta": "Close Grip",
+  "variant.convencional": "Conventional",
+  "variant.sumo": "Sumo",
+  "variant.pit": "Chest",
+  "variant.triceps": "Triceps",
+  "variant.normal": "Normal",
+  "variant.inclinat": "Incline",
+  "variant.declinat": "Decline",
+  "variant.diamant": "Diamond"
 }

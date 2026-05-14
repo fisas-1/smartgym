@@ -10,8 +10,10 @@ import { useUnit } from './contexts/UnitContext'
 import NumericKeyboard from './components/NumericKeyboard'
 
 function calculate1RM(weight: number, reps: number): number {
-  if (weight <= 0 || reps <= 0) return 0
-  return Math.round(weight / (1.0278 - 0.0278 * reps))
+  if (weight <= 0 || reps <= 0 || reps >= 37) return 0
+  const denom = 1.0278 - 0.0278 * reps
+  if (denom <= 0) return 0
+  return Math.round(weight / denom)
 }
 
 async function analyzeOverload(exerciseName: string, t: (key: string, variables?: Record<string, any>) => string, format: (kg: number) => string, unit: string): Promise<string | null> {
@@ -328,6 +330,9 @@ export default function HomePage() {
             <span className="text-2xl font-light tracking-tight tabular-nums">{format(displayedOneRM)}</span>
             <span className="text-[var(--color-text-tertiary)] text-sm">{unit}</span>
             <span className="text-[var(--color-text-tertiary)] text-xs ml-1">1RM</span>
+            {EXERCISE_INFO[exercise as Exercise]?.addsBodyweightToRM && (
+              <span className="text-[var(--color-text-tertiary)] text-[10px] ml-0.5">({t('workouts.bodyweightShort')})</span>
+            )}
           </div>
         )}
       </div>
@@ -451,6 +456,11 @@ export default function HomePage() {
                   >
                     {weightType === "corporal" ? `✓ ${t('workouts.bodyweight')}` : t('workouts.bodyweight')}
                   </button>
+                )}
+                {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && !EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
+                  <span className="mt-2 inline-block px-4 py-2 rounded-full text-xs font-medium tracking-wide bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]">
+                    ✓ {t('workouts.bodyweight')}
+                  </span>
                 )}
              </div>
 

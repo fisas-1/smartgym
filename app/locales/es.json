@@ -40,6 +40,7 @@
   "workouts.addSet": "Añadir serie",
   "workouts.restTime": "Tiempo de descanso (segundos)",
   "workouts.bodyweight": "Peso corporal",
+  "workouts.bodyweightShort": "PC",
   "workouts.notes": "Notas",
   "workouts.notesOptional": "(opcional)",
   "workouts.notesPlaceholder": "Sensación, técnica, dolor…",
@@ -316,5 +317,17 @@
   "variant.ajagut": "Tumbado",
   "variant.dempeus": "De pie",
   "variant.bandaElastica": "Banda Elástica",
-  "variant.politjaUnilateral": "Polea Unilateral"
+  "variant.politjaUnilateral": "Polea Unilateral",
+  "variant.pronat": "Pronado",
+  "variant.supinat": "Supinado",
+  "variant.neutre": "Neutro",
+  "variant.barraEstreta": "Agarre Estrecho",
+  "variant.convencional": "Convencional",
+  "variant.sumo": "Sumo",
+  "variant.pit": "Pecho",
+  "variant.triceps": "Tríceps",
+  "variant.normal": "Normal",
+  "variant.inclinat": "Inclinado",
+  "variant.declinat": "Declinado",
+  "variant.diamant": "Diamante"
 }
