@@ -86,11 +86,13 @@ export default function HomePage() {
     if (isNaN(r) || r <= 0) { setOneRM(0); return }
     const info = EXERCISE_INFO[exercise as Exercise]
     const bwKg = userBodyweightKg ?? 70
+    const unilateral = variant ? isVariantUnilateral(exercise as string, variant) : false
     if (info?.addsBodyweightToRM) {
       const externalKg = (!isNaN(w) && w > 0 && weightType === 'pes') ? toKg(w) : 0
       setOneRM(calculate1RM(bwKg + externalKg, r))
     } else if (!isNaN(w) && w > 0 && weightType === 'pes') {
-      setOneRM(calculate1RM(toKg(w), r))
+      const wKg = toKg(w) * (unilateral ? 2 : 1)
+      setOneRM(calculate1RM(wKg, r))
     } else {
       setOneRM(0)
     }
@@ -201,14 +203,15 @@ export default function HomePage() {
       try {
         const wKg = isNaN(wInput) ? 0 : toKg(wInput)
         const bwKg = userBodyweightKg ?? 70
+        const unilateral = variant ? isVariantUnilateral(exercise as string, variant) : false
 
-        // Calcula el 1RM efectiu: per exercicis de pes corporal, sempre inclou el pes corporal
         let effectiveOneRM = 0
         if (info?.addsBodyweightToRM) {
           const externalKg = weightType === 'pes' ? wKg : 0
           effectiveOneRM = calculate1RM(bwKg + externalKg, r)
         } else if (weightType === 'pes') {
-          effectiveOneRM = oneRM
+          const effectiveWKg = wKg * (unilateral ? 2 : 1)
+          effectiveOneRM = calculate1RM(effectiveWKg, r)
         }
 
         const exerciseBase = variant ? `${exercise} · ${variant}` : exercise
