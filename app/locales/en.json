@@ -315,5 +315,6 @@
   "variant.assegut": "Seated",
   "variant.ajagut": "Lying",
   "variant.dempeus": "Standing",
-  "variant.bandaElastica": "Band"
+  "variant.bandaElastica": "Band",
+  "variant.politjaUnilateral": "Unilateral Cable"
 }

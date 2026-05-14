@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './contexts/AuthContext'
-import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS, EXERCISE_VARIANTS, VARIANT_KEYS } from '@/types'
+import { Exercise, DEFAULT_EXERCISES, WorkoutLog, EXERCISE_INFO, EXERCISE_KEYS, EXERCISE_VARIANTS, VARIANT_KEYS, isVariantUnilateral } from '@/types'
 import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
 import { useUnit } from './contexts/UnitContext'
@@ -66,21 +66,33 @@ export default function HomePage() {
   const [activeInput, setActiveInput] = useState<'weight' | 'reps' | null>(null)
   const [showExtraOptions, setShowExtraOptions] = useState(false)
   const [displayedOneRM, setDisplayedOneRM] = useState(0)
+  const [userBodyweightKg, setUserBodyweightKg] = useState<number | null>(null)
   const animRef = useRef<number | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('custom_exercises')
     if (saved) setCustomExercises(JSON.parse(saved))
+    const profile = localStorage.getItem('user_profile')
+    if (profile) {
+      const p = JSON.parse(profile)
+      setUserBodyweightKg(p.weight ?? null)
+    }
   }, [])
 
   useEffect(() => {
     const w = parseFloat(weight), r = parseFloat(reps)
-    if (!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
+    if (isNaN(r) || r <= 0) { setOneRM(0); return }
+    const info = EXERCISE_INFO[exercise as Exercise]
+    const bwKg = userBodyweightKg ?? 70
+    if (info?.addsBodyweightToRM) {
+      const externalKg = (!isNaN(w) && w > 0 && weightType === 'pes') ? toKg(w) : 0
+      setOneRM(calculate1RM(bwKg + externalKg, r))
+    } else if (!isNaN(w) && w > 0 && weightType === 'pes') {
       setOneRM(calculate1RM(toKg(w), r))
     } else {
       setOneRM(0)
     }
-  }, [weight, reps, unit])
+  }, [weight, reps, unit, exercise, weightType, userBodyweightKg])
 
   useEffect(() => { loadSavedSets() }, [user])
   useEffect(() => {
@@ -178,19 +190,30 @@ export default function HomePage() {
       e.preventDefault()
       const wInput = parseFloat(weight), r = parseFloat(reps)
       if (isNaN(r) || r <= 0) return
-      if (weightType === "pes" && (isNaN(wInput) || wInput <= 0)) return
+      const info = EXERCISE_INFO[exercise as Exercise]
+      if (weightType === "pes" && !info?.addsBodyweightToRM && (isNaN(wInput) || wInput <= 0)) return
 
       setLoading(true)
       setErrorMsg(null)
 
       try {
-        const wKg = toKg(wInput)
+        const wKg = isNaN(wInput) ? 0 : toKg(wInput)
+        const bwKg = userBodyweightKg ?? 70
+
+        // Calcula el 1RM efectiu: per exercicis de pes corporal, sempre inclou el pes corporal
+        let effectiveOneRM = 0
+        if (info?.addsBodyweightToRM) {
+          const externalKg = weightType === 'pes' ? wKg : 0
+          effectiveOneRM = calculate1RM(bwKg + externalKg, r)
+        } else if (weightType === 'pes') {
+          effectiveOneRM = oneRM
+        }
 
         const exerciseBase = variant ? `${exercise} · ${variant}` : exercise
         const exerciseToStore = weightType === "corporal" ? `${exerciseBase} - Pes corporal` : exerciseBase
 
         let isPr = false
-        if (weightType !== "corporal" && oneRM > 0 && user) {
+        if (effectiveOneRM > 0 && user) {
           const { data: prev } = await supabase
             .from('workout_logs')
             .select('one_rm')
@@ -199,7 +222,7 @@ export default function HomePage() {
             .order('one_rm', { ascending: false })
             .limit(1)
           const prevMax = prev?.[0]?.one_rm || 0
-          if (oneRM > prevMax) isPr = true
+          if (effectiveOneRM > prevMax) isPr = true
         }
 
         const insertData: any = {
@@ -207,7 +230,7 @@ export default function HomePage() {
           weight: weightType === "corporal" ? 0 : wKg,
           reps: r,
           rir: rir === '' ? null : parseFloat(rir),
-          one_rm: weightType === "corporal" ? 0 : oneRM,
+          one_rm: effectiveOneRM,
           user_id: user?.id,
         }
         if (note.trim()) insertData.note = note.trim()
@@ -223,7 +246,7 @@ export default function HomePage() {
           navigator.vibrate(isPr ? [60, 40, 60, 40, 120] : 40)
         }
         if (isPr) {
-          setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(oneRM), unit }))
+          setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(effectiveOneRM), unit }))
           setTimeout(() => setPrMsg(null), 6000)
         }
         await loadSavedSets()
@@ -377,20 +400,24 @@ export default function HomePage() {
 
           {EXERCISE_VARIANTS[exercise as string] && (
             <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden">
-              {EXERCISE_VARIANTS[exercise as string].map(v => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setVariant(variant === v ? '' : v)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors ${
-                    variant === v
-                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                      : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
-                </button>
-              ))}
+              {EXERCISE_VARIANTS[exercise as string].map(v => {
+                const unilateral = isVariantUnilateral(exercise as string, v)
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setVariant(variant === v ? '' : v)}
+                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors flex items-center gap-1 ${
+                      variant === v
+                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
+                        : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                    {unilateral && <span className="opacity-50 text-[9px] leading-none">1B</span>}
+                  </button>
+                )
+              })}
             </div>
           )}
           </div>

@@ -8,6 +8,7 @@ import { ThemeContext } from '../contexts/ThemeContext'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useUnit } from '../contexts/UnitContext'
 import LanguageSelector from '../components/LanguageSelector'
+import { getBaseExercise, getVariantFromFullName, isVariantUnilateral } from '@/types'
 
 type UserProfile = {
   age: number | null
@@ -17,16 +18,24 @@ type UserProfile = {
 }
 
 const STRENGTH_STANDARDS: Record<string, Record<string, { m: number; f: number }>> = {
-  'Press Banca': { novice: { m: 1.0, f: 0.5 }, beginner: { m: 1.2, f: 0.6 }, intermediate: { m: 1.5, f: 0.8 }, advanced: { m: 2.0, f: 1.1 }, elite: { m: 2.5, f: 1.4 }, worldclass: { m: 3.0, f: 1.7 } },
-  'Sentadilles': { novice: { m: 1.2, f: 0.6 }, beginner: { m: 1.5, f: 0.8 }, intermediate: { m: 2.0, f: 1.0 }, advanced: { m: 2.5, f: 1.3 }, elite: { m: 3.0, f: 1.6 }, worldclass: { m: 3.5, f: 2.0 } },
-  'Leg Press': { novice: { m: 1.5, f: 0.8 }, beginner: { m: 2.0, f: 1.0 }, intermediate: { m: 2.5, f: 1.3 }, advanced: { m: 3.0, f: 1.6 }, elite: { m: 3.5, f: 2.0 }, worldclass: { m: 4.0, f: 2.5 } },
-  'Dominades': { novice: { m: 0.5, f: 0.2 }, beginner: { m: 0.8, f: 0.4 }, intermediate: { m: 1.2, f: 0.6 }, advanced: { m: 1.5, f: 0.8 }, elite: { m: 2.0, f: 1.0 }, worldclass: { m: 2.5, f: 1.2 } },
-  'Lat Pulldown': { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
-  'Press Military': { novice: { m: 0.6, f: 0.3 }, beginner: { m: 0.8, f: 0.4 }, intermediate: { m: 1.0, f: 0.5 }, advanced: { m: 1.3, f: 0.7 }, elite: { m: 1.6, f: 0.9 }, worldclass: { m: 2.0, f: 1.1 } },
-  'Curl de Bíceps': { novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.4, f: 0.8 } },
+  'Press Banca':     { novice: { m: 1.0, f: 0.5 }, beginner: { m: 1.2, f: 0.6 }, intermediate: { m: 1.5, f: 0.8 }, advanced: { m: 2.0, f: 1.1 }, elite: { m: 2.5, f: 1.4 }, worldclass: { m: 3.0, f: 1.7 } },
+  'Sentadilles':     { novice: { m: 1.2, f: 0.6 }, beginner: { m: 1.5, f: 0.8 }, intermediate: { m: 2.0, f: 1.0 }, advanced: { m: 2.5, f: 1.3 }, elite: { m: 3.0, f: 1.6 }, worldclass: { m: 3.5, f: 2.0 } },
+  'Leg Press':       { novice: { m: 1.5, f: 0.8 }, beginner: { m: 2.0, f: 1.0 }, intermediate: { m: 2.5, f: 1.3 }, advanced: { m: 3.0, f: 1.6 }, elite: { m: 3.5, f: 2.0 }, worldclass: { m: 4.0, f: 2.5 } },
+  // Dominades: ratio = 1RM (inclou pes corporal) / pes corporal. Pes corporal pur = ratio 1.0 aprox (depèn dels reps)
+  'Dominades':       { novice: { m: 1.0, f: 0.8 }, beginner: { m: 1.1, f: 0.9 }, intermediate: { m: 1.3, f: 1.1 }, advanced: { m: 1.5, f: 1.3 }, elite: { m: 1.8, f: 1.5 }, worldclass: { m: 2.2, f: 1.8 } },
+  // Flexions: ratio = 1RM (pes corporal) / pes corporal. 10 flexions ≈ ratio 1.33
+  'Flexions':        { novice: { m: 1.0, f: 0.8 }, beginner: { m: 1.2, f: 1.0 }, intermediate: { m: 1.5, f: 1.2 }, advanced: { m: 1.8, f: 1.4 }, elite: { m: 2.2, f: 1.7 }, worldclass: { m: 2.8, f: 2.0 } },
+  // Dips: ratio = 1RM (inclou pes corporal) / pes corporal
+  'Dips':            { novice: { m: 1.0, f: 0.7 }, beginner: { m: 1.2, f: 0.9 }, intermediate: { m: 1.5, f: 1.1 }, advanced: { m: 1.8, f: 1.3 }, elite: { m: 2.2, f: 1.6 }, worldclass: { m: 2.7, f: 1.9 } },
+  'Lat Pulldown':    { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
+  'Press Military':  { novice: { m: 0.6, f: 0.3 }, beginner: { m: 0.8, f: 0.4 }, intermediate: { m: 1.0, f: 0.5 }, advanced: { m: 1.3, f: 0.7 }, elite: { m: 1.6, f: 0.9 }, worldclass: { m: 2.0, f: 1.1 } },
+  'Curl de Bíceps':  { novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.4, f: 0.8 } },
+  'Extensió Tríceps':{ novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.3, f: 0.7 } },
+  'Zancades':        { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
+  // Llegat (claus antigues a la BD)
   'Extensiones Tricep': { novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.3, f: 0.7 } },
-  'French Press': { novice: { m: 0.3, f: 0.15 }, beginner: { m: 0.4, f: 0.2 }, intermediate: { m: 0.5, f: 0.25 }, advanced: { m: 0.7, f: 0.35 }, elite: { m: 0.9, f: 0.45 }, worldclass: { m: 1.1, f: 0.55 } },
-  'Zancadas': { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
+  'French Press':       { novice: { m: 0.3, f: 0.15 }, beginner: { m: 0.4, f: 0.2 }, intermediate: { m: 0.5, f: 0.25 }, advanced: { m: 0.7, f: 0.35 }, elite: { m: 0.9, f: 0.45 }, worldclass: { m: 1.1, f: 0.55 } },
+  'Zancadas':           { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
 }
 
 const LEVELS = [
@@ -38,7 +47,7 @@ const LEVELS = [
   { key: 'worldclass', color: '#ef4444' },
 ] as const
 
-type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number }
+type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number; isUnilateral?: boolean }
 type FavoriteRoutine = { id: string; name: string; description?: string }
 type DeletedRoutine = { id: string; name: string; description?: string; exercises: { exercise: string; sets_target: number; reps_min: number; reps_max: number; order_index: number }[]; deletedAt: string }
 
@@ -142,10 +151,13 @@ export default function PerfilPage() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }).then(({ data: logs }) => {
         if (!logs) return
-        const best: Record<string, { weight: number; reps: number; oneRM: number }> = {}
+
+        // Agrupa per nom base (elimina variant i sufix corporal) i guarda el millor 1RM
+        const best: Record<string, { weight: number; reps: number; oneRM: number; fullName: string }> = {}
         logs.forEach(l => {
-          if (!best[l.exercise] || (l.one_rm || 0) > best[l.exercise].oneRM) {
-            best[l.exercise] = { weight: l.weight, reps: l.reps, oneRM: l.one_rm || 0 }
+          const base = getBaseExercise(l.exercise)
+          if (!best[base] || (l.one_rm || 0) > best[base].oneRM) {
+            best[base] = { weight: l.weight, reps: l.reps, oneRM: l.one_rm || 0, fullName: l.exercise }
           }
         })
 
@@ -153,7 +165,7 @@ export default function PerfilPage() {
           const std = STRENGTH_STANDARDS[ex]
           if (!std) return null
           const ratio = d.oneRM / w
-          const stdg = gender === 'm' 
+          const stdg = gender === 'm'
             ? { worldclass: std.worldclass.m, elite: std.elite.m, advanced: std.advanced.m, intermediate: std.intermediate.m, beginner: std.beginner.m, novice: std.novice.m }
             : { worldclass: std.worldclass.f, elite: std.elite.f, advanced: std.advanced.f, intermediate: std.intermediate.f, beginner: std.beginner.f, novice: std.novice.f }
           let level = 'novice'
@@ -163,7 +175,9 @@ export default function PerfilPage() {
           else if (ratio >= stdg.intermediate) level = 'intermediate'
           else if (ratio >= stdg.beginner) level = 'beginner'
           const lv = LEVELS.find(l => l.key === level)
-          return { exercise: ex, level, levelColor: lv?.color || '#666', oneRM: d.oneRM }
+          const variant = getVariantFromFullName(d.fullName)
+          const isUnilateral = variant ? isVariantUnilateral(ex, variant) : false
+          return { exercise: ex, level, levelColor: lv?.color || '#666', oneRM: d.oneRM, isUnilateral }
         }).filter(Boolean) as ExerciseLevel[]
 
         setExerciseLevels(levels.sort((a, b) => (LEVELS.findIndex(l => l.key === b.level)) - (LEVELS.findIndex(l => l.key === a.level))))
@@ -254,7 +268,13 @@ export default function PerfilPage() {
              <div className="space-y-1">
                {exerciseLevels.map((ex) => (
                  <div key={ex.exercise} className="flex justify-between items-center py-3 px-3 rounded-xl hover:bg-[var(--surface)] transition-colors">
-                   <span className="font-light text-[var(--color-text-primary)] truncate">{ex.exercise}</span>
+                   <div className="min-w-0">
+                     <span className="font-light text-[var(--color-text-primary)] truncate block">{ex.exercise}</span>
+                     <span className="text-[var(--color-text-tertiary)] text-xs tabular-nums">
+                       {format(ex.oneRM)}{unit} 1RM
+                       {ex.isUnilateral && <span className="ml-1 opacity-60">(per braç)</span>}
+                     </span>
+                   </div>
                    <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3" style={{ backgroundColor: ex.levelColor + '22', color: ex.levelColor }}>{t(`level.${ex.level}`)}</span>
                  </div>
                ))}

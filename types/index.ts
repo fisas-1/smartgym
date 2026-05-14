@@ -58,6 +58,7 @@ export interface ExerciseInfo {
   defaultRepsMax: number
   hasBodyweight: boolean
   hasWeight: boolean
+  addsBodyweightToRM?: boolean // true for exercises where bodyweight is part of the lifted load (pull-ups, dips, push-ups)
 }
 
 export const DEFAULT_EXERCISES: Exercise[] = [
@@ -104,17 +105,26 @@ export const EXERCISE_VARIANTS: Record<string, string[]> = {
   'Press Banca Inclinat': ['Barra', 'Mancuernes', 'Màquina'],
   'Chest Fly':            ['Politja', 'Mancuernes', 'Màquina'],
   'Press Military':       ['Barra', 'Mancuernes', 'Màquina'],
-  'Elevació Lateral':     ['Mancuernes', 'Politja', 'Màquina'],
-  'Elevació Frontal':     ['Mancuernes', 'Politja', 'Barra'],
-  'Rem':                  ['Barra', 'Mancuerna', 'Politja', 'Màquina'],
-  'Curl de Bíceps':       ['Mancuernes', 'Barra', 'Martell', 'Politja'],
-  'Extensió Tríceps':     ['Politja', 'Barra', 'Mancuerna', 'Corda'],
+  'Elevació Lateral':     ['Mancuernes', 'Politja', 'Politja Unilateral', 'Màquina'],
+  'Elevació Frontal':     ['Mancuernes', 'Politja', 'Politja Unilateral', 'Barra'],
+  'Rem':                  ['Barra', 'Mancuerna', 'Politja', 'Politja Unilateral', 'Màquina'],
+  'Curl de Bíceps':       ['Mancuernes', 'Barra', 'Martell', 'Politja', 'Politja Unilateral'],
+  'Extensió Tríceps':     ['Politja', 'Politja Unilateral', 'Barra', 'Mancuerna', 'Corda'],
   'Sentadilles':          ['Barra', 'Goblet', 'Frontal'],
   'Zancades':             ['Mancuernes', 'Barra', 'Búlgara'],
   'Pes Mort Romanès':     ['Barra', 'Mancuernes'],
   'Leg Curl':             ['Assegut', 'Ajagut'],
   'Elevació de Turmell':  ['Dempeus', 'Assegut'],
   'Hip Thrust':           ['Barra', 'Màquina', 'Banda Elàstica'],
+}
+
+// Variants que impliquen càrrega unilateral (pes registrat = per extremitat)
+export const UNILATERAL_VARIANTS: Record<string, string[]> = {
+  'Curl de Bíceps':   ['Mancuernes', 'Martell', 'Politja Unilateral'],
+  'Extensió Tríceps': ['Mancuerna', 'Politja Unilateral'],
+  'Rem':              ['Mancuerna', 'Politja Unilateral'],
+  'Elevació Lateral': ['Politja Unilateral'],
+  'Elevació Frontal': ['Politja Unilateral'],
 }
 
 // Claus de traducció per als noms de variant
@@ -132,7 +142,8 @@ export const VARIANT_KEYS: Record<string, string> = {
   'Assegut':        'variant.assegut',
   'Ajagut':         'variant.ajagut',
   'Dempeus':        'variant.dempeus',
-  'Banda Elàstica': 'variant.bandaElastica',
+  'Banda Elàstica':    'variant.bandaElastica',
+  'Politja Unilateral': 'variant.politjaUnilateral',
 }
 
 export const EXERCISE_INFO: Record<string, ExerciseInfo> = {
@@ -140,7 +151,7 @@ export const EXERCISE_INFO: Record<string, ExerciseInfo> = {
   'Press Banca':          { name: 'Press Banca',          muscleGroup: 'Pectoral',   defaultSets: 4, defaultRepsMin: 6,  defaultRepsMax: 10, hasBodyweight: false, hasWeight: true },
   'Press Banca Inclinat': { name: 'Press Banca Inclinat', muscleGroup: 'Pectoral',   defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Chest Fly':            { name: 'Chest Fly',            muscleGroup: 'Pectoral',   defaultSets: 3, defaultRepsMin: 12, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'Flexions':             { name: 'Flexions',             muscleGroup: 'Pectoral',   defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 15, hasBodyweight: true,  hasWeight: false },
+  'Flexions':             { name: 'Flexions',             muscleGroup: 'Pectoral',   defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 15, hasBodyweight: true,  hasWeight: false, addsBodyweightToRM: true },
   // Esquitxos
   'Press Military':       { name: 'Press Military',       muscleGroup: 'Esquitxos',  defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Arnold Press':         { name: 'Arnold Press',         muscleGroup: 'Esquitxos',  defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
@@ -149,13 +160,13 @@ export const EXERCISE_INFO: Record<string, ExerciseInfo> = {
   'Face Pull':            { name: 'Face Pull',            muscleGroup: 'Esquitxos',  defaultSets: 3, defaultRepsMin: 15, defaultRepsMax: 20, hasBodyweight: false, hasWeight: true },
   // Esquena
   'Lat Pulldown':         { name: 'Lat Pulldown',         muscleGroup: 'Esquena',    defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
-  'Dominades':            { name: 'Dominades',            muscleGroup: 'Esquena',    defaultSets: 4, defaultRepsMin: 5,  defaultRepsMax: 8,  hasBodyweight: true,  hasWeight: true },
+  'Dominades':            { name: 'Dominades',            muscleGroup: 'Esquena',    defaultSets: 4, defaultRepsMin: 5,  defaultRepsMax: 8,  hasBodyweight: true,  hasWeight: true,  addsBodyweightToRM: true },
   'Rem':                  { name: 'Rem',                  muscleGroup: 'Esquena',    defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
   'Pes Mort':             { name: 'Pes Mort',             muscleGroup: 'Esquena',    defaultSets: 4, defaultRepsMin: 4,  defaultRepsMax: 6,  hasBodyweight: false, hasWeight: true },
   // Braços
   'Curl de Bíceps':       { name: 'Curl de Bíceps',       muscleGroup: 'Braços',     defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
   'Extensió Tríceps':     { name: 'Extensió Tríceps',     muscleGroup: 'Braços',     defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 15, hasBodyweight: false, hasWeight: true },
-  'Dips':                 { name: 'Dips',                 muscleGroup: 'Braços',     defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: true,  hasWeight: true },
+  'Dips':                 { name: 'Dips',                 muscleGroup: 'Braços',     defaultSets: 3, defaultRepsMin: 8,  defaultRepsMax: 12, hasBodyweight: true,  hasWeight: true,  addsBodyweightToRM: true },
   // Cames
   'Sentadilles':          { name: 'Sentadilles',          muscleGroup: 'Cames',      defaultSets: 4, defaultRepsMin: 6,  defaultRepsMax: 10, hasBodyweight: true,  hasWeight: true },
   'Leg Press':            { name: 'Leg Press',            muscleGroup: 'Cames',      defaultSets: 3, defaultRepsMin: 10, defaultRepsMax: 12, hasBodyweight: false, hasWeight: true },
@@ -283,4 +294,23 @@ export const EXERCISE_KEYS: Record<string, string> = {
 export function calculate1RM(weight: number, reps: number): number {
   if (weight <= 0 || reps <= 0) return 0
   return Math.round(weight / (1.0278 - 0.0278 * reps) * 10) / 10
+}
+
+// Retorna cert si la variant donada és unilateral per aquell exercici
+export function isVariantUnilateral(exercise: string, variant: string): boolean {
+  return (UNILATERAL_VARIANTS[exercise] ?? []).includes(variant)
+}
+
+// Extreu el nom base d'un exercici eliminant variant i sufix de pes corporal
+// "Curl de Bíceps · Mancuernes - Pes corporal" → "Curl de Bíceps"
+export function getBaseExercise(fullName: string): string {
+  return fullName.replace(/ - Pes corporal$/, '').replace(/ · .+$/, '')
+}
+
+// Extreu la variant d'un nom complet d'exercici
+// "Curl de Bíceps · Mancuernes" → "Mancuernes"
+export function getVariantFromFullName(fullName: string): string {
+  const clean = fullName.replace(/ - Pes corporal$/, '')
+  const idx = clean.indexOf(' · ')
+  return idx !== -1 ? clean.slice(idx + 3) : ''
 }
