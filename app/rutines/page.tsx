@@ -106,6 +106,17 @@ export default function RutinesPage() {
     }
   }
 
+  function handleRoutineDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIdx = routines.findIndex(r => r.id === active.id)
+    const newIdx = routines.findIndex(r => r.id === over.id)
+    if (oldIdx < 0 || newIdx < 0) return
+    const reordered = arrayMove(routines, oldIdx, newIdx)
+    setRoutines(reordered)
+    localStorage.setItem('routine_order', JSON.stringify(reordered.map(r => r.id)))
+  }
+
   // Càrrega inicial
   useEffect(() => {
     if (user) {
@@ -190,7 +201,18 @@ export default function RutinesPage() {
         return
       }
       if (data) {
-        setRoutines(data)
+        const savedOrder: string[] = JSON.parse(localStorage.getItem('routine_order') || '[]')
+        const ordered = savedOrder.length > 0
+          ? [...data].sort((a, b) => {
+              const ai = savedOrder.indexOf(a.id)
+              const bi = savedOrder.indexOf(b.id)
+              if (ai === -1 && bi === -1) return 0
+              if (ai === -1) return 1
+              if (bi === -1) return -1
+              return ai - bi
+            })
+          : data
+        setRoutines(ordered)
         // Load exercise counts for each routine
         const counts: Record<string, number> = {}
         for (const routine of data) {
@@ -816,40 +838,61 @@ export default function RutinesPage() {
            {routines.length === 0 ? (
              <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('routines.noRoutines')}</p>
            ) : (
-             routines.map(routine => (
-               <div
-                 key={routine.id}
-                 className="card-surface p-4 flex items-center justify-between gap-3 hover:bg-[var(--surface-strong)] transition-colors group"
-               >
-                 <button
-                   className="flex-1 text-left min-w-0"
-                   onClick={() => handleSelectRoutine(routine)}
-                 >
-                    <p className="text-[var(--color-text-primary)] font-light text-lg truncate">
-                      {routine.name}
-                    </p>
-                    <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
-                      {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
-                    </p>
-                 </button>
-                 <div className="flex items-center gap-1 flex-shrink-0">
-                   <button
-                     onClick={() => toggleFavorite(routine.id)}
-                     className={`text-lg px-2 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors ${favoriteIds.includes(routine.id) ? 'text-yellow-400' : 'text-[var(--color-text-tertiary)] hover:text-yellow-400'}`}
-                     aria-label={favoriteIds.includes(routine.id) ? t('routines.unfavorite') : t('routines.favorite')}
-                   >
-                     {favoriteIds.includes(routine.id) ? '★' : '☆'}
-                   </button>
-                   <button
-                     onClick={() => handleOpenEditRoutine(routine)}
-                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                     aria-label={t('routines.editBtn')}
-                   >
-                     {t('routines.editBtn')}
-                   </button>
+             <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleRoutineDragEnd}>
+               <SortableContext items={routines.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                 <div className="space-y-3">
+                   {routines.map(routine => (
+                     <SortableExerciseItem key={routine.id} id={routine.id}>
+                       {({ ref, style, attributes, listeners, isDragging }) => (
+                         <div
+                           ref={ref}
+                           style={style}
+                           {...attributes}
+                           className={`card-surface p-4 flex items-center gap-3 hover:bg-[var(--surface-strong)] transition-colors ${isDragging ? 'opacity-60 border-[var(--color-text-tertiary)]' : ''}`}
+                         >
+                           <button
+                             {...listeners}
+                             type="button"
+                             className="touch-none cursor-grab active:cursor-grabbing text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] p-1 flex-shrink-0"
+                             aria-label={t('routines.dragToReorder')}
+                             title={t('routines.dragToReorder')}
+                           >
+                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
+                           </button>
+                           <button
+                             className="flex-1 text-left min-w-0"
+                             onClick={() => handleSelectRoutine(routine)}
+                           >
+                             <p className="text-[var(--color-text-primary)] font-light text-lg truncate">
+                               {routine.name}
+                             </p>
+                             <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
+                               {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
+                             </p>
+                           </button>
+                           <div className="flex items-center gap-1 flex-shrink-0">
+                             <button
+                               onClick={() => toggleFavorite(routine.id)}
+                               className={`text-lg px-2 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors ${favoriteIds.includes(routine.id) ? 'text-yellow-400' : 'text-[var(--color-text-tertiary)] hover:text-yellow-400'}`}
+                               aria-label={favoriteIds.includes(routine.id) ? t('routines.unfavorite') : t('routines.favorite')}
+                             >
+                               {favoriteIds.includes(routine.id) ? '★' : '☆'}
+                             </button>
+                             <button
+                               onClick={() => handleOpenEditRoutine(routine)}
+                               className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                               aria-label={t('routines.editBtn')}
+                             >
+                               {t('routines.editBtn')}
+                             </button>
+                           </div>
+                         </div>
+                       )}
+                     </SortableExerciseItem>
+                   ))}
                  </div>
-               </div>
-             ))
+               </SortableContext>
+             </DndContext>
            )}
 
           <button

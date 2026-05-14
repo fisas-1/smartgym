@@ -63,6 +63,8 @@ export default function PerfilPage() {
   const [favoriteRoutines, setFavoriteRoutines] = useState<FavoriteRoutine[]>([])
   const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
+  const [showFavorites, setShowFavorites] = useState(false)
+  const [showDeleted, setShowDeleted] = useState(false)
 
   useEffect(() => {
     const savedUnit = localStorage.getItem('height_unit') as 'cm' | 'ftin'
@@ -356,40 +358,66 @@ export default function PerfilPage() {
          </div>
 
           {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
-            <div>
-              <p className="section-label mb-3">{t('routines.favoriteRoutines')}</p>
-              {favoriteRoutines.length === 0 ? (
-                <p className="text-[var(--color-text-tertiary)] text-sm py-1">{t('routines.noFavorites')}</p>
-              ) : (
-                <div className="space-y-1 mb-4">
-                  {favoriteRoutines.map(r => (
-                    <div key={r.id} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                      <span className="text-yellow-400 text-base flex-shrink-0">★</span>
-                      <span className="text-[var(--color-text-primary)] text-sm font-light truncate">{r.name}</span>
+            <div className="space-y-1">
+              {favoriteRoutines.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowFavorites(v => !v)}
+                    className="flex items-center justify-between w-full py-2 group"
+                  >
+                    <span className="section-label">{t('routines.favoriteRoutines')} ({favoriteRoutines.length})</span>
+                    <svg
+                      width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
+                      className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${showFavorites ? 'rotate-180' : ''}`}
+                    >
+                      <path d="M6 8L1 3h10L6 8z"/>
+                    </svg>
+                  </button>
+                  {showFavorites && (
+                    <div className="space-y-1 mt-1">
+                      {favoriteRoutines.map(r => (
+                        <div key={r.id} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                          <span className="text-yellow-400 text-base flex-shrink-0">★</span>
+                          <span className="text-[var(--color-text-primary)] text-sm font-light truncate">{r.name}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
               {deletedRoutines.length > 0 && (
-                <>
-                  <p className="section-label mb-2 mt-3">{t('routines.deletedRoutines')}</p>
-                  <div className="space-y-1">
-                    {deletedRoutines.map(dr => (
-                      <div key={dr.id + dr.deletedAt} className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                        <div className="min-w-0">
-                          <p className="text-[var(--color-text-primary)] text-sm font-light truncate">{dr.name}</p>
-                          <p className="text-[var(--color-text-tertiary)] text-xs">{t('routines.exercisesCount', { count: String(dr.exercises.length) })}</p>
+                <div>
+                  <button
+                    onClick={() => setShowDeleted(v => !v)}
+                    className="flex items-center justify-between w-full py-2 group"
+                  >
+                    <span className="section-label">{t('routines.deletedRoutines')} ({deletedRoutines.length})</span>
+                    <svg
+                      width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
+                      className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${showDeleted ? 'rotate-180' : ''}`}
+                    >
+                      <path d="M6 8L1 3h10L6 8z"/>
+                    </svg>
+                  </button>
+                  {showDeleted && (
+                    <div className="space-y-1 mt-1">
+                      {deletedRoutines.map(dr => (
+                        <div key={dr.id + dr.deletedAt} className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                          <div className="min-w-0">
+                            <p className="text-[var(--color-text-primary)] text-sm font-light truncate">{dr.name}</p>
+                            <p className="text-[var(--color-text-tertiary)] text-xs">{t('routines.exercisesCount', { count: String(dr.exercises.length) })}</p>
+                          </div>
+                          <button
+                            onClick={() => handleRestoreRoutine(dr)}
+                            className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
+                          >
+                            {t('routines.restore')}
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRestoreRoutine(dr)}
-                          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
-                        >
-                          {t('routines.restore')}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
               {restoreMsg && (
                 <p className="text-sm mt-2" style={{ color: 'var(--accent-success)' }}>{restoreMsg}</p>
