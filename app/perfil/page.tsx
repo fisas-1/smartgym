@@ -21,31 +21,31 @@ const STRENGTH_STANDARDS: Record<string, Record<string, { m: number; f: number }
   'Press Banca':     { novice: { m: 1.0, f: 0.5 }, beginner: { m: 1.2, f: 0.6 }, intermediate: { m: 1.5, f: 0.8 }, advanced: { m: 2.0, f: 1.1 }, elite: { m: 2.5, f: 1.4 }, worldclass: { m: 3.0, f: 1.7 } },
   'Sentadilles':     { novice: { m: 1.2, f: 0.6 }, beginner: { m: 1.5, f: 0.8 }, intermediate: { m: 2.0, f: 1.0 }, advanced: { m: 2.5, f: 1.3 }, elite: { m: 3.0, f: 1.6 }, worldclass: { m: 3.5, f: 2.0 } },
   'Leg Press':       { novice: { m: 1.5, f: 0.8 }, beginner: { m: 2.0, f: 1.0 }, intermediate: { m: 2.5, f: 1.3 }, advanced: { m: 3.0, f: 1.6 }, elite: { m: 3.5, f: 2.0 }, worldclass: { m: 4.0, f: 2.5 } },
-  // Dominades: ratio = 1RM (inclou pes corporal) / pes corporal. Pes corporal pur = ratio 1.0 aprox (depèn dels reps)
   'Dominades':       { novice: { m: 1.0, f: 0.8 }, beginner: { m: 1.1, f: 0.9 }, intermediate: { m: 1.3, f: 1.1 }, advanced: { m: 1.5, f: 1.3 }, elite: { m: 1.8, f: 1.5 }, worldclass: { m: 2.2, f: 1.8 } },
-  // Flexions: ratio = 1RM (pes corporal) / pes corporal. 10 flexions ≈ ratio 1.33
   'Flexions':        { novice: { m: 1.0, f: 0.8 }, beginner: { m: 1.2, f: 1.0 }, intermediate: { m: 1.5, f: 1.2 }, advanced: { m: 1.8, f: 1.4 }, elite: { m: 2.2, f: 1.7 }, worldclass: { m: 2.8, f: 2.0 } },
-  // Dips: ratio = 1RM (inclou pes corporal) / pes corporal
   'Dips':            { novice: { m: 1.0, f: 0.7 }, beginner: { m: 1.2, f: 0.9 }, intermediate: { m: 1.5, f: 1.1 }, advanced: { m: 1.8, f: 1.3 }, elite: { m: 2.2, f: 1.6 }, worldclass: { m: 2.7, f: 1.9 } },
   'Lat Pulldown':    { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
   'Press Military':  { novice: { m: 0.6, f: 0.3 }, beginner: { m: 0.8, f: 0.4 }, intermediate: { m: 1.0, f: 0.5 }, advanced: { m: 1.3, f: 0.7 }, elite: { m: 1.6, f: 0.9 }, worldclass: { m: 2.0, f: 1.1 } },
   'Curl de Bíceps':  { novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.4, f: 0.8 } },
   'Extensió Tríceps':{ novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.3, f: 0.7 } },
   'Zancades':        { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
-  // Llegat (claus antigues a la BD)
   'Extensiones Tricep': { novice: { m: 0.4, f: 0.2 }, beginner: { m: 0.5, f: 0.25 }, intermediate: { m: 0.7, f: 0.35 }, advanced: { m: 0.9, f: 0.5 }, elite: { m: 1.1, f: 0.6 }, worldclass: { m: 1.3, f: 0.7 } },
   'French Press':       { novice: { m: 0.3, f: 0.15 }, beginner: { m: 0.4, f: 0.2 }, intermediate: { m: 0.5, f: 0.25 }, advanced: { m: 0.7, f: 0.35 }, elite: { m: 0.9, f: 0.45 }, worldclass: { m: 1.1, f: 0.55 } },
   'Zancadas':           { novice: { m: 0.8, f: 0.4 }, beginner: { m: 1.0, f: 0.5 }, intermediate: { m: 1.3, f: 0.7 }, advanced: { m: 1.6, f: 0.9 }, elite: { m: 2.0, f: 1.1 }, worldclass: { m: 2.4, f: 1.3 } },
 }
 
 const LEVELS = [
-  { key: 'novice', color: '#666' },
-  { key: 'beginner', color: '#22c55e' },
+  { key: 'novice',       color: '#666' },
+  { key: 'beginner',     color: '#22c55e' },
   { key: 'intermediate', color: '#3b82f6' },
-  { key: 'advanced', color: '#a855f7' },
-  { key: 'elite', color: '#f97316' },
-  { key: 'worldclass', color: '#ef4444' },
+  { key: 'advanced',     color: '#a855f7' },
+  { key: 'elite',        color: '#f97316' },
+  { key: 'worldclass',   color: '#ef4444' },
 ] as const
+
+const LEVEL_TO_NUM: Record<string, number> = {
+  novice: 1, beginner: 2, intermediate: 3, advanced: 4, elite: 5, worldclass: 6,
+}
 
 type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number; isUnilateral?: boolean }
 type FavoriteRoutine = { id: string; name: string; description?: string }
@@ -69,6 +69,8 @@ export default function PerfilPage() {
   const [saved, setSaved] = useState(false)
   const [exerciseLevels, setExerciseLevels] = useState<ExerciseLevel[]>([])
   const [overallLevel, setOverallLevel] = useState<string>('')
+  const [overallAvgPct, setOverallAvgPct] = useState<number>(0)
+  const [streak, setStreak] = useState<number>(0)
   const [favoriteRoutines, setFavoriteRoutines] = useState<FavoriteRoutine[]>([])
   const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
@@ -82,10 +84,9 @@ export default function PerfilPage() {
 
   useEffect(() => { loadProfile() }, [unit, heightUnit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
-  useEffect(() => { if (user) loadFavoritesAndDeleted() }, [user])
+  useEffect(() => { if (user) { loadFavoritesAndDeleted(); calculateStreak() } }, [user])
 
   function setHeightUnit(u: 'cm' | 'ftin') {
-    // Convert current height value when switching units
     if (u === 'ftin' && height) {
       const cm = parseFloat(height)
       if (!isNaN(cm)) {
@@ -152,7 +153,6 @@ export default function PerfilPage() {
       .order('created_at', { ascending: false }).then(({ data: logs }) => {
         if (!logs) return
 
-        // Agrupa per nom base (elimina variant i sufix corporal) i guarda el millor 1RM
         const best: Record<string, { weight: number; reps: number; oneRM: number; fullName: string }> = {}
         logs.forEach(l => {
           const base = getBaseExercise(l.exercise)
@@ -184,6 +184,7 @@ export default function PerfilPage() {
 
         if (levels.length) {
           const avgPct = levels.reduce((s, l) => s + (LEVELS.findIndex(x => x.key === l.level) + 1) * 17, 0) / levels.length
+          setOverallAvgPct(Math.min(Math.round(avgPct), 100))
           if (avgPct > 80) setOverallLevel('worldclass')
           else if (avgPct > 65) setOverallLevel('elite')
           else if (avgPct > 50) setOverallLevel('advanced')
@@ -192,6 +193,43 @@ export default function PerfilPage() {
           else setOverallLevel('novice')
         }
       })
+  }
+
+  async function calculateStreak() {
+    if (!user) return
+    const { data: logs } = await supabase
+      .from('workout_logs')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (!logs || logs.length === 0) { setStreak(0); return }
+
+    const uniqueDateMs = [...new Set(logs.map(l => {
+      const d = new Date(l.created_at)
+      d.setHours(0, 0, 0, 0)
+      return d.getTime()
+    }))].sort((a, b) => b - a)
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayMs = today.getTime()
+    const dayMs = 86400000
+
+    if (uniqueDateMs[0] < todayMs - dayMs) { setStreak(0); return }
+
+    let currentStreak = 0
+    let expectedDate = uniqueDateMs[0] === todayMs ? todayMs : todayMs - dayMs
+
+    for (const dateMs of uniqueDateMs) {
+      if (dateMs === expectedDate) {
+        currentStreak++
+        expectedDate -= dayMs
+      } else if (dateMs < expectedDate) {
+        break
+      }
+    }
+    setStreak(currentStreak)
   }
 
   async function loadFavoritesAndDeleted() {
@@ -237,295 +275,448 @@ export default function PerfilPage() {
   }
 
   const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || '#666'
+  const lvlNum = LEVEL_TO_NUM[overallLevel] || 1
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-xl font-medium tracking-tight mb-8 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">{t('perfil.title')}</h1>
-          <p className="text-zinc-500 mb-8">{t('perfil.loginRequired')}</p>
-           <a href="/login" className="inline-block py-4 px-8 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-colors">
-             {t('perfil.enter')}
-           </a>
-         </div>
-       </div>
-     )
-   }
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
+        <div className="text-center space-y-6 max-w-sm">
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: '#00F0FF' }}>
+            {t('perfil.title')}
+          </h1>
+          <p className="text-sm" style={{ color: '#475569' }}>{t('perfil.loginRequired')}</p>
+          <a
+            href="/login"
+            className="inline-block py-4 px-8 rounded-2xl font-bold text-sm transition-opacity hover:opacity-80"
+            style={{ backgroundColor: '#00F0FF', color: '#060913' }}
+          >
+            {t('perfil.enter')}
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-       <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
-          <h1 className="text-xl font-medium tracking-tight bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">{t('perfil.title')}</h1>
-          {overallLevel && (
-            <p className="mt-1 text-sm" style={{ color: levelColor }}>{t(`level.${overallLevel}`)}</p>
-          )}
-        </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
 
-     <div className="px-6 space-y-6 max-w-2xl mx-auto animate-slide-up">
-          {exerciseLevels.length > 0 && (
-          <div>
-             <p className="section-label mb-3">{t('perfil.byExercise')}</p>
-             <div className="space-y-1">
-               {exerciseLevels.map((ex) => (
-                 <div key={ex.exercise} className="flex justify-between items-center py-3 px-3 rounded-xl hover:bg-[var(--surface)] transition-colors">
-                   <div className="min-w-0">
-                     <span className="font-light text-[var(--color-text-primary)] truncate block">{ex.exercise}</span>
-                     <span className="text-[var(--color-text-tertiary)] text-xs tabular-nums">
-                       {format(ex.oneRM)}{unit} 1RM
-                       {ex.isUnilateral && <span className="ml-1 opacity-60">(per braç)</span>}
-                     </span>
-                   </div>
-                   <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3" style={{ backgroundColor: ex.levelColor + '22', color: ex.levelColor }}>{t(`level.${ex.level}`)}</span>
-                 </div>
-               ))}
-              </div>
+      {/* ── Header RPG ── */}
+      <div className="px-6 pt-10 pb-2 max-w-2xl mx-auto">
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black select-none"
+              style={{ backgroundColor: '#101626', border: '1px solid #1E293B', color: '#00F0FF' }}
+            >
+              {(user.email?.[0] || '?').toUpperCase()}
             </div>
-          )}
-
-          <div>
-            <p className="section-label mb-3">{t('perfil.data')}</p>
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 <input
-                   type="text"
-                   inputMode="numeric"
-                   value={age}
-                   onChange={(e) => setAge(e.target.value)}
-                   placeholder={t('perfil.age')}
-                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 />
-                 <div className="flex gap-2">
-                   <button
-                     onClick={() => setGender('m')}
-                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
-                       gender === 'm'
-                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                         : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
-                     }`}
-                   >
-                     {t('perfil.male')}
-                   </button>
-                   <button
-                     onClick={() => setGender('f')}
-                     className={`flex-1 py-3 rounded-xl text-sm transition-colors ${
-                       gender === 'f'
-                         ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                         : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
-                     }`}
-                   >
-                     {t('perfil.female')}
-                   </button>
-                 </div>
-               </div>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 {heightUnit === 'ftin' ? (
-                   <div className="flex gap-2">
-                     <input
-                       type="text"
-                       inputMode="numeric"
-                       value={heightFt}
-                       onChange={(e) => setHeightFt(e.target.value)}
-                       placeholder={t('perfil.heightFt')}
-                       className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                     />
-                     <input
-                       type="text"
-                       inputMode="numeric"
-                       value={heightIn}
-                       onChange={(e) => setHeightIn(e.target.value)}
-                       placeholder={t('perfil.heightIn')}
-                       className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                     />
-                   </div>
-                 ) : (
-                   <input
-                     type="text"
-                     inputMode="numeric"
-                     value={height}
-                     onChange={(e) => setHeight(e.target.value)}
-                     placeholder={t('perfil.heightCm')}
-                     className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                   />
-                 )}
-                 <input
-                   type="text"
-                   inputMode="numeric"
-                   value={weight}
-                   onChange={(e) => setWeight(e.target.value)}
-                   placeholder={`${t('perfil.weightLabel')} (${unit})`}
-                   className="bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 />
-               </div>
-             </div>
-             <button
-               onClick={saveProfile}
-               type="button"
-               className="w-full mt-4 py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
-             >
-               {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
-             </button>
+            <div
+              className="absolute -bottom-1.5 -right-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
+              style={{ backgroundColor: '#00F0FF', color: '#060913' }}
+            >
+              LVL {lvlNum}
+            </div>
           </div>
 
-          <div>
-            <p className="section-label mb-3">{t('perfil.scale')}</p>
-           <div className="flex flex-wrap gap-1.5">
-             {LEVELS.map((l) => (
-               <span key={l.key} className="px-2.5 py-1 rounded-full text-[11px] font-medium" style={{ backgroundColor: l.color + '22', color: l.color }}>
-                 {t(`level.${l.key}`)}
-               </span>
-             ))}
-           </div>
-         </div>
-
-          {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
-            <div className="space-y-1">
-              {favoriteRoutines.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => setShowFavorites(v => !v)}
-                    className="flex items-center justify-between w-full py-2 group"
-                  >
-                    <span className="section-label">{t('routines.favoriteRoutines')} ({favoriteRoutines.length})</span>
-                    <svg
-                      width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
-                      className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${showFavorites ? 'rotate-180' : ''}`}
-                    >
-                      <path d="M6 8L1 3h10L6 8z"/>
-                    </svg>
-                  </button>
-                  {showFavorites && (
-                    <div className="space-y-1 mt-1">
-                      {favoriteRoutines.map(r => (
-                        <div key={r.id} className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                          <span className="text-yellow-400 text-base flex-shrink-0">★</span>
-                          <span className="text-[var(--color-text-primary)] text-sm font-light truncate">{r.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {deletedRoutines.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => setShowDeleted(v => !v)}
-                    className="flex items-center justify-between w-full py-2 group"
-                  >
-                    <span className="section-label">{t('routines.deletedRoutines')} ({deletedRoutines.length})</span>
-                    <svg
-                      width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
-                      className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${showDeleted ? 'rotate-180' : ''}`}
-                    >
-                      <path d="M6 8L1 3h10L6 8z"/>
-                    </svg>
-                  </button>
-                  {showDeleted && (
-                    <div className="space-y-1 mt-1">
-                      {deletedRoutines.map(dr => (
-                        <div key={dr.id + dr.deletedAt} className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-                          <div className="min-w-0">
-                            <p className="text-[var(--color-text-primary)] text-sm font-light truncate">{dr.name}</p>
-                            <p className="text-[var(--color-text-tertiary)] text-xs">{t('routines.exercisesCount', { count: String(dr.exercises.length) })}</p>
-                          </div>
-                          <button
-                            onClick={() => handleRestoreRoutine(dr)}
-                            className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity"
-                          >
-                            {t('routines.restore')}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {restoreMsg && (
-                <p className="text-sm mt-2" style={{ color: 'var(--accent-success)' }}>{restoreMsg}</p>
-              )}
+          <div className="flex-1 min-w-0 pt-0.5">
+            <h1 className="text-xl font-black truncate" style={{ color: '#F1F5F9' }}>
+              {user.email?.split('@')[0]}
+            </h1>
+            {overallLevel && (
+              <p className="text-[11px] uppercase tracking-widest font-bold" style={{ color: '#00F0FF' }}>
+                {t(`level.${overallLevel}`)}
+              </p>
+            )}
+            <div className="mt-2.5">
+              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E293B' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${overallAvgPct || (lvlNum / 6) * 100}%`,
+                    background: 'linear-gradient(90deg, #00F0FF 0%, #0066FF 100%)',
+                  }}
+                />
+              </div>
+              <p className="text-[10px] mt-1 tabular-nums" style={{ color: '#334155' }}>
+                {overallAvgPct > 0 ? `${overallAvgPct}%` : `${Math.round((lvlNum / 6) * 100)}%`} XP · {t('perfil.toLevel')} {Math.min(lvlNum + 1, 6)}
+              </p>
             </div>
-          )}
+          </div>
+        </div>
+      </div>
 
+      <div className="px-6 pt-6 space-y-4 max-w-2xl mx-auto">
+
+        {/* ── STREAK — Rei de la Pantalla ── */}
+        <div
+          className="relative overflow-hidden rounded-2xl p-6"
+          style={{ backgroundColor: '#101626', border: '1px solid rgba(0,240,255,0.2)' }}
+        >
+          {/* Glow pulsant de fons */}
+          <div
+            className="absolute inset-0 rounded-2xl animate-pulse pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(0,240,255,0.14) 0%, transparent 65%)' }}
+          />
+          {/* Línia inferior accent */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent 0%, #00F0FF 50%, transparent 100%)' }}
+          />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-widest font-bold mb-2" style={{ color: '#00F0FF' }}>
+                ⚡ {t('perfil.streakTitle')}
+              </p>
+              <p className="text-7xl font-black leading-none tabular-nums" style={{ color: '#F1F5F9' }}>
+                {streak}
+              </p>
+              <p className="text-sm mt-1.5 font-medium" style={{ color: '#475569' }}>
+                {streak === 1 ? t('perfil.streakDay') : t('perfil.streakDays')}
+              </p>
+            </div>
+            <span className="text-8xl select-none" style={{ opacity: 0.07 }}>🔥</span>
+          </div>
+        </div>
+
+        {/* ── BENTO GRID — Nivell + Exercicis ── */}
+        {(overallLevel || exerciseLevels.length > 0) && (
+          <div className="grid grid-cols-3 gap-3">
+            {/* Nivell global — 2/3 */}
+            <div
+              className="col-span-2 rounded-2xl p-4"
+              style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
+            >
+              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#334155' }}>
+                {t('perfil.overallLevel')}
+              </p>
+              <p className="text-2xl font-black" style={{ color: levelColor }}>
+                {overallLevel ? t(`level.${overallLevel}`) : '—'}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {LEVELS.map((l) => (
+                  <span
+                    key={l.key}
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: l.color + '22', color: l.color }}
+                  >
+                    {t(`level.${l.key}`)}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Exercicis analitzats — 1/3 */}
+            <div
+              className="col-span-1 rounded-2xl p-4 flex flex-col justify-between"
+              style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
+            >
+              <p className="text-[10px] uppercase tracking-widest leading-tight" style={{ color: '#334155' }}>
+                {t('perfil.exercises')}
+              </p>
+              <p className="text-4xl font-black tabular-nums" style={{ color: '#00F0FF' }}>
+                {exerciseLevels.length}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: '#334155' }}>
+                {t('perfil.exercisesAnalyzed')}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Llista d'exercicis per nivell ── */}
+        {exerciseLevels.length > 0 && (
           <div>
-            <p className="section-label mb-3">{t('preferences.title')}</p>
-            <div className="card-surface divide-y divide-[var(--border)]">
-              <div className="flex justify-between items-center px-4 py-3">
-                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('nav.language')}</span>
-                <LanguageSelector />
-              </div>
-              <div className="flex justify-between items-center px-4 py-3">
-                <span className="text-sm font-light text-[var(--color-text-primary)]">{t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}</span>
-                <button
-                  onClick={toggleTheme}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--surface-strong)] text-sm text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
-                  aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+            <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+              {t('perfil.byExercise')}
+            </p>
+            <div className="space-y-2">
+              {exerciseLevels.map((ex) => (
+                <div
+                  key={ex.exercise}
+                  className="flex justify-between items-center py-3 px-4 rounded-2xl"
+                  style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
                 >
-                  <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
-                  <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-                </button>
-              </div>
-              <div className="flex justify-between items-center px-4 py-3">
-                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('preferences.weightUnit')}</span>
-                <div className="flex bg-[var(--surface-strong)] rounded-lg overflow-hidden p-0.5">
-                  <button
-                    onClick={() => setUnit('kg')}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
-                      unit === 'kg'
-                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-                    }`}
+                  <div className="min-w-0">
+                    <span className="font-semibold truncate block" style={{ color: '#F1F5F9' }}>{ex.exercise}</span>
+                    <span className="text-xs tabular-nums" style={{ color: '#475569' }}>
+                      {format(ex.oneRM)}{unit} 1RM
+                      {ex.isUnilateral && <span className="ml-1 opacity-50"> · {t('perfil.perArm')}</span>}
+                    </span>
+                  </div>
+                  <span
+                    className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3 font-bold"
+                    style={{ backgroundColor: ex.levelColor + '22', color: ex.levelColor }}
                   >
-                    kg
-                  </button>
-                  <button
-                    onClick={() => setUnit('lb')}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
-                      unit === 'lb'
-                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    lb
-                  </button>
+                    {t(`level.${ex.level}`)}
+                  </span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Dades Personals ── */}
+        <div>
+          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+            {t('perfil.data')}
+          </p>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder={t('perfil.age')}
+                className="text-sm rounded-2xl px-4 py-3 outline-none transition-colors tabular-nums"
+                style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
+                onBlur={e => (e.target.style.borderColor = '#1E293B')}
+              />
+              <div className="flex gap-2">
+                {(['m', 'f'] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGender(g)}
+                    className="flex-1 py-3 rounded-2xl text-sm font-bold transition-all"
+                    style={{
+                      backgroundColor: gender === g ? '#00F0FF' : '#101626',
+                      color: gender === g ? '#060913' : '#475569',
+                      border: `1px solid ${gender === g ? '#00F0FF' : '#1E293B'}`,
+                    }}
+                  >
+                    {g === 'm' ? t('perfil.male') : t('perfil.female')}
+                  </button>
+                ))}
               </div>
-              <div className="flex justify-between items-center px-4 py-3">
-                <span className="text-sm font-light text-[var(--color-text-primary)]">{t('preferences.heightUnit')}</span>
-                <div className="flex bg-[var(--surface-strong)] rounded-lg overflow-hidden p-0.5">
-                  <button
-                    onClick={() => setHeightUnit('cm')}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
-                      heightUnit === 'cm'
-                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    cm
-                  </button>
-                  <button
-                    onClick={() => setHeightUnit('ftin')}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-md transition-colors ${
-                      heightUnit === 'ftin'
-                        ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                        : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    ft·in
-                  </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {heightUnit === 'ftin' ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text" inputMode="numeric" value={heightFt}
+                    onChange={(e) => setHeightFt(e.target.value)}
+                    placeholder={t('perfil.heightFt')}
+                    className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                    style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
+                    onBlur={e => (e.target.style.borderColor = '#1E293B')}
+                  />
+                  <input
+                    type="text" inputMode="numeric" value={heightIn}
+                    onChange={(e) => setHeightIn(e.target.value)}
+                    placeholder={t('perfil.heightIn')}
+                    className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                    style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
+                    onBlur={e => (e.target.style.borderColor = '#1E293B')}
+                  />
                 </div>
-              </div>
+              ) : (
+                <input
+                  type="text" inputMode="numeric" value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  placeholder={t('perfil.heightCm')}
+                  className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                  style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                  onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
+                  onBlur={e => (e.target.style.borderColor = '#1E293B')}
+                />
+              )}
+              <input
+                type="text" inputMode="numeric" value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder={`${t('perfil.weightLabel')} (${unit})`}
+                className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
+                onBlur={e => (e.target.style.borderColor = '#1E293B')}
+              />
             </div>
           </div>
 
           <button
-            onClick={async () => { await signOut(); router.replace('/login') }}
-            className="w-full py-3 rounded-2xl text-sm font-light transition-colors"
-            style={{ color: 'var(--accent-danger)', backgroundColor: 'color-mix(in srgb, var(--accent-danger) 10%, transparent)' }}
+            onClick={saveProfile}
+            type="button"
+            className="w-full mt-4 py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] hover:opacity-85"
+            style={{
+              backgroundColor: saved ? 'rgba(0,240,255,0.12)' : '#00F0FF',
+              color: saved ? '#00F0FF' : '#060913',
+              border: saved ? '1px solid rgba(0,240,255,0.4)' : '1px solid transparent',
+            }}
           >
-            {t('nav.logout')}
+            {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
           </button>
-       </div>
+        </div>
 
-       <div className="h-20" />
-     </div>
+        {/* ── Rutines Favorites i Eliminades ── */}
+        {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
+          <div className="space-y-2">
+            {favoriteRoutines.length > 0 && (
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
+                <button
+                  onClick={() => setShowFavorites(v => !v)}
+                  className="flex items-center justify-between w-full px-4 py-3"
+                >
+                  <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: '#475569' }}>
+                    {t('routines.favoriteRoutines')} ({favoriteRoutines.length})
+                  </span>
+                  <svg
+                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
+                    className={`transition-transform duration-200 ${showFavorites ? 'rotate-180' : ''}`}
+                    style={{ color: '#475569' }}
+                  >
+                    <path d="M6 8L1 3h10L6 8z" />
+                  </svg>
+                </button>
+                {showFavorites && (
+                  <div className="px-4 pb-3 space-y-2">
+                    {favoriteRoutines.map(r => (
+                      <div
+                        key={r.id}
+                        className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
+                        style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}
+                      >
+                        <span className="text-yellow-400 flex-shrink-0 text-sm">★</span>
+                        <span className="text-sm font-semibold truncate" style={{ color: '#F1F5F9' }}>{r.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {deletedRoutines.length > 0 && (
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
+                <button
+                  onClick={() => setShowDeleted(v => !v)}
+                  className="flex items-center justify-between w-full px-4 py-3"
+                >
+                  <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: '#475569' }}>
+                    {t('routines.deletedRoutines')} ({deletedRoutines.length})
+                  </span>
+                  <svg
+                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
+                    className={`transition-transform duration-200 ${showDeleted ? 'rotate-180' : ''}`}
+                    style={{ color: '#475569' }}
+                  >
+                    <path d="M6 8L1 3h10L6 8z" />
+                  </svg>
+                </button>
+                {showDeleted && (
+                  <div className="px-4 pb-3 space-y-2">
+                    {deletedRoutines.map(dr => (
+                      <div
+                        key={dr.id + dr.deletedAt}
+                        className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl"
+                        style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate" style={{ color: '#F1F5F9' }}>{dr.name}</p>
+                          <p className="text-xs" style={{ color: '#475569' }}>
+                            {t('routines.exercisesCount', { count: String(dr.exercises.length) })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleRestoreRoutine(dr)}
+                          className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80 active:scale-95"
+                          style={{ backgroundColor: 'rgba(0,240,255,0.1)', color: '#00F0FF', border: '1px solid rgba(0,240,255,0.25)' }}
+                        >
+                          {t('routines.restore')}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {restoreMsg && (
+              <p className="text-sm px-1 font-medium" style={{ color: '#00F0FF' }}>{restoreMsg}</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Preferències ── */}
+        <div>
+          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+            {t('preferences.title')}
+          </p>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
+            {/* Idioma */}
+            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
+              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('nav.language')}</span>
+              <LanguageSelector />
+            </div>
+            {/* Tema */}
+            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
+              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>
+                {t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all hover:opacity-75"
+                style={{ backgroundColor: '#0C1220', color: '#F1F5F9', border: '1px solid #1E293B' }}
+                aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
+              >
+                <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+              </button>
+            </div>
+            {/* Pes */}
+            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
+              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('preferences.weightUnit')}</span>
+              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}>
+                {(['kg', 'lb'] as const).map(u => (
+                  <button
+                    key={u}
+                    onClick={() => setUnit(u)}
+                    className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-bold"
+                    style={{
+                      backgroundColor: unit === u ? '#00F0FF' : 'transparent',
+                      color: unit === u ? '#060913' : '#475569',
+                    }}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Alçada */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('preferences.heightUnit')}</span>
+              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}>
+                {(['cm', 'ftin'] as const).map(u => (
+                  <button
+                    key={u}
+                    onClick={() => setHeightUnit(u)}
+                    className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-bold"
+                    style={{
+                      backgroundColor: heightUnit === u ? '#00F0FF' : 'transparent',
+                      color: heightUnit === u ? '#060913' : '#475569',
+                    }}
+                  >
+                    {u === 'cm' ? 'cm' : 'ft·in'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Tancar Sessió ── */}
+        <button
+          onClick={async () => { await signOut(); router.replace('/login') }}
+          className="w-full py-3 rounded-2xl text-sm font-bold transition-all hover:opacity-80 active:scale-[0.98]"
+          style={{ color: '#FF4444', backgroundColor: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)' }}
+        >
+          {t('nav.logout')}
+        </button>
+      </div>
+
+      <div className="h-20" />
+    </div>
   )
 }
