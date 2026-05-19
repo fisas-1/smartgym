@@ -5,15 +5,15 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from '../contexts/LanguageContext'
 
-// ── Paleta ──────────────────────────────────────────────
+// ── Paleta d'elit ────────────────────────────────────────────
 const C = {
-  bg:      '#050505',
-  surface: '#121212',
-  border:  '#222222',
-  text:    '#FAFAF7',
-  muted:   '#555555',
-  faint:   '#1A1A1A',
-  accent:  '#E8FF1A',
+  bg:      '#090707',
+  surface: '#141111',
+  border:  '#262020',
+  text:    '#F5F5F3',
+  muted:   '#5C5757',
+  faint:   '#1E1A1A',
+  accent:  '#FF4500',
   danger:  '#FF4444',
   warn:    '#FF6B00',
 } as const
@@ -155,7 +155,7 @@ export default function AmicsPage() {
           <h1 className="text-3xl font-black" style={{ color: C.accent }}>amics.</h1>
           <p className="text-sm" style={{ color: C.muted }}>{t('friends.searchToSeeRanking')}</p>
           <a href="/login"
-             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-opacity hover:opacity-80"
+             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
              style={{ backgroundColor: C.accent, color: C.bg }}>
             {t('common.login')}
           </a>
@@ -173,7 +173,7 @@ export default function AmicsPage() {
       {/* ── Header ── */}
       <div className="px-6 pt-10 pb-6 max-w-2xl mx-auto">
         <h1 className="text-3xl font-black tracking-tight" style={{ color: C.text }}>
-          amics<span style={{ color: C.accent }}>.</span>
+          {t('friends.title')}<span style={{ color: C.accent }}>.</span>
         </h1>
         <p className="text-xs uppercase tracking-widest mt-0.5 font-black" style={{ color: C.muted }}>
           {t('friends.feedSubtitle')}
@@ -198,7 +198,7 @@ export default function AmicsPage() {
           <button
             onClick={handleSearch}
             disabled={searching || !searchQuery.trim()}
-            className="px-5 py-3 rounded-2xl text-sm font-black transition-all hover:opacity-80 disabled:opacity-30 active:scale-95"
+            className="px-5 py-3 rounded-2xl text-sm font-black transition-all hover:opacity-90 disabled:opacity-30 active:scale-95"
             style={{ backgroundColor: C.accent, color: C.bg }}
             aria-label="Search"
           >
@@ -235,10 +235,9 @@ export default function AmicsPage() {
                 const cardBg = isMe
                   ? C.accent + '08'
                   : isDanger
-                    ? C.warn + '08'
+                    ? C.warn + '06'
                     : C.surface
 
-                // Color consistència
                 const consistencyColor = u.consistency >= 70
                   ? C.accent
                   : u.consistency >= 40
@@ -249,7 +248,15 @@ export default function AmicsPage() {
                   <div
                     key={u.id}
                     className="rounded-2xl px-4 pt-4 pb-3 relative overflow-hidden"
-                    style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+                    style={{
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
+                      boxShadow: isDanger && !isMe
+                        ? `0 4px 24px ${C.warn}12`
+                        : isMe
+                          ? `0 4px 24px ${C.accent}10`
+                          : 'none',
+                    }}
                   >
                     {/* Línia superior per a "jo" */}
                     {isMe && (
@@ -341,7 +348,7 @@ export default function AmicsPage() {
 
                     {/* Feedback reacció */}
                     {reactions[u.id] && (
-                      <p className="mt-2 text-xs font-black text-center" style={{ color: C.accent }}>
+                      <p className="mt-2 text-xs font-black text-center reaction-pop" style={{ color: C.accent }}>
                         {reactions[u.id]}
                       </p>
                     )}
@@ -351,13 +358,11 @@ export default function AmicsPage() {
                       <div className="mt-3 flex gap-2">
                         {isDanger ? (
                           <>
-                            {/* Moo-tivar */}
                             <ActionButton
                               label={t('friends.mootivate')}
                               baseColor={C.warn}
                               onClick={() => handleReaction(u.id, 'motivar')}
                             />
-                            {/* Empènyer */}
                             <ActionButton
                               label={t('friends.pushThem')}
                               baseColor={C.danger}
@@ -366,14 +371,12 @@ export default function AmicsPage() {
                           </>
                         ) : (
                           <>
-                            {/* Donar Volt */}
                             <ActionButton
                               label={t('friends.giveVolt')}
                               baseColor={C.accent}
                               darkText
                               onClick={() => handleReaction(u.id, 'volt')}
                             />
-                            {/* Injectar Energia */}
                             <ActionButton
                               label={t('friends.injectEnergy')}
                               baseColor="#a855f7"
@@ -396,7 +399,7 @@ export default function AmicsPage() {
   )
 }
 
-// ── Component botó d'acció reutilitzable ────────────────
+// ── Component botó d'acció reutilitzable ────────────────────
 function ActionButton({
   label,
   baseColor,
@@ -411,7 +414,7 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex-1 py-2 rounded-xl text-xs font-black transition-all duration-150 hover:scale-[1.03] active:scale-95"
+      className="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-150 hover:scale-[1.03] active:scale-95"
       style={{
         backgroundColor: baseColor + '15',
         color: baseColor,
@@ -420,14 +423,16 @@ function ActionButton({
       onMouseEnter={e => {
         const el = e.currentTarget
         el.style.backgroundColor = baseColor
-        el.style.color = darkText ? '#050505' : '#FAFAF7'
+        el.style.color = darkText ? '#090707' : '#F5F5F3'
         el.style.borderColor = baseColor
+        el.style.boxShadow = `0 0 18px ${baseColor}45`
       }}
       onMouseLeave={e => {
         const el = e.currentTarget
         el.style.backgroundColor = baseColor + '15'
         el.style.color = baseColor
         el.style.borderColor = baseColor + '33'
+        el.style.boxShadow = 'none'
       }}
     >
       {label}

@@ -10,16 +10,16 @@ import { useUnit } from '../contexts/UnitContext'
 import LanguageSelector from '../components/LanguageSelector'
 import { getBaseExercise, getVariantFromFullName, isVariantUnilateral } from '@/types'
 
-// ── Paleta ──────────────────────────────────────────────
+// ── Paleta d'elit ────────────────────────────────────────────
 const C = {
-  bg:       '#050505',
-  surface:  '#121212',
-  border:   '#222222',
-  text:     '#FAFAF7',
-  muted:    '#555555',
-  faint:    '#2A2A2A',
-  accent:   '#E8FF1A',
-  danger:   '#FF4444',
+  bg:      '#090707',
+  surface: '#141111',
+  border:  '#262020',
+  text:    '#F5F5F3',
+  muted:   '#5C5757',
+  faint:   '#1E1A1A',
+  accent:  '#FF4500',
+  danger:  '#FF4444',
 } as const
 
 type UserProfile = {
@@ -300,7 +300,7 @@ export default function PerfilPage() {
           </h1>
           <p className="text-sm" style={{ color: C.muted }}>{t('perfil.loginRequired')}</p>
           <a href="/login"
-             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-opacity hover:opacity-80"
+             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
              style={{ backgroundColor: C.accent, color: C.bg }}>
             {t('perfil.enter')}
           </a>
@@ -319,7 +319,12 @@ export default function PerfilPage() {
           {/* Avatar + badge LVL */}
           <div className="relative flex-shrink-0">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black select-none"
-                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, color: C.accent }}>
+                 style={{
+                   backgroundColor: C.surface,
+                   border: streak > 0 ? `1px solid ${C.accent}55` : `1px solid ${C.border}`,
+                   color: C.accent,
+                   boxShadow: streak > 0 ? `0 0 18px ${C.accent}22` : 'none',
+                 }}>
               {(user.email?.[0] || '?').toUpperCase()}
             </div>
             <div className="absolute -bottom-1.5 -right-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
@@ -339,9 +344,13 @@ export default function PerfilPage() {
               </p>
             )}
             <div className="mt-2.5">
-              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
                 <div className="h-full rounded-full transition-all duration-1000 ease-out"
-                     style={{ width: `${xpPct}%`, backgroundColor: C.accent }} />
+                     style={{
+                       width: `${xpPct}%`,
+                       backgroundColor: C.accent,
+                       boxShadow: `0 0 8px ${C.accent}80`,
+                     }} />
               </div>
               <p className="text-[10px] mt-1 tabular-nums" style={{ color: C.muted }}>
                 {xpPct}% XP · {t('perfil.toLevel')} {Math.min(lvlNum + 1, 6)}
@@ -354,31 +363,38 @@ export default function PerfilPage() {
       <div className="px-6 pt-6 space-y-4 max-w-2xl mx-auto">
 
         {/* ── STREAK — Rei de la Pantalla ── */}
-        <div className="relative overflow-hidden rounded-2xl p-6"
-             style={{ backgroundColor: C.surface, border: `1px solid ${C.accent}33` }}>
+        <div className="relative overflow-hidden rounded-2xl p-6 streak-pulse"
+             style={{
+               backgroundColor: C.surface,
+               border: `1px solid ${C.accent}44`,
+             }}>
 
-          {/* Glow pulsant */}
+          {/* Radial glow pulsant */}
           <div className="absolute inset-0 rounded-2xl animate-pulse pointer-events-none"
-               style={{ background: `radial-gradient(ellipse at 50% -20%, ${C.accent}1A 0%, transparent 65%)` }} />
+               style={{ background: `radial-gradient(ellipse at 50% -20%, ${C.accent}1C 0%, transparent 65%)` }} />
 
-          {/* Línia superior accent */}
-          <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          {/* Línia superior accent 2px */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] pointer-events-none"
                style={{ background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+
+          {/* Corner glow decoratiu */}
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none"
+               style={{ background: `radial-gradient(circle, ${C.accent}0B 0%, transparent 65%)` }} />
 
           <div className="relative z-10 flex items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-widest font-black mb-2"
+              <p className="text-[11px] uppercase tracking-widest font-black mb-3"
                  style={{ color: C.accent }}>
                 ⚡ {t('perfil.streakTitle')}
               </p>
-              <p className="text-8xl font-black leading-none tabular-nums" style={{ color: C.text }}>
+              <p className="text-9xl font-black leading-none tabular-nums" style={{ color: C.text }}>
                 {streak}
               </p>
               <p className="text-sm mt-2 font-medium" style={{ color: C.muted }}>
                 {streak === 1 ? t('perfil.streakDay') : t('perfil.streakDays')}
               </p>
             </div>
-            <p className="text-9xl select-none leading-none mb-1" style={{ opacity: 0.06 }}>🔥</p>
+            <p className="text-[7rem] select-none leading-none mb-1 flex-shrink-0" style={{ opacity: 0.05 }}>🔥</p>
           </div>
         </div>
 
@@ -387,22 +403,31 @@ export default function PerfilPage() {
           <div className="grid grid-cols-3 gap-3">
 
             {/* Nivell global — 2/3 */}
-            <div className="col-span-2 rounded-2xl p-4"
+            <div className="col-span-2 rounded-2xl p-4 relative overflow-hidden"
                  style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-              <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: C.muted }}>
-                {t('perfil.overallLevel')}
-              </p>
-              <p className="text-2xl font-black" style={{ color: levelColor }}>
-                {overallLevel ? t(`level.${overallLevel}`) : '—'}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {LEVELS.map((l) => (
-                  <span key={l.key}
-                        className="px-2 py-0.5 rounded-full text-[10px] font-black"
-                        style={{ backgroundColor: l.color + '18', color: l.color }}>
-                    {t(`level.${l.key}`)}
-                  </span>
-                ))}
+              {/* Color wash del nivell actual */}
+              <div className="absolute inset-0 pointer-events-none rounded-2xl"
+                   style={{ background: `linear-gradient(135deg, ${levelColor}0A 0%, transparent 55%)` }} />
+              <div className="relative">
+                <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: C.muted }}>
+                  {t('perfil.overallLevel')}
+                </p>
+                <p className="text-2xl font-black" style={{ color: levelColor }}>
+                  {overallLevel ? t(`level.${overallLevel}`) : '—'}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {LEVELS.map((l) => (
+                    <span key={l.key}
+                          className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                          style={{
+                            backgroundColor: l.color + '18',
+                            color: l.color,
+                            border: overallLevel === l.key ? `1px solid ${l.color}55` : '1px solid transparent',
+                          }}>
+                      {t(`level.${l.key}`)}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -431,9 +456,12 @@ export default function PerfilPage() {
             <div className="space-y-2">
               {exerciseLevels.map((ex) => (
                 <div key={ex.exercise}
-                     className="flex justify-between items-center py-3 px-4 rounded-2xl"
+                     className="flex justify-between items-center py-3 px-4 rounded-2xl relative overflow-hidden"
                      style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-                  <div className="min-w-0">
+                  {/* Franja lateral del nivell */}
+                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full"
+                       style={{ backgroundColor: ex.levelColor }} />
+                  <div className="min-w-0 pl-3">
                     <span className="font-semibold truncate block" style={{ color: C.text }}>
                       {ex.exercise}
                     </span>
@@ -443,7 +471,11 @@ export default function PerfilPage() {
                     </span>
                   </div>
                   <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3 font-black"
-                        style={{ backgroundColor: ex.levelColor + '1A', color: ex.levelColor }}>
+                        style={{
+                          backgroundColor: ex.levelColor + '1A',
+                          color: ex.levelColor,
+                          border: `1px solid ${ex.levelColor}30`,
+                        }}>
                     {t(`level.${ex.level}`)}
                   </span>
                 </div>
@@ -553,7 +585,7 @@ export default function PerfilPage() {
                     {favoriteRoutines.map(r => (
                       <div key={r.id} className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
                            style={{ backgroundColor: C.faint, border: `1px solid ${C.border}` }}>
-                        <span className="text-yellow-400 flex-shrink-0 text-sm">★</span>
+                        <span className="flex-shrink-0 text-sm" style={{ color: C.accent }}>★</span>
                         <span className="text-sm font-semibold truncate" style={{ color: C.text }}>{r.name}</span>
                       </div>
                     ))}
