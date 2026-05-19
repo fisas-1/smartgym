@@ -10,6 +10,18 @@ import { useUnit } from '../contexts/UnitContext'
 import LanguageSelector from '../components/LanguageSelector'
 import { getBaseExercise, getVariantFromFullName, isVariantUnilateral } from '@/types'
 
+// ── Paleta ──────────────────────────────────────────────
+const C = {
+  bg:       '#050505',
+  surface:  '#121212',
+  border:   '#222222',
+  text:     '#FAFAF7',
+  muted:    '#555555',
+  faint:    '#2A2A2A',
+  accent:   '#E8FF1A',
+  danger:   '#FF4444',
+} as const
+
 type UserProfile = {
   age: number | null
   height: number | null
@@ -35,7 +47,7 @@ const STRENGTH_STANDARDS: Record<string, Record<string, { m: number; f: number }
 }
 
 const LEVELS = [
-  { key: 'novice',       color: '#666' },
+  { key: 'novice',       color: '#555555' },
   { key: 'beginner',     color: '#22c55e' },
   { key: 'intermediate', color: '#3b82f6' },
   { key: 'advanced',     color: '#a855f7' },
@@ -177,7 +189,7 @@ export default function PerfilPage() {
           const lv = LEVELS.find(l => l.key === level)
           const variant = getVariantFromFullName(d.fullName)
           const isUnilateral = variant ? isVariantUnilateral(ex, variant) : false
-          return { exercise: ex, level, levelColor: lv?.color || '#666', oneRM: d.oneRM, isUnilateral }
+          return { exercise: ex, level, levelColor: lv?.color || '#555', oneRM: d.oneRM, isUnilateral }
         }).filter(Boolean) as ExerciseLevel[]
 
         setExerciseLevels(levels.sort((a, b) => (LEVELS.findIndex(l => l.key === b.level)) - (LEVELS.findIndex(l => l.key === a.level))))
@@ -274,22 +286,22 @@ export default function PerfilPage() {
     setTimeout(() => setRestoreMsg(null), 3000)
   }
 
-  const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || '#666'
+  const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || C.muted
   const lvlNum = LEVEL_TO_NUM[overallLevel] || 1
+  const xpPct = overallAvgPct > 0 ? overallAvgPct : Math.round((lvlNum / 6) * 100)
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
+      <div className="min-h-screen flex items-center justify-center px-6"
+           style={{ backgroundColor: C.bg, color: C.text }}>
         <div className="text-center space-y-6 max-w-sm">
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: '#00F0FF' }}>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: C.accent }}>
             {t('perfil.title')}
           </h1>
-          <p className="text-sm" style={{ color: '#475569' }}>{t('perfil.loginRequired')}</p>
-          <a
-            href="/login"
-            className="inline-block py-4 px-8 rounded-2xl font-bold text-sm transition-opacity hover:opacity-80"
-            style={{ backgroundColor: '#00F0FF', color: '#060913' }}
-          >
+          <p className="text-sm" style={{ color: C.muted }}>{t('perfil.loginRequired')}</p>
+          <a href="/login"
+             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-opacity hover:opacity-80"
+             style={{ backgroundColor: C.accent, color: C.bg }}>
             {t('perfil.enter')}
           </a>
         </div>
@@ -298,47 +310,41 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
+    <div className="min-h-screen" style={{ backgroundColor: C.bg, color: C.text }}>
 
       {/* ── Header RPG ── */}
       <div className="px-6 pt-10 pb-2 max-w-2xl mx-auto">
         <div className="flex items-start gap-4">
+
+          {/* Avatar + badge LVL */}
           <div className="relative flex-shrink-0">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black select-none"
-              style={{ backgroundColor: '#101626', border: '1px solid #1E293B', color: '#00F0FF' }}
-            >
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black select-none"
+                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, color: C.accent }}>
               {(user.email?.[0] || '?').toUpperCase()}
             </div>
-            <div
-              className="absolute -bottom-1.5 -right-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
-              style={{ backgroundColor: '#00F0FF', color: '#060913' }}
-            >
+            <div className="absolute -bottom-1.5 -right-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
+                 style={{ backgroundColor: C.accent, color: C.bg }}>
               LVL {lvlNum}
             </div>
           </div>
 
+          {/* Nom + nivell + barra XP */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <h1 className="text-xl font-black truncate" style={{ color: '#F1F5F9' }}>
+            <h1 className="text-xl font-black truncate" style={{ color: C.text }}>
               {user.email?.split('@')[0]}
             </h1>
             {overallLevel && (
-              <p className="text-[11px] uppercase tracking-widest font-bold" style={{ color: '#00F0FF' }}>
+              <p className="text-[11px] uppercase tracking-widest font-black" style={{ color: C.accent }}>
                 {t(`level.${overallLevel}`)}
               </p>
             )}
             <div className="mt-2.5">
-              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E293B' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{
-                    width: `${overallAvgPct || (lvlNum / 6) * 100}%`,
-                    background: 'linear-gradient(90deg, #00F0FF 0%, #0066FF 100%)',
-                  }}
-                />
+              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
+                <div className="h-full rounded-full transition-all duration-1000 ease-out"
+                     style={{ width: `${xpPct}%`, backgroundColor: C.accent }} />
               </div>
-              <p className="text-[10px] mt-1 tabular-nums" style={{ color: '#334155' }}>
-                {overallAvgPct > 0 ? `${overallAvgPct}%` : `${Math.round((lvlNum / 6) * 100)}%`} XP · {t('perfil.toLevel')} {Math.min(lvlNum + 1, 6)}
+              <p className="text-[10px] mt-1 tabular-nums" style={{ color: C.muted }}>
+                {xpPct}% XP · {t('perfil.toLevel')} {Math.min(lvlNum + 1, 6)}
               </p>
             </div>
           </div>
@@ -348,46 +354,42 @@ export default function PerfilPage() {
       <div className="px-6 pt-6 space-y-4 max-w-2xl mx-auto">
 
         {/* ── STREAK — Rei de la Pantalla ── */}
-        <div
-          className="relative overflow-hidden rounded-2xl p-6"
-          style={{ backgroundColor: '#101626', border: '1px solid rgba(0,240,255,0.2)' }}
-        >
-          {/* Glow pulsant de fons */}
-          <div
-            className="absolute inset-0 rounded-2xl animate-pulse pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(0,240,255,0.14) 0%, transparent 65%)' }}
-          />
-          {/* Línia inferior accent */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
-            style={{ background: 'linear-gradient(90deg, transparent 0%, #00F0FF 50%, transparent 100%)' }}
-          />
+        <div className="relative overflow-hidden rounded-2xl p-6"
+             style={{ backgroundColor: C.surface, border: `1px solid ${C.accent}33` }}>
 
-          <div className="relative z-10 flex items-center justify-between">
+          {/* Glow pulsant */}
+          <div className="absolute inset-0 rounded-2xl animate-pulse pointer-events-none"
+               style={{ background: `radial-gradient(ellipse at 50% -20%, ${C.accent}1A 0%, transparent 65%)` }} />
+
+          {/* Línia superior accent */}
+          <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+               style={{ background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+
+          <div className="relative z-10 flex items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-widest font-bold mb-2" style={{ color: '#00F0FF' }}>
+              <p className="text-[11px] uppercase tracking-widest font-black mb-2"
+                 style={{ color: C.accent }}>
                 ⚡ {t('perfil.streakTitle')}
               </p>
-              <p className="text-7xl font-black leading-none tabular-nums" style={{ color: '#F1F5F9' }}>
+              <p className="text-8xl font-black leading-none tabular-nums" style={{ color: C.text }}>
                 {streak}
               </p>
-              <p className="text-sm mt-1.5 font-medium" style={{ color: '#475569' }}>
+              <p className="text-sm mt-2 font-medium" style={{ color: C.muted }}>
                 {streak === 1 ? t('perfil.streakDay') : t('perfil.streakDays')}
               </p>
             </div>
-            <span className="text-8xl select-none" style={{ opacity: 0.07 }}>🔥</span>
+            <p className="text-9xl select-none leading-none mb-1" style={{ opacity: 0.06 }}>🔥</p>
           </div>
         </div>
 
         {/* ── BENTO GRID — Nivell + Exercicis ── */}
         {(overallLevel || exerciseLevels.length > 0) && (
           <div className="grid grid-cols-3 gap-3">
+
             {/* Nivell global — 2/3 */}
-            <div
-              className="col-span-2 rounded-2xl p-4"
-              style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
-            >
-              <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: '#334155' }}>
+            <div className="col-span-2 rounded-2xl p-4"
+                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+              <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: C.muted }}>
                 {t('perfil.overallLevel')}
               </p>
               <p className="text-2xl font-black" style={{ color: levelColor }}>
@@ -395,11 +397,9 @@ export default function PerfilPage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {LEVELS.map((l) => (
-                  <span
-                    key={l.key}
-                    className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: l.color + '22', color: l.color }}
-                  >
+                  <span key={l.key}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                        style={{ backgroundColor: l.color + '18', color: l.color }}>
                     {t(`level.${l.key}`)}
                   </span>
                 ))}
@@ -407,47 +407,43 @@ export default function PerfilPage() {
             </div>
 
             {/* Exercicis analitzats — 1/3 */}
-            <div
-              className="col-span-1 rounded-2xl p-4 flex flex-col justify-between"
-              style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
-            >
-              <p className="text-[10px] uppercase tracking-widest leading-tight" style={{ color: '#334155' }}>
+            <div className="col-span-1 rounded-2xl p-4 flex flex-col justify-between"
+                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: C.muted }}>
                 {t('perfil.exercises')}
               </p>
-              <p className="text-4xl font-black tabular-nums" style={{ color: '#00F0FF' }}>
+              <p className="text-4xl font-black tabular-nums" style={{ color: C.accent }}>
                 {exerciseLevels.length}
               </p>
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: '#334155' }}>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: C.muted }}>
                 {t('perfil.exercisesAnalyzed')}
               </p>
             </div>
           </div>
         )}
 
-        {/* ── Llista d'exercicis per nivell ── */}
+        {/* ── Llista exercicis per nivell ── */}
         {exerciseLevels.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+            <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: C.muted }}>
               {t('perfil.byExercise')}
             </p>
             <div className="space-y-2">
               {exerciseLevels.map((ex) => (
-                <div
-                  key={ex.exercise}
-                  className="flex justify-between items-center py-3 px-4 rounded-2xl"
-                  style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
-                >
+                <div key={ex.exercise}
+                     className="flex justify-between items-center py-3 px-4 rounded-2xl"
+                     style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
                   <div className="min-w-0">
-                    <span className="font-semibold truncate block" style={{ color: '#F1F5F9' }}>{ex.exercise}</span>
-                    <span className="text-xs tabular-nums" style={{ color: '#475569' }}>
+                    <span className="font-semibold truncate block" style={{ color: C.text }}>
+                      {ex.exercise}
+                    </span>
+                    <span className="text-xs tabular-nums" style={{ color: C.muted }}>
                       {format(ex.oneRM)}{unit} 1RM
                       {ex.isUnilateral && <span className="ml-1 opacity-50"> · {t('perfil.perArm')}</span>}
                     </span>
                   </div>
-                  <span
-                    className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3 font-bold"
-                    style={{ backgroundColor: ex.levelColor + '22', color: ex.levelColor }}
-                  >
+                  <span className="text-xs px-2.5 py-1 rounded-full flex-shrink-0 ml-3 font-black"
+                        style={{ backgroundColor: ex.levelColor + '1A', color: ex.levelColor }}>
                     {t(`level.${ex.level}`)}
                   </span>
                 </div>
@@ -458,34 +454,29 @@ export default function PerfilPage() {
 
         {/* ── Dades Personals ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: C.muted }}>
             {t('perfil.data')}
           </p>
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
-                type="text"
-                inputMode="numeric"
-                value={age}
+                type="text" inputMode="numeric" value={age}
                 onChange={(e) => setAge(e.target.value)}
                 placeholder={t('perfil.age')}
-                className="text-sm rounded-2xl px-4 py-3 outline-none transition-colors tabular-nums"
-                style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-                onBlur={e => (e.target.style.borderColor = '#1E293B')}
+                className="text-sm rounded-2xl px-4 py-3 outline-none transition-all tabular-nums"
+                style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+                onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+                onBlur={e => (e.target.style.borderColor = C.border)}
               />
               <div className="flex gap-2">
                 {(['m', 'f'] as const).map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => setGender(g)}
-                    className="flex-1 py-3 rounded-2xl text-sm font-bold transition-all"
-                    style={{
-                      backgroundColor: gender === g ? '#00F0FF' : '#101626',
-                      color: gender === g ? '#060913' : '#475569',
-                      border: `1px solid ${gender === g ? '#00F0FF' : '#1E293B'}`,
-                    }}
-                  >
+                  <button key={g} onClick={() => setGender(g)}
+                          className="flex-1 py-3 rounded-2xl text-sm font-black transition-all"
+                          style={{
+                            backgroundColor: gender === g ? C.accent : C.surface,
+                            color: gender === g ? C.bg : C.muted,
+                            border: `1px solid ${gender === g ? C.accent : C.border}`,
+                          }}>
                     {g === 'm' ? t('perfil.male') : t('perfil.female')}
                   </button>
                 ))}
@@ -495,58 +486,47 @@ export default function PerfilPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {heightUnit === 'ftin' ? (
                 <div className="flex gap-2">
-                  <input
-                    type="text" inputMode="numeric" value={heightFt}
-                    onChange={(e) => setHeightFt(e.target.value)}
-                    placeholder={t('perfil.heightFt')}
-                    className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
-                    style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                    onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-                    onBlur={e => (e.target.style.borderColor = '#1E293B')}
-                  />
-                  <input
-                    type="text" inputMode="numeric" value={heightIn}
-                    onChange={(e) => setHeightIn(e.target.value)}
-                    placeholder={t('perfil.heightIn')}
-                    className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
-                    style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                    onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-                    onBlur={e => (e.target.style.borderColor = '#1E293B')}
-                  />
+                  <input type="text" inputMode="numeric" value={heightFt}
+                         onChange={(e) => setHeightFt(e.target.value)}
+                         placeholder={t('perfil.heightFt')}
+                         className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                         style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+                         onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+                         onBlur={e => (e.target.style.borderColor = C.border)} />
+                  <input type="text" inputMode="numeric" value={heightIn}
+                         onChange={(e) => setHeightIn(e.target.value)}
+                         placeholder={t('perfil.heightIn')}
+                         className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                         style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+                         onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+                         onBlur={e => (e.target.style.borderColor = C.border)} />
                 </div>
               ) : (
-                <input
-                  type="text" inputMode="numeric" value={height}
-                  onChange={(e) => setHeight(e.target.value)}
-                  placeholder={t('perfil.heightCm')}
-                  className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
-                  style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                  onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-                  onBlur={e => (e.target.style.borderColor = '#1E293B')}
-                />
+                <input type="text" inputMode="numeric" value={height}
+                       onChange={(e) => setHeight(e.target.value)}
+                       placeholder={t('perfil.heightCm')}
+                       className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                       style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+                       onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+                       onBlur={e => (e.target.style.borderColor = C.border)} />
               )}
-              <input
-                type="text" inputMode="numeric" value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder={`${t('perfil.weightLabel')} (${unit})`}
-                className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
-                style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-                onBlur={e => (e.target.style.borderColor = '#1E293B')}
-              />
+              <input type="text" inputMode="numeric" value={weight}
+                     onChange={(e) => setWeight(e.target.value)}
+                     placeholder={`${t('perfil.weightLabel')} (${unit})`}
+                     className="text-sm rounded-2xl px-4 py-3 outline-none tabular-nums"
+                     style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+                     onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+                     onBlur={e => (e.target.style.borderColor = C.border)} />
             </div>
           </div>
 
-          <button
-            onClick={saveProfile}
-            type="button"
-            className="w-full mt-4 py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] hover:opacity-85"
-            style={{
-              backgroundColor: saved ? 'rgba(0,240,255,0.12)' : '#00F0FF',
-              color: saved ? '#00F0FF' : '#060913',
-              border: saved ? '1px solid rgba(0,240,255,0.4)' : '1px solid transparent',
-            }}
-          >
+          <button onClick={saveProfile} type="button"
+                  className="w-full mt-4 py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] hover:opacity-85"
+                  style={{
+                    backgroundColor: saved ? 'transparent' : C.accent,
+                    color: saved ? C.accent : C.bg,
+                    border: `1px solid ${saved ? C.accent + '66' : 'transparent'}`,
+                  }}>
             {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
           </button>
         </div>
@@ -555,32 +535,26 @@ export default function PerfilPage() {
         {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
           <div className="space-y-2">
             {favoriteRoutines.length > 0 && (
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
-                <button
-                  onClick={() => setShowFavorites(v => !v)}
-                  className="flex items-center justify-between w-full px-4 py-3"
-                >
-                  <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: '#475569' }}>
+              <div className="rounded-2xl overflow-hidden"
+                   style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+                <button onClick={() => setShowFavorites(v => !v)}
+                        className="flex items-center justify-between w-full px-4 py-3">
+                  <span className="text-[10px] uppercase tracking-widest font-black" style={{ color: C.muted }}>
                     {t('routines.favoriteRoutines')} ({favoriteRoutines.length})
                   </span>
-                  <svg
-                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
-                    className={`transition-transform duration-200 ${showFavorites ? 'rotate-180' : ''}`}
-                    style={{ color: '#475569' }}
-                  >
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
+                       className={`transition-transform duration-200 ${showFavorites ? 'rotate-180' : ''}`}
+                       style={{ color: C.muted }}>
                     <path d="M6 8L1 3h10L6 8z" />
                   </svg>
                 </button>
                 {showFavorites && (
                   <div className="px-4 pb-3 space-y-2">
                     {favoriteRoutines.map(r => (
-                      <div
-                        key={r.id}
-                        className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
-                        style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}
-                      >
+                      <div key={r.id} className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
+                           style={{ backgroundColor: C.faint, border: `1px solid ${C.border}` }}>
                         <span className="text-yellow-400 flex-shrink-0 text-sm">★</span>
-                        <span className="text-sm font-semibold truncate" style={{ color: '#F1F5F9' }}>{r.name}</span>
+                        <span className="text-sm font-semibold truncate" style={{ color: C.text }}>{r.name}</span>
                       </div>
                     ))}
                   </div>
@@ -589,41 +563,34 @@ export default function PerfilPage() {
             )}
 
             {deletedRoutines.length > 0 && (
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
-                <button
-                  onClick={() => setShowDeleted(v => !v)}
-                  className="flex items-center justify-between w-full px-4 py-3"
-                >
-                  <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: '#475569' }}>
+              <div className="rounded-2xl overflow-hidden"
+                   style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+                <button onClick={() => setShowDeleted(v => !v)}
+                        className="flex items-center justify-between w-full px-4 py-3">
+                  <span className="text-[10px] uppercase tracking-widest font-black" style={{ color: C.muted }}>
                     {t('routines.deletedRoutines')} ({deletedRoutines.length})
                   </span>
-                  <svg
-                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
-                    className={`transition-transform duration-200 ${showDeleted ? 'rotate-180' : ''}`}
-                    style={{ color: '#475569' }}
-                  >
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
+                       className={`transition-transform duration-200 ${showDeleted ? 'rotate-180' : ''}`}
+                       style={{ color: C.muted }}>
                     <path d="M6 8L1 3h10L6 8z" />
                   </svg>
                 </button>
                 {showDeleted && (
                   <div className="px-4 pb-3 space-y-2">
                     {deletedRoutines.map(dr => (
-                      <div
-                        key={dr.id + dr.deletedAt}
-                        className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl"
-                        style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}
-                      >
+                      <div key={dr.id + dr.deletedAt}
+                           className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl"
+                           style={{ backgroundColor: C.faint, border: `1px solid ${C.border}` }}>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate" style={{ color: '#F1F5F9' }}>{dr.name}</p>
-                          <p className="text-xs" style={{ color: '#475569' }}>
+                          <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{dr.name}</p>
+                          <p className="text-xs" style={{ color: C.muted }}>
                             {t('routines.exercisesCount', { count: String(dr.exercises.length) })}
                           </p>
                         </div>
-                        <button
-                          onClick={() => handleRestoreRoutine(dr)}
-                          className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80 active:scale-95"
-                          style={{ backgroundColor: 'rgba(0,240,255,0.1)', color: '#00F0FF', border: '1px solid rgba(0,240,255,0.25)' }}
-                        >
+                        <button onClick={() => handleRestoreRoutine(dr)}
+                                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-black transition-all hover:opacity-80 active:scale-95"
+                                style={{ backgroundColor: C.accent + '1A', color: C.accent, border: `1px solid ${C.accent}33` }}>
                           {t('routines.restore')}
                         </button>
                       </div>
@@ -634,70 +601,66 @@ export default function PerfilPage() {
             )}
 
             {restoreMsg && (
-              <p className="text-sm px-1 font-medium" style={{ color: '#00F0FF' }}>{restoreMsg}</p>
+              <p className="text-sm px-1 font-semibold" style={{ color: C.accent }}>{restoreMsg}</p>
             )}
           </div>
         )}
 
         {/* ── Preferències ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: '#334155' }}>
+          <p className="text-[10px] uppercase tracking-widest mb-3 px-1" style={{ color: C.muted }}>
             {t('preferences.title')}
           </p>
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}>
-            {/* Idioma */}
-            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
-              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('nav.language')}</span>
+          <div className="rounded-2xl overflow-hidden"
+               style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+
+            <div className="flex justify-between items-center px-4 py-3"
+                 style={{ borderBottom: `1px solid ${C.border}` }}>
+              <span className="text-sm font-semibold" style={{ color: C.text }}>{t('nav.language')}</span>
               <LanguageSelector />
             </div>
-            {/* Tema */}
-            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
-              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>
+
+            <div className="flex justify-between items-center px-4 py-3"
+                 style={{ borderBottom: `1px solid ${C.border}` }}>
+              <span className="text-sm font-semibold" style={{ color: C.text }}>
                 {t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
               </span>
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all hover:opacity-75"
-                style={{ backgroundColor: '#0C1220', color: '#F1F5F9', border: '1px solid #1E293B' }}
-                aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
-              >
+              <button onClick={toggleTheme}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-all hover:opacity-75"
+                      style={{ backgroundColor: C.faint, color: C.text, border: `1px solid ${C.border}` }}
+                      aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}>
                 <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
                 <span className="text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
               </button>
             </div>
-            {/* Pes */}
-            <div className="flex justify-between items-center px-4 py-3" style={{ borderBottom: '1px solid #1E293B' }}>
-              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('preferences.weightUnit')}</span>
-              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}>
+
+            <div className="flex justify-between items-center px-4 py-3"
+                 style={{ borderBottom: `1px solid ${C.border}` }}>
+              <span className="text-sm font-semibold" style={{ color: C.text }}>{t('preferences.weightUnit')}</span>
+              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: C.faint, border: `1px solid ${C.border}` }}>
                 {(['kg', 'lb'] as const).map(u => (
-                  <button
-                    key={u}
-                    onClick={() => setUnit(u)}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-bold"
-                    style={{
-                      backgroundColor: unit === u ? '#00F0FF' : 'transparent',
-                      color: unit === u ? '#060913' : '#475569',
-                    }}
-                  >
+                  <button key={u} onClick={() => setUnit(u)}
+                          className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-black"
+                          style={{
+                            backgroundColor: unit === u ? C.accent : 'transparent',
+                            color: unit === u ? C.bg : C.muted,
+                          }}>
                     {u}
                   </button>
                 ))}
               </div>
             </div>
-            {/* Alçada */}
+
             <div className="flex justify-between items-center px-4 py-3">
-              <span className="text-sm font-semibold" style={{ color: '#F1F5F9' }}>{t('preferences.heightUnit')}</span>
-              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: '#0C1220', border: '1px solid #1E293B' }}>
+              <span className="text-sm font-semibold" style={{ color: C.text }}>{t('preferences.heightUnit')}</span>
+              <div className="flex rounded-xl p-0.5" style={{ backgroundColor: C.faint, border: `1px solid ${C.border}` }}>
                 {(['cm', 'ftin'] as const).map(u => (
-                  <button
-                    key={u}
-                    onClick={() => setHeightUnit(u)}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-bold"
-                    style={{
-                      backgroundColor: heightUnit === u ? '#00F0FF' : 'transparent',
-                      color: heightUnit === u ? '#060913' : '#475569',
-                    }}
-                  >
+                  <button key={u} onClick={() => setHeightUnit(u)}
+                          className="px-3 py-1.5 text-xs uppercase tracking-wider rounded-lg transition-all font-black"
+                          style={{
+                            backgroundColor: heightUnit === u ? C.accent : 'transparent',
+                            color: heightUnit === u ? C.bg : C.muted,
+                          }}>
                     {u === 'cm' ? 'cm' : 'ft·in'}
                   </button>
                 ))}
@@ -707,11 +670,9 @@ export default function PerfilPage() {
         </div>
 
         {/* ── Tancar Sessió ── */}
-        <button
-          onClick={async () => { await signOut(); router.replace('/login') }}
-          className="w-full py-3 rounded-2xl text-sm font-bold transition-all hover:opacity-80 active:scale-[0.98]"
-          style={{ color: '#FF4444', backgroundColor: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)' }}
-        >
+        <button onClick={async () => { await signOut(); router.replace('/login') }}
+                className="w-full py-3 rounded-2xl text-sm font-black transition-all hover:opacity-80 active:scale-[0.98]"
+                style={{ color: C.danger, backgroundColor: C.danger + '10', border: `1px solid ${C.danger}28` }}>
           {t('nav.logout')}
         </button>
       </div>

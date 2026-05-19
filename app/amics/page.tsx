@@ -5,6 +5,19 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from '../contexts/LanguageContext'
 
+// ── Paleta ──────────────────────────────────────────────
+const C = {
+  bg:      '#050505',
+  surface: '#121212',
+  border:  '#222222',
+  text:    '#FAFAF7',
+  muted:   '#555555',
+  faint:   '#1A1A1A',
+  accent:  '#E8FF1A',
+  danger:  '#FF4444',
+  warn:    '#FF6B00',
+} as const
+
 type FriendStats = {
   id: string
   username: string
@@ -55,13 +68,8 @@ export default function AmicsPage() {
         logs.filter(l => new Date(l.created_at) >= last30)
             .map(l => new Date(l.created_at).toDateString())
       )
-
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single()
-
+        .from('profiles').select('username').eq('id', user.id).single()
       setMyStats({
         id: user.id,
         username: profile?.username || user.email?.split('@')[0] || 'Tu',
@@ -71,11 +79,7 @@ export default function AmicsPage() {
       })
     } else {
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single()
-
+        .from('profiles').select('username').eq('id', user.id).single()
       setMyStats({
         id: user.id,
         username: profile?.username || user.email?.split('@')[0] || 'Tu',
@@ -115,9 +119,8 @@ export default function AmicsPage() {
         last30.setDate(last30.getDate() - 30)
         const recentDays = new Set(
           (logs || []).filter(l => new Date(l.created_at) >= last30)
-              .map(l => new Date(l.created_at).toDateString())
+                     .map(l => new Date(l.created_at).toDateString())
         )
-
         return {
           id: profile.id,
           username: profile.username,
@@ -135,9 +138,9 @@ export default function AmicsPage() {
 
   function handleReaction(userId: string, type: 'volt' | 'energia' | 'motivar' | 'empenyer') {
     const msgs: Record<string, string> = {
-      volt: '⚡ Volt donat!',
-      energia: '💉 Energia injectada!',
-      motivar: '🐄 Moo-tivat!',
+      volt:     '⚡ Volt donat!',
+      energia:  '💉 Energia injectada!',
+      motivar:  '🐄 Moo-tivat!',
       empenyer: '🚀 Empès!',
     }
     setReactions(prev => ({ ...prev, [userId]: msgs[type] }))
@@ -146,15 +149,14 @@ export default function AmicsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
+      <div className="min-h-screen flex items-center justify-center px-6"
+           style={{ backgroundColor: C.bg, color: C.text }}>
         <div className="text-center max-w-sm space-y-6">
-          <h1 className="text-3xl font-black" style={{ color: '#00F0FF' }}>amics.</h1>
-          <p className="text-sm" style={{ color: '#475569' }}>{t('friends.searchToSeeRanking')}</p>
-          <a
-            href="/login"
-            className="inline-block py-4 px-8 rounded-2xl font-bold text-sm transition-opacity hover:opacity-80"
-            style={{ backgroundColor: '#00F0FF', color: '#060913' }}
-          >
+          <h1 className="text-3xl font-black" style={{ color: C.accent }}>amics.</h1>
+          <p className="text-sm" style={{ color: C.muted }}>{t('friends.searchToSeeRanking')}</p>
+          <a href="/login"
+             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-opacity hover:opacity-80"
+             style={{ backgroundColor: C.accent, color: C.bg }}>
             {t('common.login')}
           </a>
         </div>
@@ -166,14 +168,14 @@ export default function AmicsPage() {
   const sorted = [...allUsers].sort((a, b) => b.consistency - a.consistency)
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#060913', color: '#F1F5F9' }}>
+    <div className="min-h-screen" style={{ backgroundColor: C.bg, color: C.text }}>
 
       {/* ── Header ── */}
       <div className="px-6 pt-10 pb-6 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-black tracking-tight" style={{ color: '#F1F5F9' }}>
-          amics<span style={{ color: '#00F0FF' }}>.</span>
+        <h1 className="text-3xl font-black tracking-tight" style={{ color: C.text }}>
+          amics<span style={{ color: C.accent }}>.</span>
         </h1>
-        <p className="text-xs uppercase tracking-widest mt-0.5 font-bold" style={{ color: '#334155' }}>
+        <p className="text-xs uppercase tracking-widest mt-0.5 font-black" style={{ color: C.muted }}>
           {t('friends.feedSubtitle')}
         </p>
       </div>
@@ -188,16 +190,16 @@ export default function AmicsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={t('friends.searchUser')}
-            className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none transition-colors"
-            style={{ backgroundColor: '#101626', color: '#F1F5F9', border: '1px solid #1E293B' }}
-            onFocus={e => (e.target.style.borderColor = 'rgba(0,240,255,0.4)')}
-            onBlur={e => (e.target.style.borderColor = '#1E293B')}
+            className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none transition-all"
+            style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
+            onFocus={e => (e.target.style.borderColor = C.accent + '66')}
+            onBlur={e => (e.target.style.borderColor = C.border)}
           />
           <button
             onClick={handleSearch}
             disabled={searching || !searchQuery.trim()}
-            className="px-5 py-3 rounded-2xl text-sm font-bold transition-all hover:opacity-80 disabled:opacity-30 active:scale-95"
-            style={{ backgroundColor: '#00F0FF', color: '#060913' }}
+            className="px-5 py-3 rounded-2xl text-sm font-black transition-all hover:opacity-80 disabled:opacity-30 active:scale-95"
+            style={{ backgroundColor: C.accent, color: C.bg }}
             aria-label="Search"
           >
             {searching ? '…' : '🔍'}
@@ -206,16 +208,14 @@ export default function AmicsPage() {
 
         {/* ── Rànquing ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest mb-3 px-1 font-bold" style={{ color: '#334155' }}>
+          <p className="text-[10px] uppercase tracking-widest mb-3 px-1 font-black" style={{ color: C.muted }}>
             {t('friends.ranking')}
           </p>
 
           {sorted.length === 0 ? (
-            <div
-              className="py-8 rounded-2xl text-center"
-              style={{ backgroundColor: '#101626', border: '1px solid #1E293B' }}
-            >
-              <p className="text-sm" style={{ color: '#334155' }}>{t('friends.searchToSeeRanking')}</p>
+            <div className="py-10 rounded-2xl text-center"
+                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+              <p className="text-sm" style={{ color: C.muted }}>{t('friends.searchToSeeRanking')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -226,17 +226,24 @@ export default function AmicsPage() {
                 const isHot = !isMe && u.consistency >= 60 && days <= 3
                 const medal = MEDAL[idx] ?? null
 
-                // Colors de la targeta
                 const cardBorder = isMe
-                  ? 'rgba(0,240,255,0.3)'
+                  ? C.accent + '44'
                   : isDanger
-                    ? 'rgba(255,100,0,0.3)'
-                    : '#1E293B'
+                    ? C.warn + '44'
+                    : C.border
+
                 const cardBg = isMe
-                  ? 'rgba(0,240,255,0.05)'
+                  ? C.accent + '08'
                   : isDanger
-                    ? 'rgba(255,80,0,0.05)'
-                    : '#101626'
+                    ? C.warn + '08'
+                    : C.surface
+
+                // Color consistència
+                const consistencyColor = u.consistency >= 70
+                  ? C.accent
+                  : u.consistency >= 40
+                    ? C.text
+                    : C.muted
 
                 return (
                   <div
@@ -244,63 +251,62 @@ export default function AmicsPage() {
                     className="rounded-2xl px-4 pt-4 pb-3 relative overflow-hidden"
                     style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
                   >
-                    {/* Línia superior de color per "jo" */}
+                    {/* Línia superior per a "jo" */}
                     {isMe && (
-                      <div
-                        className="absolute top-0 left-0 right-0 h-px"
-                        style={{ background: 'linear-gradient(90deg, transparent, #00F0FF, transparent)' }}
-                      />
+                      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                           style={{ background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+                    )}
+
+                    {/* Línia superior perill */}
+                    {isDanger && !isMe && (
+                      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                           style={{ background: `linear-gradient(90deg, transparent, ${C.warn}, transparent)` }} />
                     )}
 
                     {/* Fila principal */}
                     <div className="flex items-start gap-3">
+
                       {/* Rang */}
-                      <span className="text-sm tabular-nums font-bold w-6 text-center flex-shrink-0 mt-1" style={{ color: '#334155' }}>
+                      <span className="text-sm tabular-nums font-black w-6 text-center flex-shrink-0 mt-1"
+                            style={{ color: C.muted }}>
                         {medal ?? idx + 1}
                       </span>
 
                       {/* Avatar */}
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 select-none"
-                        style={{
-                          backgroundColor: isMe ? 'rgba(0,240,255,0.15)' : '#1E293B',
-                          color: isMe ? '#00F0FF' : '#475569',
-                          border: `1px solid ${isMe ? 'rgba(0,240,255,0.3)' : '#2D3748'}`,
-                        }}
-                      >
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 select-none"
+                           style={{
+                             backgroundColor: isMe ? C.accent + '20' : C.faint,
+                             color: isMe ? C.accent : C.muted,
+                             border: `1px solid ${isMe ? C.accent + '44' : C.border}`,
+                           }}>
                         {u.username[0]?.toUpperCase()}
                       </div>
 
-                      {/* Nom + info */}
+                      {/* Nom + badges */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-bold truncate" style={{ color: '#F1F5F9' }}>{u.username}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-black truncate" style={{ color: C.text }}>{u.username}</p>
+
                           {isMe && (
-                            <span
-                              className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                              style={{ backgroundColor: 'rgba(0,240,255,0.15)', color: '#00F0FF' }}
-                            >
+                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: C.accent + '20', color: C.accent }}>
                               {t('friends.youLabel')}
                             </span>
                           )}
                           {isHot && (
-                            <span
-                              className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                              style={{ backgroundColor: 'rgba(0,240,255,0.1)', color: '#00F0FF', border: '1px solid rgba(0,240,255,0.25)' }}
-                            >
+                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: C.accent + '15', color: C.accent, border: `1px solid ${C.accent}30` }}>
                               ⚡ {t('friends.onStreak')}
                             </span>
                           )}
                           {isDanger && (
-                            <span
-                              className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                              style={{ backgroundColor: 'rgba(255,80,0,0.15)', color: '#FF6B00', border: '1px solid rgba(255,80,0,0.3)' }}
-                            >
+                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: C.warn + '20', color: C.warn, border: `1px solid ${C.warn}40` }}>
                               ⚠️ {days === 999 ? t('friends.noActivity') : t('friends.daysInactive', { days: String(days) })}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: '#475569' }}>
+                        <p className="text-xs mt-0.5" style={{ color: C.muted }}>
                           {u.lastWorkout
                             ? new Date(u.lastWorkout).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
                             : t('friends.noActivity')}
@@ -309,77 +315,72 @@ export default function AmicsPage() {
 
                       {/* Consistència */}
                       <div className="text-right flex-shrink-0">
-                        <p
-                          className="text-xl font-black tabular-nums"
-                          style={{
-                            color: u.consistency >= 70
-                              ? '#00F0FF'
-                              : u.consistency >= 40
-                                ? '#F1F5F9'
-                                : '#334155',
-                          }}
-                        >
+                        <p className="text-xl font-black tabular-nums" style={{ color: consistencyColor }}>
                           {u.consistency}<span className="text-sm font-bold">%</span>
                         </p>
-                        <p className="text-[9px] uppercase tracking-wider" style={{ color: '#334155' }}>
+                        <p className="text-[9px] uppercase tracking-wider" style={{ color: C.muted }}>
                           {t('friends.consistency')}
                         </p>
                       </div>
                     </div>
 
                     {/* Barra de consistència */}
-                    <div className="mt-3 mx-9" style={{ paddingLeft: '3rem' }}>
-                      <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1E293B' }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${u.consistency}%`,
-                            background: u.consistency >= 70
-                              ? 'linear-gradient(90deg, #00F0FF, #0066FF)'
-                              : u.consistency >= 40
-                                ? 'linear-gradient(90deg, #a855f7, #6366f1)'
-                                : '#334155',
-                          }}
-                        />
+                    <div className="mt-3" style={{ paddingLeft: '3.75rem' }}>
+                      <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
+                        <div className="h-full rounded-full transition-all duration-700"
+                             style={{
+                               width: `${u.consistency}%`,
+                               backgroundColor: u.consistency >= 70
+                                 ? C.accent
+                                 : u.consistency >= 40
+                                   ? '#a855f7'
+                                   : C.muted,
+                             }} />
                       </div>
                     </div>
 
-                    {/* Feedback de reacció */}
+                    {/* Feedback reacció */}
                     {reactions[u.id] && (
-                      <p
-                        className="mt-2 text-xs font-bold text-center"
-                        style={{ color: '#00F0FF' }}
-                      >
+                      <p className="mt-2 text-xs font-black text-center" style={{ color: C.accent }}>
                         {reactions[u.id]}
                       </p>
                     )}
 
-                    {/* ── Botó d'acció ── */}
+                    {/* ── Botons d'acció ── */}
                     {!isMe && (
-                      <div className="mt-3">
-                        <button
-                          onClick={() => handleReaction(u.id, 'motivar')}
-                          className="w-full py-2 rounded-xl text-xs font-black transition-all duration-200 hover:scale-105 active:scale-95"
-                          style={{
-                            backgroundColor: 'rgba(0,240,255,0.08)',
-                            color: '#00F0FF',
-                            border: '1px solid rgba(0,240,255,0.2)',
-                          }}
-                          onMouseEnter={e => {
-                            const el = e.currentTarget
-                            el.style.backgroundColor = '#00F0FF'
-                            el.style.color = '#060913'
-                            el.style.borderColor = '#00F0FF'
-                          }}
-                          onMouseLeave={e => {
-                            const el = e.currentTarget
-                            el.style.backgroundColor = 'rgba(0,240,255,0.08)'
-                            el.style.color = '#00F0FF'
-                            el.style.borderColor = 'rgba(0,240,255,0.2)'
-                          }}
-                        >
-                          {t('friends.mootivate')}
-                        </button>
+                      <div className="mt-3 flex gap-2">
+                        {isDanger ? (
+                          <>
+                            {/* Moo-tivar */}
+                            <ActionButton
+                              label={t('friends.mootivate')}
+                              baseColor={C.warn}
+                              onClick={() => handleReaction(u.id, 'motivar')}
+                            />
+                            {/* Empènyer */}
+                            <ActionButton
+                              label={t('friends.pushThem')}
+                              baseColor={C.danger}
+                              onClick={() => handleReaction(u.id, 'empenyer')}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            {/* Donar Volt */}
+                            <ActionButton
+                              label={t('friends.giveVolt')}
+                              baseColor={C.accent}
+                              darkText
+                              onClick={() => handleReaction(u.id, 'volt')}
+                            />
+                            {/* Injectar Energia */}
+                            <ActionButton
+                              label={t('friends.injectEnergy')}
+                              baseColor="#a855f7"
+                              onClick={() => handleReaction(u.id, 'energia')}
+                            />
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -392,5 +393,44 @@ export default function AmicsPage() {
 
       <div className="h-20" />
     </div>
+  )
+}
+
+// ── Component botó d'acció reutilitzable ────────────────
+function ActionButton({
+  label,
+  baseColor,
+  darkText = false,
+  onClick,
+}: {
+  label: string
+  baseColor: string
+  darkText?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex-1 py-2 rounded-xl text-xs font-black transition-all duration-150 hover:scale-[1.03] active:scale-95"
+      style={{
+        backgroundColor: baseColor + '15',
+        color: baseColor,
+        border: `1px solid ${baseColor}33`,
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget
+        el.style.backgroundColor = baseColor
+        el.style.color = darkText ? '#050505' : '#FAFAF7'
+        el.style.borderColor = baseColor
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget
+        el.style.backgroundColor = baseColor + '15'
+        el.style.color = baseColor
+        el.style.borderColor = baseColor + '33'
+      }}
+    >
+      {label}
+    </button>
   )
 }
