@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useContext, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,7 @@ const C = {
   text:    '#F5F5F3',
   muted:   '#5C5757',
   faint:   '#1E1A1A',
-  accent:  '#FF4500',
+  accent:  '#ffff3f',
   danger:  '#FF4444',
 } as const
 
@@ -89,6 +89,14 @@ export default function PerfilPage() {
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
   const [showFavorites, setShowFavorites] = useState(false)
   const [showDeleted, setShowDeleted] = useState(false)
+  const [username, setUsername] = useState('')
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameInput, setUsernameInput] = useState('')
+  const [usernameError, setUsernameError] = useState('')
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const savedUnit = localStorage.getItem('height_unit') as 'cm' | 'ftin'
@@ -97,7 +105,7 @@ export default function PerfilPage() {
 
   useEffect(() => { loadProfile() }, [unit, heightUnit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
-  useEffect(() => { if (user) { loadFavoritesAndDeleted(); calculateStreak() } }, [user])
+  useEffect(() => { if (user) { loadFavoritesAndDeleted(); calculateStreak(); loadUserProfile() } }, [user])
 
   function setHeightUnit(u: 'cm' | 'ftin') {
     if (u === 'ftin' && height) {
@@ -325,6 +333,80 @@ export default function PerfilPage() {
     setTimeout(() => setRestoreMsg(null), 3000)
   }
 
+  async function loadUserProfile() {
+    if (!user) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single()
+    if (data) {
+      setUsername(data.username || '')
+      setAvatarUrl(data.avatar_url || null)
+    }
+  }
+
+  async function handleSaveUsername() {
+    const trimmed = usernameInput.trim()
+    if (!trimmed) return
+    if (trimmed === username) { setEditingUsername(false); return }
+    setSavingUsername(true)
+    setUsernameError('')
+
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('username', trimmed)
+      .neq('id', user!.id)
+      .maybeSingle()
+
+    if (existing) {
+      setUsernameError('Aquest nom d\'usuari ja existeix')
+      setSavingUsername(false)
+      return
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username: trimmed })
+      .eq('id', user!.id)
+
+    if (!error) {
+      setUsername(trimmed)
+      setEditingUsername(false)
+    } else {
+      setUsernameError('Error en desar')
+    }
+    setSavingUsername(false)
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `${user.id}/avatar.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true })
+
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path)
+      const url = `${urlData.publicUrl}?t=${Date.now()}`
+      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
+      setAvatarUrl(url)
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    setUploadingAvatar(false)
+  }
+
+  const userCode = `#${user!.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`
+
   const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || C.muted
   const lvlNum = LEVEL_TO_NUM[overallLevel] || 1
   const xpPct = overallAvgPct > 0 ? overallAvgPct : Math.round((lvlNum / 6) * 100)
@@ -355,28 +437,109 @@ export default function PerfilPage() {
       <div className="px-6 pt-10 pb-2 max-w-2xl mx-auto">
         <div className="flex items-start gap-4">
 
-          {/* Avatar + badge LVL */}
+          {/* Avatar + badge LVL + upload */}
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black select-none"
-                 style={{
-                   backgroundColor: C.surface,
-                   border: streak > 0 ? `1px solid ${C.accent}55` : `1px solid ${C.border}`,
-                   color: C.accent,
-                   boxShadow: streak > 0 ? `0 0 18px ${C.accent}22` : 'none',
-                 }}>
-              {(user.email?.[0] || '?').toUpperCase()}
-            </div>
+            <label className="cursor-pointer block" title="Canvia la foto de perfil">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center text-2xl font-black select-none relative"
+                   style={{
+                     backgroundColor: C.surface,
+                     border: streak > 0 ? `1px solid ${C.accent}55` : `1px solid ${C.border}`,
+                     color: C.accent,
+                     boxShadow: streak > 0 ? `0 0 18px ${C.accent}22` : 'none',
+                   }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                  : (user.email?.[0] || '?').toUpperCase()
+                }
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center"
+                       style={{ backgroundColor: '#00000099' }}>
+                    <span className="text-xs font-black" style={{ color: C.accent }}>…</span>
+                  </div>
+                )}
+                {/* Overlay càmera en hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                     style={{ backgroundColor: '#00000077' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                </div>
+              </div>
+            </label>
             <div className="absolute -bottom-1.5 -right-1.5 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums"
                  style={{ backgroundColor: C.accent, color: C.bg }}>
               LVL {lvlNum}
             </div>
           </div>
 
-          {/* Nom + nivell + barra XP */}
+          {/* Nom + ID permanent + nivell + barra XP */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <h1 className="text-xl font-black truncate" style={{ color: C.text }}>
-              {user.email?.split('@')[0]}
-            </h1>
+
+            {/* Username editable */}
+            {editingUsername ? (
+              <div className="space-y-1.5 mb-1">
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    value={usernameInput}
+                    onChange={e => { setUsernameInput(e.target.value); setUsernameError('') }}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSaveUsername(); if (e.key === 'Escape') setEditingUsername(false) }}
+                    className="flex-1 text-sm font-black rounded-xl px-3 py-1.5 outline-none"
+                    style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.accent}66` }}
+                    maxLength={30}
+                  />
+                  <button
+                    onClick={handleSaveUsername}
+                    disabled={savingUsername || !usernameInput.trim()}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black transition-all disabled:opacity-40"
+                    style={{ backgroundColor: C.accent, color: C.bg }}
+                  >
+                    {savingUsername ? '…' : '✓'}
+                  </button>
+                  <button
+                    onClick={() => { setEditingUsername(false); setUsernameError('') }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black transition-all hover:opacity-75"
+                    style={{ backgroundColor: C.surface, color: C.muted, border: `1px solid ${C.border}` }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                {usernameError && (
+                  <p className="text-[11px] font-black" style={{ color: '#FF4444' }}>{usernameError}</p>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-xl font-black truncate" style={{ color: C.text }}>
+                  {username || user.email?.split('@')[0]}
+                </h1>
+                <button
+                  onClick={() => { setUsernameInput(username || user.email?.split('@')[0] || ''); setEditingUsername(true) }}
+                  className="flex-shrink-0 transition-all hover:opacity-75"
+                  style={{ color: C.muted }}
+                  aria-label="Editar nom d'usuari"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Codi permanent */}
+            <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: C.muted }}>
+              {userCode}
+            </p>
+
             {overallLevel && (
               <p className="text-[11px] uppercase tracking-widest font-black" style={{ color: C.accent }}>
                 {t(`level.${overallLevel}`)}

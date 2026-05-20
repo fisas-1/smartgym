@@ -13,7 +13,7 @@ const C = {
   text:    '#F5F5F3',
   muted:   '#5C5757',
   faint:   '#1E1A1A',
-  accent:  '#FF4500',
+  accent:  '#ffff3f',
   danger:  '#FF4444',
   warn:    '#FF6B00',
 } as const
@@ -24,6 +24,7 @@ type FriendStats = {
   totalWorkouts: number
   consistency: number
   lastWorkout: string | null
+  avatarUrl?: string | null
 }
 
 function daysSince(lastWorkout: string | null): number {
@@ -69,23 +70,25 @@ export default function AmicsPage() {
             .map(l => new Date(l.created_at).toDateString())
       )
       const { data: profile } = await supabase
-        .from('profiles').select('username').eq('id', user.id).single()
+        .from('profiles').select('username, avatar_url').eq('id', user.id).single()
       setMyStats({
         id: user.id,
         username: profile?.username || user.email?.split('@')[0] || 'Tu',
         totalWorkouts: uniqueDays.size,
         consistency: Math.round((recentDays.size / 30) * 100),
         lastWorkout: logs[0]?.created_at || null,
+        avatarUrl: profile?.avatar_url || null,
       })
     } else {
       const { data: profile } = await supabase
-        .from('profiles').select('username').eq('id', user.id).single()
+        .from('profiles').select('username, avatar_url').eq('id', user.id).single()
       setMyStats({
         id: user.id,
         username: profile?.username || user.email?.split('@')[0] || 'Tu',
         totalWorkouts: 0,
         consistency: 0,
         lastWorkout: null,
+        avatarUrl: profile?.avatar_url || null,
       })
     }
   }
@@ -108,11 +111,10 @@ export default function AmicsPage() {
 
     if (profiles && profiles.length > 0) {
       const usersWithStats = await Promise.all(profiles.map(async (profile) => {
-        const { data: logs } = await supabase
-          .from('workout_logs')
-          .select('created_at')
-          .eq('user_id', profile.id)
-          .order('created_at', { ascending: false })
+        const [{ data: logs }, { data: prof }] = await Promise.all([
+          supabase.from('workout_logs').select('created_at').eq('user_id', profile.id).order('created_at', { ascending: false }),
+          supabase.from('profiles').select('avatar_url').eq('id', profile.id).single(),
+        ])
 
         const uniqueDays = new Set(logs?.map(l => new Date(l.created_at).toDateString()) || [])
         const last30 = new Date()
@@ -127,6 +129,7 @@ export default function AmicsPage() {
           totalWorkouts: uniqueDays.size,
           consistency: Math.round((recentDays.size / 30) * 100),
           lastWorkout: logs && logs.length > 0 ? logs[0].created_at : null,
+          avatarUrl: prof?.avatar_url || null,
         }
       }))
       setResults(usersWithStats)
@@ -280,19 +283,25 @@ export default function AmicsPage() {
                       </span>
 
                       {/* Avatar */}
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 select-none"
+                      <div className="w-9 h-9 rounded-xl flex-shrink-0 select-none overflow-hidden flex items-center justify-center text-sm font-black"
                            style={{
                              backgroundColor: isMe ? C.accent + '20' : C.faint,
                              color: isMe ? C.accent : C.muted,
                              border: `1px solid ${isMe ? C.accent + '44' : C.border}`,
                            }}>
-                        {u.username[0]?.toUpperCase()}
+                        {u.avatarUrl
+                          ? <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
+                          : u.username[0]?.toUpperCase()
+                        }
                       </div>
 
                       {/* Nom + badges */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-black truncate" style={{ color: C.text }}>{u.username}</p>
+                          <span className="text-[9px] tabular-nums" style={{ color: C.muted }}>
+                            {`#${u.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`}
+                          </span>
 
                           {isMe && (
                             <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
