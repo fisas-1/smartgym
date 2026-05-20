@@ -405,8 +405,6 @@ export default function PerfilPage() {
     setUploadingAvatar(false)
   }
 
-  const userCode = `#${user!.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`
-
   const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || C.muted
   const lvlNum = LEVEL_TO_NUM[overallLevel] || 1
   const xpPct = overallAvgPct > 0 ? overallAvgPct : Math.round((lvlNum / 6) * 100)
@@ -429,6 +427,8 @@ export default function PerfilPage() {
       </div>
     )
   }
+
+  const userCode = `#${user.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.bg, color: C.text }}>
