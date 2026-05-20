@@ -141,8 +141,8 @@ export default function AmicsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
         <div className="text-center max-w-sm space-y-6">
-          <p className="section-label mb-1">feed de competició</p>
-          <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">Amics.</h1>
+          <p className="section-label mb-1">{t('friends.feedSubtitle')}</p>
+          <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">{t('friends.title')}.</h1>
           <p className="text-sm text-[var(--text-3)]">{t('friends.searchToSeeRanking')}</p>
           <a
             href="/login"
@@ -163,9 +163,9 @@ export default function AmicsPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
       <div className="px-5 pt-12 pb-0 max-w-2xl mx-auto">
-        <p className="section-label mb-1">feed de competició</p>
+        <p className="section-label mb-1">{t('friends.feedSubtitle')}</p>
         <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
-          Amics.
+          {t('friends.title')}.
         </h1>
       </div>
 

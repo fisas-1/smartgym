@@ -63,7 +63,7 @@ function LoggedOutView({ t }: { t: (key: string) => string }) {
         <div className="text-center space-y-2">
           <Logo size="lg" />
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.12em' }}>
-            el teu gimnàs
+            {t('home.tagline')}
           </p>
         </div>
 
@@ -644,7 +644,7 @@ export default function HomePage() {
             <button onClick={endSession}
               className="px-3 py-1.5 rounded-xl text-xs transition-colors active:scale-95"
               style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
-              ■ Parar
+              ■ {t('timer.stop')}
             </button>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
               style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
@@ -659,9 +659,9 @@ export default function HomePage() {
           style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
           <div className="grid grid-cols-3">
             {[
-              { label: 'sèries', value: `${completedSetsToday}`, sub: `/${totalSetsTarget}`, accent: false },
-              { label: 'volum', value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 ? `${volPct >= 0 ? '+' : ''}${volPct}%` : '', accent: volPct > 0 },
-              { label: 'sessió', value: `${elapsedMins}`, sub: 'min', accent: false },
+              { label: t('workouts.sets'), value: `${completedSetsToday}`, sub: `/${totalSetsTarget}`, accent: false },
+              { label: t('home.volume'), value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 ? `${volPct >= 0 ? '+' : ''}${volPct}%` : '', accent: volPct > 0 },
+              { label: t('home.session'), value: `${elapsedMins}`, sub: 'min', accent: false },
             ].map((s, i) => (
               <div key={i} className="py-3 text-center" style={{ borderLeft: i > 0 ? '1px solid var(--rule-soft)' : 'none' }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)' }}>{s.label}</div>
@@ -1062,7 +1062,7 @@ export default function HomePage() {
   const inRange = !isNaN(rNum) && rNum >= repsMin && rNum <= repsMax
   const isPRweight = !isNaN(wNum) && wNum > 0 && (bestPerExercise[exercise] || 0) > 0 && calc1RM(toKg(wNum), rNum || 1) > (bestPerExercise[exercise] || 0)
   const repPills = [5, 8, 10, 12, 15, 20]
-  const rirLabels: Record<string, string> = { '0': 'fallo', '1': 'molt', '2': 'dur', '3': 'còmode', '4': 'fàcil' }
+  const rirLabels: Record<string, string> = { '0': t('home.rir0'), '1': t('home.rir1'), '2': t('home.rir2'), '3': t('home.rir3'), '4': t('home.rir4') }
   const ctaEnabled = !isNaN(rNum) && rNum > 0
 
   return (
@@ -1073,7 +1073,7 @@ export default function HomePage() {
         <div className="dop-slide-up">
           <Logo />
           <p className="mt-1" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.06em' }}>
-            Bon dia, {userName || 'usuari'} — entrenem?
+            {t(greetingKey, { name: userName }).replace(/\.$/, '')} {t('home.trainQuestion')}
           </p>
         </div>
         {/* Streak chip */}
@@ -1089,13 +1089,13 @@ export default function HomePage() {
         <div className="mx-5 mb-3 rounded-[14px] px-4 py-3 flex items-center justify-between dop-slide-up"
           style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
           <div>
-            <p className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rutina d'avui</p>
+            <p className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('home.todayRoutine')}</p>
             <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text)' }}>{todayRoutine.name}</p>
           </div>
           <button onClick={startSession}
             className="px-4 py-2 rounded-xl font-medium text-sm transition-all active:scale-95 hover:opacity-90"
             style={{ background: 'var(--accent)', color: '#fff' }}>
-            Iniciar
+            {t('home.startSession')}
           </button>
         </div>
       )}
@@ -1105,8 +1105,8 @@ export default function HomePage() {
         style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
         <div className="grid grid-cols-3">
           {[
-            { label: 'sèries', value: savedSets.length > 0 ? String(savedSets.length) : '—', sub: 'avui', accent: false },
-            { label: 'volum', value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 && todayVolume > 0 ? `+${Math.round(((todayVolume - prevVolume) / prevVolume) * 100)}%` : '', accent: todayVolume > prevVolume },
+            { label: t('workouts.sets'), value: savedSets.length > 0 ? String(savedSets.length) : '—', sub: t('home.today'), accent: false },
+            { label: t('home.volume'), value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 && todayVolume > 0 ? `+${Math.round(((todayVolume - prevVolume) / prevVolume) * 100)}%` : '', accent: todayVolume > prevVolume },
             { label: '1RM', value: displayedOneRM > 0 ? `${format(displayedOneRM)}` : '—', sub: displayedOneRM > 0 ? unit : '', accent: false },
           ].map((s, i) => (
             <div key={i} className="py-3 text-center" style={{ borderLeft: i > 0 ? '1px solid var(--rule-soft)' : 'none' }}>
@@ -1144,7 +1144,7 @@ export default function HomePage() {
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
-              exercici
+              {t('workouts.exercise')}
             </span>
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hidden">
@@ -1208,11 +1208,11 @@ export default function HomePage() {
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
-              pes ({unit})
+              {t('workouts.weight')} ({unit})
             </span>
             {!isNaN(wNum) && wNum > 0 && lastSessions[exercise] && (
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>
-                anterior {format(unit === 'kg' ? (lastSessions[exercise]?.sets[0]?.weight || 0) : fromKg(lastSessions[exercise]?.sets[0]?.weight || 0))}{unit}
+                {t('workouts.previous').toLowerCase()} {format(unit === 'kg' ? (lastSessions[exercise]?.sets[0]?.weight || 0) : fromKg(lastSessions[exercise]?.sets[0]?.weight || 0))}{unit}
               </span>
             )}
           </div>
@@ -1225,7 +1225,7 @@ export default function HomePage() {
             {isPRweight && (
               <span className="absolute top-3 right-4 dop-scale-pop"
                 style={{ fontFamily: 'var(--font-mono)', fontSize: 9, padding: '2px 7px', background: 'var(--accent)', color: '#fff', borderRadius: 9999, letterSpacing: '0.06em', fontWeight: 500 }}>
-                RÈCORD
+                {t('home.record').toUpperCase()}
               </span>
             )}
             <button type="button"
@@ -1261,10 +1261,10 @@ export default function HomePage() {
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
-              reps
+              {t('workouts.reps')}
             </span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>
-              obj. {repsMin}–{repsMax}
+              {t('home.objective', { min: repsMin, max: repsMax })}
             </span>
           </div>
           <div className="relative rounded-[18px] p-4" style={{ background: 'var(--input-big)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
@@ -1287,7 +1287,7 @@ export default function HomePage() {
                 {inRange && rNum > 0 && (
                   <span className="absolute -top-1 right-2 dop-scale-pop"
                     style={{ fontFamily: 'var(--font-mono)', fontSize: 9, padding: '2px 6px', background: 'var(--accent-tint)', color: 'var(--accent)', borderRadius: 9999, letterSpacing: '0.06em', fontWeight: 500 }}>
-                    OBJECTIU ✓
+                    {t('home.target').toUpperCase()} ✓
                   </span>
                 )}
               </div>
@@ -1328,7 +1328,7 @@ export default function HomePage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
               RIR
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>repeticions en reserva</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>{t('home.repsInReserve')}</span>
           </div>
           <div className="flex gap-1.5">
             {['0','1','2','3','4'].map(n => (
@@ -1351,13 +1351,13 @@ export default function HomePage() {
         {(displayedOneRM > 0 || bestPerExercise[exercise]) && (
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-[14px] p-3" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>1RM estimat</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>{t('home.estimated1RM')}</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 500, color: displayedOneRM > (bestPerExercise[exercise] || 0) ? 'var(--accent)' : 'var(--text)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                 {displayedOneRM || '—'}<span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 2 }}>{unit}</span>
               </div>
             </div>
             <div className="rounded-[14px] p-3" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>millor 1RM</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>{t('home.best1RM')}</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 500, color: 'var(--text-2)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                 {bestPerExercise[exercise] || '—'}<span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 2 }}>{unit}</span>
               </div>
@@ -1370,13 +1370,13 @@ export default function HomePage() {
           <button type="button" onClick={() => setNotesOpen(true)}
             className="flex items-center gap-2 transition-colors"
             style={{ background: 'transparent', border: 'none', color: 'var(--text-3)', fontFamily: 'var(--font-sans)', fontSize: 12, cursor: 'pointer', padding: '4px 0' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14 }}>+</span> afegir nota
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14 }}>+</span> {t('home.addNote')}
           </button>
         ) : (
           <div className="animate-slide-up">
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>nota</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>{t('home.note')}</div>
             <textarea value={note} onChange={e => setNote(e.target.value)}
-              placeholder="Sensació, tècnica, dolor..."
+              placeholder={t('workouts.notesPlaceholder')}
               className="w-full rounded-[14px] px-4 py-3 text-sm resize-none outline-none"
               style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-sans)', minHeight: 64 }} />
           </div>
@@ -1396,13 +1396,13 @@ export default function HomePage() {
             }}>
             {formLoading ? t('common.saving') : ctaEnabled
               ? <span className="flex items-center justify-center gap-2">
-                  <span>Anotar sèrie</span>
+                  <span>{t('home.logSetAction')}</span>
                   <span style={{ opacity: 0.75, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
                     · {weight || 0}<span style={{ opacity: 0.6 }}>{unit}</span> × {reps}
                   </span>
                   {isPRweight && <span>🏆</span>}
                 </span>
-              : <span>Posa les reps per anotar</span>
+              : <span>{t('home.enterReps')}</span>
             }
           </button>
         </div>
