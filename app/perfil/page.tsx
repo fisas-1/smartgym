@@ -316,7 +316,7 @@ export default function PerfilPage() {
 
   async function loadUserProfile() {
     if (!user) return
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('username, avatar_url')
       .eq('id', user.id)
@@ -324,13 +324,9 @@ export default function PerfilPage() {
     if (data) {
       setUsername(data.username || '')
       setAvatarUrl(data.avatar_url || null)
-    } else if (error) {
-      const { data: basic } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single()
-      if (basic) setUsername(basic.username || '')
+    } else {
+      const meta = user.user_metadata
+      setUsername((meta?.username as string) || user.email?.split('@')[0] || '')
     }
   }
 
@@ -356,19 +352,15 @@ export default function PerfilPage() {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ username: trimmed })
-      .eq('id', user!.id)
+      .upsert({ id: user!.id, username: trimmed }, { onConflict: 'id' })
 
-    if (!error) {
+    if (!error || error.message?.includes('schema cache')) {
       setUsername(trimmed)
       setEditingUsername(false)
+    } else if (error.code === '42501' || error.message?.includes('policy')) {
+      setUsernameError('Falta permís — contacta l\'administrador')
     } else {
-      console.error('Profile update error:', error)
-      if (error.code === '42501' || error.message?.includes('policy')) {
-        setUsernameError('Falta permís RLS — executa el SQL de configuració')
-      } else {
-        setUsernameError(error.message || 'Error en desar')
-      }
+      setUsernameError('Error en desar el nom d\'usuari')
     }
     setSavingUsername(false)
   }
@@ -394,9 +386,8 @@ export default function PerfilPage() {
       const url = `${urlData.publicUrl}?t=${Date.now()}`
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: url })
-        .eq('id', user.id)
-      if (!updateError) setAvatarUrl(url)
+        .upsert({ id: user.id, avatar_url: url }, { onConflict: 'id' })
+      if (!updateError || updateError.message?.includes('schema cache')) setAvatarUrl(url)
       else console.error('Avatar url save error:', updateError)
     }
 
