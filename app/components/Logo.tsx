@@ -16,7 +16,6 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
       style={{ fontFamily: 'var(--font-sans, system-ui, sans-serif)' }}
     >
       <span className="opacity-70">gym</span>
-      <span className="text-[var(--accent)] font-bold">.</span>
       moo
       <span className="text-[var(--accent)] font-bold">.</span>
     </span>

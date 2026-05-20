@@ -107,6 +107,7 @@ export default function HomePage() {
 
   // ── Session state ──────────────────────────────────────────────────────────
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null)
+  const [todayRoutine, setTodayRoutine] = useState<{ id: string; name: string } | null>(null)
   const [sessionLoading, setSessionLoading] = useState(true)
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([])
   const [routineSets, setRoutineSets] = useState<Record<string, RoutineSet[]>>({})
@@ -215,6 +216,8 @@ export default function HomePage() {
       const today = new Date().getDay()
       const todayRoutineId = Object.entries(routineDays).find(([, days]) => days.includes(today))?.[0]
 
+      await Promise.all([loadTodayStats(), loadStreak()])
+
       if (!todayRoutineId) { setSessionLoading(false); return }
 
       const { data: routine } = await supabase.from('routines').select('*').eq('id', todayRoutineId).eq('user_id', user!.id).single()
@@ -222,30 +225,39 @@ export default function HomePage() {
 
       const todayStr = new Date().toISOString().slice(0, 10)
       const stored = localStorage.getItem('active_session')
-      let session: ActiveSession
       if (stored) {
         const parsed = JSON.parse(stored)
         const sessionDay = new Date(parsed.startTime).toISOString().slice(0, 10)
         if (parsed.routineId === todayRoutineId && sessionDay === todayStr) {
-          session = parsed
+          setActiveSession(parsed)
+          await loadRoutineData(todayRoutineId)
         } else {
-          session = { routineId: todayRoutineId, routineName: routine.name, startTime: Date.now() }
-          localStorage.setItem('active_session', JSON.stringify(session))
+          localStorage.removeItem('active_session')
+          setTodayRoutine({ id: todayRoutineId, name: routine.name })
         }
       } else {
-        session = { routineId: todayRoutineId, routineName: routine.name, startTime: Date.now() }
-        localStorage.setItem('active_session', JSON.stringify(session))
+        setTodayRoutine({ id: todayRoutineId, name: routine.name })
       }
-      setActiveSession(session)
-
-      await Promise.all([
-        loadRoutineData(todayRoutineId),
-        loadTodayStats(),
-        loadStreak(),
-      ])
     } finally {
       setSessionLoading(false)
     }
+  }
+
+  async function startSession() {
+    if (!todayRoutine) return
+    const session = { routineId: todayRoutine.id, routineName: todayRoutine.name, startTime: Date.now() }
+    localStorage.setItem('active_session', JSON.stringify(session))
+    setActiveSession(session)
+    await loadRoutineData(todayRoutine.id)
+  }
+
+  function endSession() {
+    const r = activeSession ? { id: activeSession.routineId, name: activeSession.routineName } : null
+    localStorage.removeItem('active_session')
+    setActiveSession(null)
+    setTodayRoutine(r)
+    setRoutineExercises([])
+    setRoutineSets({})
   }
 
   async function loadRoutineData(routineId: string) {
@@ -627,11 +639,18 @@ export default function HomePage() {
               {capitalizedDay} · {activeSession.routineName}
             </p>
           </div>
-          {/* Streak chip */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl dop-slide-up"
-            style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
-            <span className="dop-flame text-sm">🔥</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{streak}</span>
+          {/* Streak + stop */}
+          <div className="flex items-center gap-2 dop-slide-up">
+            <button onClick={endSession}
+              className="px-3 py-1.5 rounded-xl text-xs transition-colors active:scale-95"
+              style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+              ■ Parar
+            </button>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+              style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
+              <span className="dop-flame text-sm">🔥</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{streak}</span>
+            </div>
           </div>
         </div>
 
@@ -1064,6 +1083,22 @@ export default function HomePage() {
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{streak}</span>
         </div>
       </div>
+
+      {/* Start session banner */}
+      {todayRoutine && (
+        <div className="mx-5 mb-3 rounded-[14px] px-4 py-3 flex items-center justify-between dop-slide-up"
+          style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
+          <div>
+            <p className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rutina d'avui</p>
+            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text)' }}>{todayRoutine.name}</p>
+          </div>
+          <button onClick={startSession}
+            className="px-4 py-2 rounded-xl font-medium text-sm transition-all active:scale-95 hover:opacity-90"
+            style={{ background: 'var(--accent)', color: '#fff' }}>
+            Iniciar
+          </button>
+        </div>
+      )}
 
       {/* Today recap strip */}
       <div className="mx-5 mb-4 rounded-[14px] overflow-hidden"
