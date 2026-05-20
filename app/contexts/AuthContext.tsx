@@ -60,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({ id: data.user.id, username })
-      
+        .upsert({ id: data.user.id, username }, { onConflict: 'id' })
+
       if (profileError) {
         console.error('Error creating profile:', profileError)
       }
