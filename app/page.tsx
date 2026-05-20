@@ -1038,8 +1038,8 @@ export default function HomePage() {
   const wNum = parseFloat(weight)
   const rNum = parseInt(reps)
   const exInfo = EXERCISE_INFO[exercise as Exercise]
-  const repsMin = exInfo?.repsMin ?? 8
-  const repsMax = exInfo?.repsMax ?? 12
+  const repsMin = exInfo?.defaultRepsMin ?? 8
+  const repsMax = exInfo?.defaultRepsMax ?? 12
   const inRange = !isNaN(rNum) && rNum >= repsMin && rNum <= repsMax
   const isPRweight = !isNaN(wNum) && wNum > 0 && (bestPerExercise[exercise] || 0) > 0 && calc1RM(toKg(wNum), rNum || 1) > (bestPerExercise[exercise] || 0)
   const repPills = [5, 8, 10, 12, 15, 20]
