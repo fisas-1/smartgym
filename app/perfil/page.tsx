@@ -335,7 +335,7 @@ export default function PerfilPage() {
 
   async function loadUserProfile() {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('username, avatar_url')
       .eq('id', user.id)
@@ -343,6 +343,14 @@ export default function PerfilPage() {
     if (data) {
       setUsername(data.username || '')
       setAvatarUrl(data.avatar_url || null)
+    } else if (error) {
+      // avatar_url column might not exist yet — fallback to username only
+      const { data: basic } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+      if (basic) setUsername(basic.username || '')
     }
   }
 
@@ -375,7 +383,12 @@ export default function PerfilPage() {
       setUsername(trimmed)
       setEditingUsername(false)
     } else {
-      setUsernameError('Error en desar')
+      console.error('Profile update error:', error)
+      if (error.code === '42501' || error.message?.includes('policy')) {
+        setUsernameError('Falta permís RLS — executa el SQL de configuració')
+      } else {
+        setUsernameError(error.message || 'Error en desar')
+      }
     }
     setSavingUsername(false)
   }
@@ -392,13 +405,19 @@ export default function PerfilPage() {
       .from('avatars')
       .upload(path, file, { upsert: true })
 
-    if (!uploadError) {
+    if (uploadError) {
+      console.error('Avatar upload error:', uploadError)
+    } else {
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(path)
       const url = `${urlData.publicUrl}?t=${Date.now()}`
-      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
-      setAvatarUrl(url)
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('id', user.id)
+      if (!updateError) setAvatarUrl(url)
+      else console.error('Avatar url save error:', updateError)
     }
 
     if (fileInputRef.current) fileInputRef.current.value = ''
