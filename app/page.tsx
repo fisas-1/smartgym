@@ -624,7 +624,7 @@ export default function HomePage() {
             onClick={openLogModal}
             disabled={!currentExercise || !nextIncompleteSet}
             className="w-full py-4 rounded-2xl font-medium flex items-center justify-between px-5 transition-opacity disabled:opacity-40 active:scale-[0.98]"
-            style={{ backgroundColor: 'var(--accent-warn)', color: theme === 'dark' ? '#000' : '#fff' }}
+            style={{ backgroundColor: 'var(--accent-warn)', color: '#000' }}
           >
             <span className="text-xl font-light leading-none">+</span>
             <span className="text-base font-semibold tracking-wide">{t('home.logSet')}</span>

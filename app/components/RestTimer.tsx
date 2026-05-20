@@ -41,6 +41,8 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
   const [duration, setDuration] = useState(defaultSeconds)
   const [remaining, setRemaining] = useState(0)
   const [running, setRunning] = useState(false)
+  const [showCustom, setShowCustom] = useState(false)
+  const [customInput, setCustomInput] = useState('')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const alarmTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -60,14 +62,12 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
     sendToSW({ type: 'TIMER_CANCEL' })
   }
 
-  // Register SW once on mount
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {})
     }
   }, [])
 
-  // Restore timer from localStorage on mount (handles page refresh)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (!saved) return
@@ -86,7 +86,6 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
     }
   }, [])
 
-  // Recalculate when app comes back to foreground (after screen lock)
   useEffect(() => {
     function onVisibilityChange() {
       if (document.visibilityState !== 'visible') return
@@ -111,7 +110,6 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
   }, [])
 
-  // Countdown interval
   useEffect(() => {
     if (!running) return
     intervalRef.current = setInterval(() => {
@@ -140,6 +138,7 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
     }
     const endTime = Date.now() + sec * 1000
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ endTime, duration: sec }))
+    localStorage.setItem('rest_timer_default', String(sec))
     setDuration(sec)
     setRemaining(sec)
     setRunning(true)
@@ -158,7 +157,31 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
     sendToSW({ type: 'TIMER_CANCEL' })
   }
 
-  // Listen for rest-timer:start event (fired when a set is completed)
+  function adjustTimer(delta: number) {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return
+    try {
+      const { endTime, duration: dur } = JSON.parse(saved)
+      const newEndTime = Math.max(Date.now() + 1000, endTime + delta * 1000)
+      const newDuration = Math.max(1, dur + delta)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ endTime: newEndTime, duration: newDuration }))
+      setRemaining(Math.round((newEndTime - Date.now()) / 1000))
+      setDuration(newDuration)
+      sendToSW({ type: 'TIMER_START', endTime: newEndTime, title: t('timer.restDone'), body: t('timer.backToWork') })
+    } catch {}
+  }
+
+  function confirmCustom() {
+    const mins = customInput.includes(':')
+      ? parseInt(customInput.split(':')[0]) * 60 + parseInt(customInput.split(':')[1] || '0')
+      : parseInt(customInput)
+    if (!isNaN(mins) && mins > 0) {
+      startTimer(mins)
+    }
+    setCustomInput('')
+    setShowCustom(false)
+  }
+
   useEffect(() => {
     function onStart(e: any) {
       const sec = e?.detail?.seconds ?? duration
@@ -185,8 +208,33 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
   }
 
   if (!running && remaining === 0) {
+    if (showCustom) {
+      return (
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 backdrop-blur-md rounded-full px-3 py-2 fade-in" style={surfaceStyle}>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={customInput}
+            onChange={e => setCustomInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') confirmCustom() }}
+            placeholder="1:30"
+            autoFocus
+            className="w-16 text-center text-sm bg-transparent text-[var(--color-text-primary)] outline-none tabular-nums placeholder:text-[var(--color-text-tertiary)]"
+          />
+          <button onClick={confirmCustom}
+            className="text-xs px-2.5 py-1 rounded-full text-[var(--color-text-primary)] bg-[var(--surface-hover)] hover:opacity-80 transition-opacity">
+            ↵
+          </button>
+          <button onClick={() => { setShowCustom(false); setCustomInput('') }}
+            className="text-xs px-2 py-1 rounded-full text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+            ✕
+          </button>
+        </div>
+      )
+    }
+
     return (
-      <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex gap-1 backdrop-blur-md rounded-full px-2 py-1.5 fade-in" style={surfaceStyle}>
+      <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 flex gap-1 items-center backdrop-blur-md rounded-full px-2 py-1.5 fade-in" style={surfaceStyle}>
         {PRESETS.map(p => (
           <button
             key={p}
@@ -197,18 +245,33 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
             {p < 60 ? `${p}s` : `${Math.floor(p / 60)}'${p % 60 ? p % 60 : ''}`}
           </button>
         ))}
+        <div className="w-px h-3 bg-[var(--border)] mx-0.5" />
+        <button
+          onClick={() => setShowCustom(true)}
+          className="text-xs px-2.5 py-1 rounded-full text-[var(--color-text-tertiary)] hover:bg-[var(--surface-hover)] hover:text-[var(--color-text-primary)] transition-colors"
+          title="Temps personalitzat"
+        >
+          ✎
+        </button>
       </div>
     )
   }
 
   return (
-    <div className={`fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[220px] fade-in${remaining <= 5 && remaining > 0 ? ' timer-pulse' : ''}`} style={surfaceStyle}>
+    <div className={`fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 backdrop-blur-md rounded-2xl px-4 py-3 min-w-[240px] fade-in${remaining <= 5 && remaining > 0 ? ' timer-pulse' : ''}`} style={surfaceStyle}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">{t('timer.rest')}</p>
           <p className="text-2xl font-light text-[var(--color-text-primary)] tabular-nums">{display}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => adjustTimer(-15)}
+            className="h-9 px-2 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] text-xs font-medium transition-colors tabular-nums"
+            title="-15s"
+          >
+            -15
+          </button>
           <button
             onClick={stopTimer}
             className="w-9 h-9 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] text-sm transition-colors"
@@ -224,6 +287,13 @@ export default function RestTimer({ defaultSeconds = 90 }: { defaultSeconds?: nu
             aria-label={t('timer.restart')}
           >
             ↺
+          </button>
+          <button
+            onClick={() => adjustTimer(30)}
+            className="h-9 px-2 rounded-full bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] text-xs font-medium transition-colors tabular-nums"
+            title="+30s"
+          >
+            +30
           </button>
         </div>
       </div>
