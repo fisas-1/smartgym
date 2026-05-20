@@ -8,7 +8,9 @@
       "Bash(Out-Null)",
       "Bash(Write-Output \"created\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\smartgym\" -Directory)",
-      "Bash(Select-Object -ExpandProperty Name)"
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(node -e \"const f=require\\('./app/locales/ca.json'\\); const keys=Object.keys\\(f\\); console.log\\('Top-level sections:', keys\\); console.log\\('perfil keys:', Object.keys\\(f.perfil||{}\\)\\); console.log\\('routines keys sample:', Object.keys\\(f.routines||{}\\).slice\\(0,10\\)\\)\")",
+      "Bash(node -e \"const f=require\\('./app/locales/ca.json'\\); const streakKeys=Object.keys\\(f\\).filter\\(k=>k.includes\\('streak'\\)||k.includes\\('perfil'\\)\\); console.log\\(streakKeys\\)\")"
     ]
   }
 }

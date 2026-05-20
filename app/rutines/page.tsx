@@ -79,6 +79,7 @@ export default function RutinesPage() {
    const [selectedTemplate, setSelectedTemplate] = useState<string>('')
    const [favoriteIds, setFavoriteIds] = useState<string[]>([])
    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+   const [routineDays, setRoutineDays] = useState<Record<string, number[]>>({})
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -124,8 +125,25 @@ export default function RutinesPage() {
       loadCustomExercises()
       const saved = localStorage.getItem('favorite_routine_ids')
       if (saved) setFavoriteIds(JSON.parse(saved))
+      const savedDays = localStorage.getItem('routine_days')
+      if (savedDays) setRoutineDays(JSON.parse(savedDays))
     }
   }, [user])
+
+  function getDayAbbr(dayIndex: number): string {
+    const date = new Date(2024, 0, 7 + dayIndex) // 2024-01-07 is Sunday (0), +1=Mon...
+    return date.toLocaleDateString(locale, { weekday: 'narrow' }).replace(/\.$/, '').toUpperCase()
+  }
+
+  function toggleRoutineDay(routineId: string, day: number) {
+    setRoutineDays(prev => {
+      const current = prev[routineId] || []
+      const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day].sort((a, b) => a - b)
+      const updated = { ...prev, [routineId]: next }
+      localStorage.setItem('routine_days', JSON.stringify(updated))
+      return updated
+    })
+  }
 
   useEffect(() => {
     if (selectedRoutine) {
@@ -869,6 +887,20 @@ export default function RutinesPage() {
                              <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
                                {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
                              </p>
+                             {(routineDays[routine.id]?.length ?? 0) > 0 && (
+                               <div className="flex gap-1 mt-1.5 flex-wrap">
+                                 {[0,1,2,3,4,5,6].map(d => {
+                                   const active = routineDays[routine.id]?.includes(d)
+                                   if (!active) return null
+                                   return (
+                                     <span key={d} className="text-[9px] font-black px-1.5 py-0.5 rounded-md"
+                                           style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 15%, transparent)', color: 'var(--accent-success)' }}>
+                                       {getDayAbbr(d)}
+                                     </span>
+                                   )
+                                 })}
+                               </div>
+                             )}
                            </button>
                            <div className="flex items-center gap-1 flex-shrink-0">
                              <button
@@ -963,6 +995,30 @@ export default function RutinesPage() {
                  className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
                  autoFocus
                />
+               {/* Day-of-week selector */}
+               <div className="mb-4">
+                 <p className="section-label mb-2">{t('routines.trainingDays')}</p>
+                 <div className="flex gap-1.5">
+                   {[0,1,2,3,4,5,6].map(d => {
+                     const active = routineDays[editingRoutine.id]?.includes(d)
+                     return (
+                       <button
+                         key={d}
+                         type="button"
+                         onClick={() => toggleRoutineDay(editingRoutine.id, d)}
+                         className="flex-1 py-2 rounded-xl text-xs font-black transition-all"
+                         style={{
+                           backgroundColor: active ? 'var(--accent-success)' : 'var(--surface-strong)',
+                           color: active ? '#fff' : 'var(--color-text-tertiary)',
+                           border: `1px solid ${active ? 'var(--accent-success)' : 'var(--border)'}`,
+                         }}
+                       >
+                         {getDayAbbr(d)}
+                       </button>
+                     )
+                   })}
+                 </div>
+               </div>
                {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
                <div className="flex gap-3 mb-3">
                  <button onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>

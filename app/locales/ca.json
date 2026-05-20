@@ -345,5 +345,9 @@
   "variant.normal": "Normal",
   "variant.inclinat": "Inclinat",
   "variant.declinat": "Declinat",
-  "variant.diamant": "Diamant"
+  "variant.diamant": "Diamant",
+
+  "routines.trainingDays": "Dies d'entrenament",
+  "perfil.streakSessions": "sessions",
+  "perfil.daysPerWeek": "{{count}} dies/sem"
 }

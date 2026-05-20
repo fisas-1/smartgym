@@ -83,6 +83,7 @@ export default function PerfilPage() {
   const [overallLevel, setOverallLevel] = useState<string>('')
   const [overallAvgPct, setOverallAvgPct] = useState<number>(0)
   const [streak, setStreak] = useState<number>(0)
+  const [scheduledDaysCount, setScheduledDaysCount] = useState<number>(0)
   const [favoriteRoutines, setFavoriteRoutines] = useState<FavoriteRoutine[]>([])
   const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
   const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
@@ -217,31 +218,69 @@ export default function PerfilPage() {
 
     if (!logs || logs.length === 0) { setStreak(0); return }
 
-    const uniqueDateMs = [...new Set(logs.map(l => {
-      const d = new Date(l.created_at)
-      d.setHours(0, 0, 0, 0)
-      return d.getTime()
-    }))].sort((a, b) => b - a)
+    // Build set of trained day-strings "YYYY-MM-DD"
+    const trainedDays = new Set(logs.map(l => l.created_at.slice(0, 10)))
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayMs = today.getTime()
-    const dayMs = 86400000
+    // Read scheduled days from localStorage: { routineId: number[] } where 0=Sun..6=Sat
+    const routineDaysRaw = localStorage.getItem('routine_days')
+    const routineDaysMap: Record<string, number[]> = routineDaysRaw ? JSON.parse(routineDaysRaw) : {}
+    const allScheduled = new Set<number>()
+    Object.values(routineDaysMap).forEach(days => days.forEach(d => allScheduled.add(d)))
 
-    if (uniqueDateMs[0] < todayMs - dayMs) { setStreak(0); return }
-
-    let currentStreak = 0
-    let expectedDate = uniqueDateMs[0] === todayMs ? todayMs : todayMs - dayMs
-
-    for (const dateMs of uniqueDateMs) {
-      if (dateMs === expectedDate) {
-        currentStreak++
-        expectedDate -= dayMs
-      } else if (dateMs < expectedDate) {
-        break
+    if (allScheduled.size === 0) {
+      // Legacy mode: no schedule set — classic consecutive-day streak
+      const uniqueDateMs = [...new Set(logs.map(l => {
+        const d = new Date(l.created_at)
+        d.setHours(0, 0, 0, 0)
+        return d.getTime()
+      }))].sort((a, b) => b - a)
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      const todayMs = today.getTime(); const dayMs = 86400000
+      if (uniqueDateMs[0] < todayMs - dayMs) { setStreak(0); return }
+      let s = 0; let exp = uniqueDateMs[0] === todayMs ? todayMs : todayMs - dayMs
+      for (const ms of uniqueDateMs) {
+        if (ms === exp) { s++; exp -= dayMs } else if (ms < exp) break
       }
+      setStreak(s)
+      return
     }
-    setStreak(currentStreak)
+
+    setScheduledDaysCount(allScheduled.size)
+
+    // Smart mode: walk backwards day by day; skip unscheduled days silently
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const dayMs = 86400000
+    let sessions = 0
+    let cursor = new Date(today)
+    const maxLookback = 365
+
+    for (let i = 0; i < maxLookback; i++) {
+      const dayOfWeek = cursor.getDay() // 0=Sun..6=Sat
+      const dateStr = cursor.toISOString().slice(0, 10)
+      const isScheduled = allScheduled.has(dayOfWeek)
+
+      if (!isScheduled) {
+        // Rest day — skip silently
+        cursor = new Date(cursor.getTime() - dayMs)
+        continue
+      }
+
+      if (trainedDays.has(dateStr)) {
+        sessions++
+        cursor = new Date(cursor.getTime() - dayMs)
+        continue
+      }
+
+      // Scheduled day was missed
+      // Grace: if it's today and not yet completed, don't break
+      if (i === 0) {
+        cursor = new Date(cursor.getTime() - dayMs)
+        continue
+      }
+      break
+    }
+
+    setStreak(sessions)
   }
 
   async function loadFavoritesAndDeleted() {
@@ -391,8 +430,16 @@ export default function PerfilPage() {
                 {streak}
               </p>
               <p className="text-sm mt-2 font-medium" style={{ color: C.muted }}>
-                {streak === 1 ? t('perfil.streakDay') : t('perfil.streakDays')}
+                {scheduledDaysCount > 0
+                  ? t('perfil.streakSessions')
+                  : streak === 1 ? t('perfil.streakDay') : t('perfil.streakDays')}
               </p>
+              {scheduledDaysCount > 0 && (
+                <p className="text-[10px] mt-1 font-black uppercase tracking-widest tabular-nums"
+                   style={{ color: C.accent + 'BB' }}>
+                  {t('perfil.daysPerWeek', { count: String(scheduledDaysCount) })}
+                </p>
+              )}
             </div>
             <p className="text-[7rem] select-none leading-none mb-1 flex-shrink-0" style={{ opacity: 0.05 }}>🔥</p>
           </div>
