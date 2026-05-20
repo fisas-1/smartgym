@@ -121,9 +121,23 @@ export default function HomePage() {
   const [logWeight, setLogWeight] = useState('')
   const [logReps, setLogReps] = useState('')
   const [logRir, setLogRir] = useState('2')
+  const [logNote, setLogNote] = useState('')
+  const [logShowExtra, setLogShowExtra] = useState(false)
   const [logLoading, setLogLoading] = useState(false)
   const [activeLogInput, setActiveLogInput] = useState<'weight' | 'reps' | null>(null)
   const [prMsg, setPrMsg] = useState<string | null>(null)
+
+  // ── Extra exercise (fora rutina) ───────────────────────────────────────────
+  const [showExtraLog, setShowExtraLog] = useState(false)
+  const [extraExercise, setExtraExercise] = useState<Exercise>('Press Banca')
+  const [extraVariant, setExtraVariant] = useState<string>('')
+  const [extraWeight, setExtraWeight] = useState('')
+  const [extraReps, setExtraReps] = useState('')
+  const [extraRir, setExtraRir] = useState('')
+  const [extraNote, setExtraNote] = useState('')
+  const [extraShowExtra, setExtraShowExtra] = useState(false)
+  const [activeExtraInput, setActiveExtraInput] = useState<'weight' | 'reps' | null>(null)
+  const [extraLoading, setExtraLoading] = useState(false)
 
   // ── Quick-log form state (no-session fallback) ─────────────────────────────
   const [exercise, setExercise] = useState<Exercise>('Press Banca')
@@ -371,6 +385,8 @@ export default function HomePage() {
     setLogWeight(recWeightKg > 0 ? String(unit === 'kg' ? recWeightKg : Number(fromKg(recWeightKg).toFixed(1))) : '')
     setLogReps(String(recReps))
     setLogRir('2')
+    setLogNote('')
+    setLogShowExtra(false)
     setActiveLogInput(null)
     setShowLogModal(true)
   }
@@ -397,9 +413,9 @@ export default function HomePage() {
         weight: wKg, reps: r, rir: rirVal, completed: true, completed_at: new Date().toISOString()
       }).eq('id', nextIncompleteSet.id)
 
-      await supabase.from('workout_logs').insert({
-        exercise: currentExercise.exercise, weight: wKg, reps: r, rir: rirVal, one_rm, user_id: user.id
-      })
+      const logInsert: any = { exercise: currentExercise.exercise, weight: wKg, reps: r, rir: rirVal, one_rm, user_id: user.id }
+      if (logNote.trim()) logInsert.note = logNote.trim()
+      await supabase.from('workout_logs').insert(logInsert)
 
       const sec = typeof window !== 'undefined' ? parseInt(localStorage.getItem('rest_timer_default') || '90', 10) : 90
       window.dispatchEvent(new CustomEvent('rest-timer:start', { detail: { seconds: sec } }))
@@ -416,6 +432,25 @@ export default function HomePage() {
     } finally {
       setLogLoading(false)
     }
+  }
+
+  async function handleExtraLogSave() {
+    const wInput = parseFloat(extraWeight), r = parseInt(extraReps)
+    if (isNaN(r) || r <= 0 || !user) return
+    setExtraLoading(true)
+    try {
+      const wKg = isNaN(wInput) || wInput <= 0 ? 0 : toKg(wInput)
+      const rirVal = extraRir === '' ? null : parseFloat(extraRir)
+      const exBase = extraVariant ? `${extraExercise} · ${extraVariant}` : extraExercise
+      const one_rm = wKg > 0 ? calc1RM(wKg, r) : 0
+      const insertData: any = { exercise: exBase, weight: wKg, reps: r, rir: rirVal, one_rm, user_id: user.id }
+      if (extraNote.trim()) insertData.note = extraNote.trim()
+      await supabase.from('workout_logs').insert(insertData)
+      if (navigator.vibrate) navigator.vibrate(40)
+      setExtraWeight(''); setExtraReps(''); setExtraRir(''); setExtraNote('')
+      setExtraShowExtra(false); setActiveExtraInput(null)
+      await loadTodayStats()
+    } finally { setExtraLoading(false) }
   }
 
   // ─── Quick-log form (no-session fallback) ─────────────────────────────────
@@ -793,6 +828,101 @@ export default function HomePage() {
               </div>
             </div>
           )}
+
+          {/* EXERCICIS EXTRA (fora rutina) */}
+          <div className="card-surface p-4">
+            <button type="button" onClick={() => setShowExtraLog(v => !v)}
+              className="w-full flex items-center justify-between text-left">
+              <p className="section-label">{t('workouts.exercise')} extra</p>
+              <span className={`text-[var(--color-text-tertiary)] text-lg font-light transition-transform duration-200 ${showExtraLog ? 'rotate-45' : ''}`}>+</span>
+            </button>
+
+            {showExtraLog && (
+              <div className="mt-4 space-y-4 animate-slide-up">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hidden">
+                  {getDisplayExercises().map(ex => (
+                    <button key={ex} type="button" onClick={() => { setExtraExercise(ex as Exercise); setExtraVariant('') }}
+                      className={`px-4 py-2 rounded-full text-sm whitespace-nowrap flex-shrink-0 transition-colors min-h-[40px] ${extraExercise === ex ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)]'}`}>
+                      {tEx(ex)}
+                    </button>
+                  ))}
+                </div>
+
+                {EXERCISE_VARIANTS[extraExercise as string] && (
+                  <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden">
+                    {EXERCISE_VARIANTS[extraExercise as string].map(v => (
+                      <button key={v} type="button" onClick={() => setExtraVariant(extraVariant === v ? '' : v)}
+                        className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors ${extraVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'}`}>
+                        {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
+                  <input type="text" inputMode="none" readOnly value={extraWeight}
+                    onClick={() => setActiveExtraInput('weight')} placeholder="0"
+                    className={`w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none cursor-pointer ${activeExtraInput === 'weight' ? 'border-[var(--border)]' : ''}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="section-label block mb-2">{t('workouts.reps')}</label>
+                  <div className="flex items-center justify-between rounded-2xl px-3 py-2.5 bg-[var(--surface-strong)]">
+                    <button type="button" onClick={() => { const n = parseInt(extraReps) || 0; if (n > 0) setExtraReps(String(n - 1)) }}
+                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-light bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--surface-hover)] active:scale-95 transition-all">−</button>
+                    <div onClick={() => setActiveExtraInput('reps')} className="flex-1 mx-2 text-center text-4xl font-light tabular-nums cursor-pointer select-none">
+                      {extraReps || <span className="text-[var(--color-text-tertiary)]">0</span>}
+                    </div>
+                    <button type="button" onClick={() => setExtraReps(String((parseInt(extraReps) || 0) + 1))}
+                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 active:scale-95 transition-all">+</button>
+                  </div>
+                  <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
+                    {[5, 8, 10, 12, 15, 20].map(n => (
+                      <button key={n} type="button" onClick={() => setExtraReps(String(n))}
+                        className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${extraReps === String(n) ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}>
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <button type="button" onClick={() => setExtraShowExtra(v => !v)}
+                    className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1">
+                    <span className={`inline-block transition-transform duration-200 ${extraShowExtra ? 'rotate-45' : ''}`}>+</span>
+                    {extraShowExtra ? t('workouts.lessOptions') : t('workouts.moreOptions')}
+                  </button>
+                </div>
+
+                {extraShowExtra && (
+                  <div className="space-y-4 animate-slide-up">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="section-label">{t('common.rir')}</label>
+                        <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{extraRir === '' ? '—' : extraRir}</span>
+                      </div>
+                      <input type="range" min="0" max="3" step="1" value={extraRir === '' ? 0 : extraRir} onChange={e => setExtraRir(e.target.value)}
+                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
+                      <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
+                    </div>
+                    <div>
+                      <label className="section-label block mb-2">{t('workouts.notes')}</label>
+                      <input type="text" value={extraNote} onChange={e => setExtraNote(e.target.value)} placeholder={t('workouts.notesPlaceholder')} maxLength={200}
+                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]" />
+                    </div>
+                  </div>
+                )}
+
+                <button type="button" onClick={handleExtraLogSave} disabled={extraLoading || !extraReps || parseInt(extraReps) <= 0}
+                  className="w-full py-3 rounded-2xl font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: 'var(--color-text-primary)', color: 'var(--color-bg-primary)' }}>
+                  {extraLoading ? '…' : t('common.save')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Log Set Modal */}
@@ -821,16 +951,40 @@ export default function HomePage() {
                     <button type="button" onClick={() => setLogReps(String((parseInt(logReps) || 0) + 1))}
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 active:scale-95 transition-all">+</button>
                   </div>
+                  <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
+                    {[5, 8, 10, 12, 15, 20].map(n => (
+                      <button key={n} type="button" onClick={() => setLogReps(String(n))}
+                        className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${logReps === String(n) ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}>
+                        {n}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="section-label">{t('common.rir')}</label>
-                    <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{logRir}</span>
-                  </div>
-                  <input type="range" min="0" max="3" step="1" value={logRir} onChange={e => setLogRir(e.target.value)}
-                    className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
-                  <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
+                  <button type="button" onClick={() => setLogShowExtra(v => !v)}
+                    className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1">
+                    <span className={`inline-block transition-transform duration-200 ${logShowExtra ? 'rotate-45' : ''}`}>+</span>
+                    {logShowExtra ? t('workouts.lessOptions') : t('workouts.moreOptions')}
+                  </button>
                 </div>
+                {logShowExtra && (
+                  <div className="space-y-4 animate-slide-up">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="section-label">{t('common.rir')}</label>
+                        <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{logRir}</span>
+                      </div>
+                      <input type="range" min="0" max="3" step="1" value={logRir} onChange={e => setLogRir(e.target.value)}
+                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
+                      <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
+                    </div>
+                    <div>
+                      <label className="section-label block mb-2">{t('workouts.notes')}</label>
+                      <input type="text" value={logNote} onChange={e => setLogNote(e.target.value)} placeholder={t('workouts.notesPlaceholder')} maxLength={200}
+                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3">
@@ -853,6 +1007,12 @@ export default function HomePage() {
         )}
         {activeLogInput === 'reps' && (
           <NumericKeyboard value={logReps} onChange={setLogReps} onClose={() => setActiveLogInput(null)} allowDecimal={false} label={t('workouts.reps')} maxLength={3} />
+        )}
+        {activeExtraInput === 'weight' && (
+          <NumericKeyboard value={extraWeight} onChange={setExtraWeight} onClose={() => setActiveExtraInput(null)} allowDecimal label={`${t('workouts.weight')} (${unit})`} maxLength={5} />
+        )}
+        {activeExtraInput === 'reps' && (
+          <NumericKeyboard value={extraReps} onChange={setExtraReps} onClose={() => setActiveExtraInput(null)} allowDecimal={false} label={t('workouts.reps')} maxLength={3} />
         )}
       </div>
     )
