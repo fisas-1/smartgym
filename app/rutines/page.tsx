@@ -56,30 +56,31 @@ export default function RutinesPage() {
   const [routineExercises, setRoutineExercises] = useState<RoutineExercise[]>([])
   const [routineSets, setRoutineSets] = useState<Record<string, RoutineSet[]>>({})
   const [customExercises, setCustomExercises] = useState<CustomExercises>([])
-   const [showExerciseModal, setShowExerciseModal] = useState(false)
-   const [newExerciseName, setNewExerciseName] = useState('')
-   const [newExerciseVariant, setNewExerciseVariant] = useState<string | null>(null)
-   const [newExercisePrimary, setNewExercisePrimary] = useState('')
-   const [newExerciseSecondary, setNewExerciseSecondary] = useState('')
-   const [showRoutineModal, setShowRoutineModal] = useState(false)
-   const [newRoutineName, setNewRoutineName] = useState('')
-    const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
-   const [editRoutineName, setEditRoutineName] = useState('')
-   const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
-   const [editingExercise, setEditingExercise] = useState<RoutineExercise | null>(null)
-   const [showEditExerciseModal, setShowEditExerciseModal] = useState(false)
-   const [editSetsTarget, setEditSetsTarget] = useState<number>(3)
-   const [editRepsMin, setEditRepsMin] = useState<number>(8)
-   const [editRepsMax, setEditRepsMax] = useState<number>(12)
-   const [editVariant, setEditVariant] = useState<string | null>(null)
-   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-   const [loading, setLoading] = useState(false)
-   const [lastSessions, setLastSessions] = useState<Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }>>({})
-   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
-   const [favoriteIds, setFavoriteIds] = useState<string[]>([])
-   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-   const [routineDays, setRoutineDays] = useState<Record<string, number[]>>({})
+  const [showExerciseModal, setShowExerciseModal] = useState(false)
+  const [newExerciseName, setNewExerciseName] = useState('')
+  const [newExerciseVariant, setNewExerciseVariant] = useState<string | null>(null)
+  const [newExercisePrimary, setNewExercisePrimary] = useState('')
+  const [newExerciseSecondary, setNewExerciseSecondary] = useState('')
+  const [showRoutineModal, setShowRoutineModal] = useState(false)
+  const [newRoutineName, setNewRoutineName] = useState('')
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
+  const [editRoutineName, setEditRoutineName] = useState('')
+  const [showEditRoutineModal, setShowEditRoutineModal] = useState(false)
+  const [editingExercise, setEditingExercise] = useState<RoutineExercise | null>(null)
+  const [showEditExerciseModal, setShowEditExerciseModal] = useState(false)
+  const [editSetsTarget, setEditSetsTarget] = useState<number>(3)
+  const [editRepsMin, setEditRepsMin] = useState<number>(8)
+  const [editRepsMax, setEditRepsMax] = useState<number>(12)
+  const [editVariant, setEditVariant] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [lastSessions, setLastSessions] = useState<Record<string, { date: string; sets: { weight: number; reps: number; rir: number | null }[] }>>({})
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([])
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [routineDays, setRoutineDays] = useState<Record<string, number[]>>({})
+  const [activeTab, setActiveTab] = useState<'all' | 'fav' | 'deleted'>('all')
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -97,7 +98,6 @@ export default function RutinesPage() {
     if (oldIdx < 0 || newIdx < 0) return
     const reordered = arrayMove(routineExercises, oldIdx, newIdx)
     setRoutineExercises(reordered)
-    // Persist new order_index for each item
     const updates = reordered.map((ex, i) => supabase.from('routine_exercises').update({ order_index: i }).eq('id', ex.id))
     const results = await Promise.all(updates)
     const firstErr = results.find(r => r.error)
@@ -118,7 +118,6 @@ export default function RutinesPage() {
     localStorage.setItem('routine_order', JSON.stringify(reordered.map(r => r.id)))
   }
 
-  // Càrrega inicial
   useEffect(() => {
     if (user) {
       loadRoutines()
@@ -131,7 +130,7 @@ export default function RutinesPage() {
   }, [user])
 
   function getDayAbbr(dayIndex: number): string {
-    const date = new Date(2024, 0, 7 + dayIndex) // 2024-01-07 is Sunday (0), +1=Mon...
+    const date = new Date(2024, 0, 7 + dayIndex)
     return date.toLocaleDateString(locale, { weekday: 'narrow' }).replace(/\.$/, '').toUpperCase()
   }
 
@@ -180,12 +179,10 @@ export default function RutinesPage() {
         entry.sets.push({ weight: log.weight, reps: log.reps, rir: log.rir })
       }
     }
-    // Logs come DESC; reverse each exercise's sets so set 1 = chronologically first
     for (const ex of Object.keys(grouped)) grouped[ex].sets.reverse()
     setLastSessions(grouped)
   }
 
-  // Netejar missatges després de 3 segons
   useEffect(() => {
     if (successMsg || errorMsg) {
       const timer = setTimeout(() => {
@@ -196,107 +193,98 @@ export default function RutinesPage() {
     }
   }, [successMsg, errorMsg])
 
-   // Assegurar que cada exercici té les sèries inicialitzades / sincronitzades
-   useEffect(() => {
-     if (selectedRoutine && routineExercises.length > 0) {
-       routineExercises.forEach(ex => {
-         syncExerciseSets(ex.id, ex.sets_target)
-       })
-     }
-   }, [selectedRoutine, routineExercises])
+  useEffect(() => {
+    if (selectedRoutine && routineExercises.length > 0) {
+      routineExercises.forEach(ex => {
+        syncExerciseSets(ex.id, ex.sets_target)
+      })
+    }
+  }, [selectedRoutine, routineExercises])
 
-// Càrrega de rutines des de Supabase
-   async function loadRoutines() {
-      if (!user) return
-      const { data, error } = await supabase
-        .from('routines')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-      
-      if (error) {
-        console.error('Error loading routines:', error)
-        return
+  async function loadRoutines() {
+    if (!user) return
+    const { data, error } = await supabase
+      .from('routines')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error loading routines:', error)
+      return
+    }
+    if (data) {
+      const savedOrder: string[] = JSON.parse(localStorage.getItem('routine_order') || '[]')
+      const ordered = savedOrder.length > 0
+        ? [...data].sort((a, b) => {
+            const ai = savedOrder.indexOf(a.id)
+            const bi = savedOrder.indexOf(b.id)
+            if (ai === -1 && bi === -1) return 0
+            if (ai === -1) return 1
+            if (bi === -1) return -1
+            return ai - bi
+          })
+        : data
+      setRoutines(ordered)
+      const counts: Record<string, number> = {}
+      for (const routine of data) {
+        const { count } = await supabase
+          .from('routine_exercises')
+          .select('*', { count: 'exact', head: true })
+          .eq('routine_id', routine.id)
+        counts[routine.id] = count || 0
       }
-      if (data) {
-        const savedOrder: string[] = JSON.parse(localStorage.getItem('routine_order') || '[]')
-        const ordered = savedOrder.length > 0
-          ? [...data].sort((a, b) => {
-              const ai = savedOrder.indexOf(a.id)
-              const bi = savedOrder.indexOf(b.id)
-              if (ai === -1 && bi === -1) return 0
-              if (ai === -1) return 1
-              if (bi === -1) return -1
-              return ai - bi
-            })
-          : data
-        setRoutines(ordered)
-        // Load exercise counts for each routine
-        const counts: Record<string, number> = {}
-        for (const routine of data) {
-          const { count } = await supabase
-            .from('routine_exercises')
-            .select('*', { count: 'exact', head: true })
-            .eq('routine_id', routine.id)
-          counts[routine.id] = count || 0
-        }
-        setRoutineExerciseCounts(counts)
-      }
+      setRoutineExerciseCounts(counts)
+    }
+  }
+
+  async function loadRoutineExercises(routineId: string): Promise<RoutineExercise[]> {
+    const { data, error } = await supabase
+      .from('routine_exercises')
+      .select('*')
+      .eq('routine_id', routineId)
+      .order('order_index', { ascending: true })
+
+    if (error) {
+      console.error('Error loading routine exercises:', error)
+      return []
+    }
+    if (data) setRoutineExercises(data)
+    return data || []
+  }
+
+  async function loadRoutineSets(routineId: string, exerciseIds?: string[]) {
+    const ids = exerciseIds || routineExercises.map(re => re.id)
+    if (ids.length === 0) return
+
+    const { data, error } = await supabase
+      .from('routine_sets')
+      .select('*')
+      .in('routine_exercise_id', ids)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      console.error('Error loading routine sets:', error)
+      return
     }
 
-   // Càrrega d'exercicis d'una rutina
-   async function loadRoutineExercises(routineId: string): Promise<RoutineExercise[]> {
-     const { data, error } = await supabase
-       .from('routine_exercises')
-       .select('*')
-       .eq('routine_id', routineId)
-       .order('order_index', { ascending: true })
-     
-     if (error) {
-       console.error('Error loading routine exercises:', error)
-       return []
-     }
-     if (data) setRoutineExercises(data)
-     return data || []
-   }
+    const grouped: Record<string, RoutineSet[]> = {}
+    data?.forEach(set => {
+      if (!grouped[set.routine_exercise_id]) grouped[set.routine_exercise_id] = []
+      grouped[set.routine_exercise_id].push(set)
+    })
+    setRoutineSets(grouped)
+  }
 
-   // Càrrega de series completades d'una rutina
-   async function loadRoutineSets(routineId: string, exerciseIds?: string[]) {
-     const ids = exerciseIds || routineExercises.map(re => re.id)
-     if (ids.length === 0) return
-
-     const { data, error } = await supabase
-       .from('routine_sets')
-       .select('*')
-       .in('routine_exercise_id', ids)
-       .order('created_at', { ascending: true })
-     
-     if (error) {
-       console.error('Error loading routine sets:', error)
-       return
-     }
-     
-     // Agrupar per exercici
-     const grouped: Record<string, RoutineSet[]> = {}
-     data?.forEach(set => {
-       if (!grouped[set.routine_exercise_id]) grouped[set.routine_exercise_id] = []
-       grouped[set.routine_exercise_id].push(set)
-     })
-     setRoutineSets(grouped)
-   }
-
-  // Càrrega d'exercicis personalitzats
   function loadCustomExercises() {
     const saved = localStorage.getItem('custom_exercises')
     if (saved) setCustomExercises(JSON.parse(saved))
   }
 
-  // Crear nova rutina
   async function handleCreateRoutine() {
     if (!user) return
     const template = ROUTINE_TEMPLATES.find(t => t.id === selectedTemplate) || null
 
-    // If no template and no name, error
     if (!template && !newRoutineName.trim()) {
       setErrorMsg(t('routines.nameRequired'))
       return
@@ -307,7 +295,6 @@ export default function RutinesPage() {
 
     try {
       if (template) {
-        // Create one routine per template entry
         for (const r of template.routines) {
           const routineName = template.routines.length === 1 && newRoutineName.trim()
             ? newRoutineName.trim()
@@ -319,7 +306,6 @@ export default function RutinesPage() {
             .single()
           if (rErr || !newRoutine) throw rErr || new Error(t('routines.errorCreating'))
 
-          // Insert exercises with sets
           for (let i = 0; i < r.exercises.length; i++) {
             const ex = r.exercises[i]
             const { data: newEx, error: eErr } = await supabase
@@ -364,311 +350,288 @@ export default function RutinesPage() {
     loadRoutines()
   }
 
-   // Seleccionar rutina
-   function handleSelectRoutine(routine: Routine) {
-     setSelectedRoutine(routine)
-   }
+  function handleSelectRoutine(routine: Routine) {
+    setSelectedRoutine(routine)
+  }
 
-   // Obrir modal edició rutina
-   function handleOpenEditRoutine(routine: Routine) {
-     setEditingRoutine(routine)
-     setEditRoutineName(routine.name)
-     setShowEditRoutineModal(true)
-   }
+  function handleOpenEditRoutine(routine: Routine) {
+    setEditingRoutine(routine)
+    setEditRoutineName(routine.name)
+    setShowEditRoutineModal(true)
+  }
 
-   // Actualitzar nom de rutina
-   async function handleUpdateRoutine() {
-     if (!editingRoutine || !editRoutineName.trim()) return
+  async function handleUpdateRoutine() {
+    if (!editingRoutine || !editRoutineName.trim()) return
 
-     setLoading(true)
-     setErrorMsg(null)
+    setLoading(true)
+    setErrorMsg(null)
 
-     const { error } = await supabase
-       .from('routines')
-       .update({ name: editRoutineName.trim() })
-       .eq('id', editingRoutine.id)
+    const { error } = await supabase
+      .from('routines')
+      .update({ name: editRoutineName.trim() })
+      .eq('id', editingRoutine.id)
 
-     setLoading(false)
+    setLoading(false)
 
-     if (error) {
-       setErrorMsg(t('routines.errorUpdating') + error.message)
-       return
-     }
+    if (error) {
+      setErrorMsg(t('routines.errorUpdating') + error.message)
+      return
+    }
 
-     setShowEditRoutineModal(false)
-     setEditingRoutine(null)
-     setEditRoutineName('')
-     loadRoutines()
-     if (selectedRoutine?.id === editingRoutine.id) {
-       setSelectedRoutine(prev => prev ? { ...prev, name: editRoutineName.trim() } : null)
-     }
-     setSuccessMsg(t('routines.updated'))
-   }
+    setShowEditRoutineModal(false)
+    setEditingRoutine(null)
+    setEditRoutineName('')
+    loadRoutines()
+    if (selectedRoutine?.id === editingRoutine.id) {
+      setSelectedRoutine(prev => prev ? { ...prev, name: editRoutineName.trim() } : null)
+    }
+    setSuccessMsg(t('routines.updated'))
+  }
 
-   // Toggle preferida
-   function toggleFavorite(routineId: string) {
-     const next = favoriteIds.includes(routineId)
-       ? favoriteIds.filter(id => id !== routineId)
-       : [...favoriteIds, routineId]
-     setFavoriteIds(next)
-     localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
-     setSuccessMsg(favoriteIds.includes(routineId) ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
-   }
+  function toggleFavorite(routineId: string) {
+    const next = favoriteIds.includes(routineId)
+      ? favoriteIds.filter(id => id !== routineId)
+      : [...favoriteIds, routineId]
+    setFavoriteIds(next)
+    localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
+    setSuccessMsg(favoriteIds.includes(routineId) ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
+  }
 
-   // Eliminar rutina (amb arxiu per recuperar)
-   async function handleDeleteRoutine() {
-     if (!editingRoutine) return
-     setLoading(true)
+  async function handleDeleteRoutine() {
+    if (!editingRoutine) return
+    setLoading(true)
 
-     // Guardar dades completes a localStorage per poder recuperar-la
-     const { data: exs } = await supabase
-       .from('routine_exercises')
-       .select('id, exercise, sets_target, reps_min, reps_max, order_index')
-       .eq('routine_id', editingRoutine.id)
-       .order('order_index', { ascending: true })
+    const { data: exs } = await supabase
+      .from('routine_exercises')
+      .select('id, exercise, sets_target, reps_min, reps_max, order_index')
+      .eq('routine_id', editingRoutine.id)
+      .order('order_index', { ascending: true })
 
-     const deletedEntry: DeletedRoutine = {
-       id: editingRoutine.id,
-       name: editingRoutine.name,
-       description: editingRoutine.description,
-       exercises: exs || [],
-       deletedAt: new Date().toISOString(),
-     }
-     const existing = JSON.parse(localStorage.getItem('deleted_routines') || '[]') as DeletedRoutine[]
-     localStorage.setItem('deleted_routines', JSON.stringify([deletedEntry, ...existing].slice(0, 20)))
+    const deletedEntry: DeletedRoutine = {
+      id: editingRoutine.id,
+      name: editingRoutine.name,
+      description: editingRoutine.description,
+      exercises: exs || [],
+      deletedAt: new Date().toISOString(),
+    }
+    const existing = JSON.parse(localStorage.getItem('deleted_routines') || '[]') as DeletedRoutine[]
+    localStorage.setItem('deleted_routines', JSON.stringify([deletedEntry, ...existing].slice(0, 20)))
 
-     // Eliminar de BD (cascade a routine_exercises i routine_sets si hi ha FK on delete cascade)
-     await supabase.from('routine_sets').delete().in(
-       'routine_exercise_id',
-       (exs || []).map((e: any) => e.id).filter(Boolean)
-     )
-     await supabase.from('routine_exercises').delete().eq('routine_id', editingRoutine.id)
-     const { error } = await supabase.from('routines').delete().eq('id', editingRoutine.id)
+    await supabase.from('routine_sets').delete().in(
+      'routine_exercise_id',
+      (exs || []).map((e: any) => e.id).filter(Boolean)
+    )
+    await supabase.from('routine_exercises').delete().eq('routine_id', editingRoutine.id)
+    const { error } = await supabase.from('routines').delete().eq('id', editingRoutine.id)
 
-     setLoading(false)
-     if (error) { setErrorMsg(t('routines.errorDeleting')); return }
+    setLoading(false)
+    if (error) { setErrorMsg(t('routines.errorDeleting')); return }
 
-     // Netejar favorits si estava
-     if (favoriteIds.includes(editingRoutine.id)) {
-       const next = favoriteIds.filter(id => id !== editingRoutine.id)
-       setFavoriteIds(next)
-       localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
-     }
+    if (favoriteIds.includes(editingRoutine.id)) {
+      const next = favoriteIds.filter(id => id !== editingRoutine.id)
+      setFavoriteIds(next)
+      localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
+    }
 
-     setShowDeleteConfirm(false)
-     setShowEditRoutineModal(false)
-     setEditingRoutine(null)
-     setEditRoutineName('')
-     setSuccessMsg(t('routines.deleted'))
-     loadRoutines()
-   }
+    setShowDeleteConfirm(false)
+    setShowEditRoutineModal(false)
+    setEditingRoutine(null)
+    setEditRoutineName('')
+    setSuccessMsg(t('routines.deleted'))
+    loadRoutines()
+  }
 
-   // Obrir modal edició exercici
-   function handleOpenEditExercise(exercise: RoutineExercise) {
-     setEditingExercise(exercise)
-     setEditSetsTarget(exercise.sets_target)
-     setEditRepsMin(exercise.reps_min)
-     setEditRepsMax(exercise.reps_max)
-     const parts = exercise.exercise.split(' · ')
-     setEditVariant(parts.length > 1 ? parts[1] : null)
-     setShowEditExerciseModal(true)
-   }
+  function handleOpenEditExercise(exercise: RoutineExercise) {
+    setEditingExercise(exercise)
+    setEditSetsTarget(exercise.sets_target)
+    setEditRepsMin(exercise.reps_min)
+    setEditRepsMax(exercise.reps_max)
+    const parts = exercise.exercise.split(' · ')
+    setEditVariant(parts.length > 1 ? parts[1] : null)
+    setShowEditExerciseModal(true)
+  }
 
-   // Actualitzar exercici
-   async function handleUpdateExercise() {
-     if (!editingExercise || !selectedRoutine) return
-     if (editSetsTarget <= 0 || editRepsMin <= 0 || editRepsMax <= 0 || editRepsMin > editRepsMax) {
-       setErrorMsg(t('routines.invalidValues'))
-       return
-     }
+  async function handleUpdateExercise() {
+    if (!editingExercise || !selectedRoutine) return
+    if (editSetsTarget <= 0 || editRepsMin <= 0 || editRepsMax <= 0 || editRepsMin > editRepsMax) {
+      setErrorMsg(t('routines.invalidValues'))
+      return
+    }
 
-     setLoading(true)
-     setErrorMsg(null)
+    setLoading(true)
+    setErrorMsg(null)
 
-     const baseExerciseName = editingExercise.exercise.split(' · ')[0]
-     const updatedExerciseName = editVariant ? `${baseExerciseName} · ${editVariant}` : baseExerciseName
+    const baseExerciseName = editingExercise.exercise.split(' · ')[0]
+    const updatedExerciseName = editVariant ? `${baseExerciseName} · ${editVariant}` : baseExerciseName
 
-     const { error } = await supabase
-       .from('routine_exercises')
-       .update({
-         exercise: updatedExerciseName,
-         sets_target: editSetsTarget,
-         reps_min: editRepsMin,
-         reps_max: editRepsMax,
-       })
-       .eq('id', editingExercise.id)
+    const { error } = await supabase
+      .from('routine_exercises')
+      .update({
+        exercise: updatedExerciseName,
+        sets_target: editSetsTarget,
+        reps_min: editRepsMin,
+        reps_max: editRepsMax,
+      })
+      .eq('id', editingExercise.id)
 
-     setLoading(false)
+    setLoading(false)
 
-     if (error) {
-       setErrorMsg(t('routines.errorUpdating') + error.message)
-       return
-     }
+    if (error) {
+      setErrorMsg(t('routines.errorUpdating') + error.message)
+      return
+    }
 
-     setShowEditExerciseModal(false)
-     setEditingExercise(null)
-     setSuccessMsg(t('routines.exerciseAdded'))
+    setShowEditExerciseModal(false)
+    setEditingExercise(null)
+    setSuccessMsg(t('routines.exerciseAdded'))
 
-      // Recarregar exercicis i sets per reflectir canvis
-      const exercises = await loadRoutineExercises(selectedRoutine.id)
-      await loadRoutineSets(selectedRoutine.id, exercises.map(e => e.id))
-   }
+    const exercises = await loadRoutineExercises(selectedRoutine.id)
+    await loadRoutineSets(selectedRoutine.id, exercises.map(e => e.id))
+  }
 
-  // Tornar a la llista de rutines
   function handleBackToList() {
     setSelectedRoutine(null)
     setRoutineExercises([])
     setRoutineSets({})
   }
 
-// Afegir exercici a la rutina
-    async function handleAddExercise(exerciseName?: string) {
-      if (!user || !selectedRoutine) return
+  async function handleAddExercise(exerciseName?: string) {
+    if (!user || !selectedRoutine) return
 
-      const exercise = exerciseName || newExerciseName
-      if (!exercise || !exercise.trim()) return
+    const exercise = exerciseName || newExerciseName
+    if (!exercise || !exercise.trim()) return
 
-      const baseName = exercise.trim()
-      const useVariant = !exerciseName && newExerciseVariant
-      const exerciseWithVariant = useVariant ? `${baseName} · ${newExerciseVariant}` : baseName
+    const baseName = exercise.trim()
+    const useVariant = !exerciseName && newExerciseVariant
+    const exerciseWithVariant = useVariant ? `${baseName} · ${newExerciseVariant}` : baseName
 
-      // Comprovar duplicats
-      const exerciseExists = routineExercises.some(re => re.exercise === exerciseWithVariant)
-      if (exerciseExists) {
-        setErrorMsg(t('routines.exerciseExists'))
+    const exerciseExists = routineExercises.some(re => re.exercise === exerciseWithVariant)
+    if (exerciseExists) {
+      setErrorMsg(t('routines.exerciseExists'))
+      return
+    }
+
+    setLoading(true)
+    setErrorMsg(null)
+
+    try {
+      const isDefaultExercise = DEFAULT_EXERCISES.includes(baseName as any)
+      if (!isDefaultExercise) {
+        const { data: existing } = await supabase
+          .from('saved_exercises')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('exercise', baseName)
+          .single()
+
+        if (!existing) {
+          const { error: saveError } = await supabase
+            .from('saved_exercises')
+            .insert({ user_id: user.id, exercise: baseName })
+
+          if (saveError) {
+            console.error('Error saving custom exercise:', saveError)
+          }
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('routine_exercises')
+        .insert({
+          routine_id: selectedRoutine.id,
+          exercise: exerciseWithVariant,
+          sets_target: 3,
+          reps_min: 8,
+          reps_max: 12,
+          order_index: routineExercises.length
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase error adding exercise:', error)
+        setErrorMsg(t('routines.errorAddingExercise') + error.message)
         return
       }
 
-      setLoading(true)
-      setErrorMsg(null)
-
-      try {
-        // Si és un exercici personalitzat (no està en la llista per defecte), desar-lo també a saved_exercises
-        const isDefaultExercise = DEFAULT_EXERCISES.includes(baseName as any)
-        if (!isDefaultExercise) {
-          // Comprovar si ja existeix a saved_exercises per aquest usuari
-          const { data: existing } = await supabase
-            .from('saved_exercises')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('exercise', baseName)
-            .single()
-
-          if (!existing) {
-            const { error: saveError } = await supabase
-              .from('saved_exercises')
-              .insert({ user_id: user.id, exercise: baseName })
-
-            if (saveError) {
-              console.error('Error saving custom exercise:', saveError)
-            }
-          }
+      const newSets = []
+      const newRoutineSets: Record<string, RoutineSet[]> = { ...routineSets }
+      for (let i = 1; i <= 3; i++) {
+        const setId = crypto.randomUUID()
+        newSets.push({
+          routine_exercise_id: data.id,
+          set_number: i,
+          completed: false
+        })
+        if (!newRoutineSets[data.id]) {
+          newRoutineSets[data.id] = []
         }
-
-         // Inserir l'exercici a la rutina (variant codificada al nom: "Exercici · Variant")
-         const { data, error } = await supabase
-           .from('routine_exercises')
-           .insert({
-             routine_id: selectedRoutine.id,
-             exercise: exerciseWithVariant,
-             sets_target: 3,
-             reps_min: 8,
-             reps_max: 12,
-             order_index: routineExercises.length
-           })
-           .select()
-           .single()
-
-        if (error) {
-          console.error('Supabase error adding exercise:', error)
-          setErrorMsg(t('routines.errorAddingExercise') + error.message)
-          return
-        }
-
-        // Generar les sèries inicials (3 per defecte)
-        const newSets = []
-        const newRoutineSets: Record<string, RoutineSet[]> = { ...routineSets }
-        for (let i = 1; i <= 3; i++) {
-          const setId = crypto.randomUUID()
-          newSets.push({
-            routine_exercise_id: data.id,
-            set_number: i,
-            completed: false
-          })
-          if (!newRoutineSets[data.id]) {
-            newRoutineSets[data.id] = []
-          }
-          newRoutineSets[data.id].push({
-            id: setId,
-            routine_exercise_id: data.id,
-            set_number: i,
-            weight: 0,
-            reps: 0,
-            rir: 0,
-            completed: false,
-            created_at: new Date().toISOString()
-          })
-        }
-        await supabase.from('routine_sets').insert(newSets)
-
-        // Actualitzar exercicis de la rutina i recomptar
-        setRoutineExercises(prev => [...prev, data])
-        setRoutineSets(newRoutineSets)
-
-        const { count } = await supabase
-          .from('routine_exercises')
-          .select('*', { count: 'exact', head: true })
-          .eq('routine_id', selectedRoutine.id)
-        setRoutineExerciseCounts(prev => ({
-          ...prev,
-          [selectedRoutine.id]: count || 0
-        }))
-
-        // Save muscle group if provided
-        if (newExercisePrimary && !DEFAULT_EXERCISES.includes(baseName as any)) {
-          const groups: Record<string, { primary: string; secondary?: string }> = JSON.parse(localStorage.getItem('exercise_muscle_groups') || '{}')
-          groups[baseName] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
-          localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
-        }
-        setNewExerciseName('')
-        setNewExerciseVariant(null)
-        setNewExercisePrimary('')
-        setNewExerciseSecondary('')
-        setShowExerciseModal(false)
-        setSuccessMsg(t('routines.exerciseAdded'))
-      } catch (err) {
-        console.error('Error in handleAddExercise:', err)
-        setErrorMsg(t('routines.unexpectedError'))
-      } finally {
-        setLoading(false)
+        newRoutineSets[data.id].push({
+          id: setId,
+          routine_exercise_id: data.id,
+          set_number: i,
+          weight: 0,
+          reps: 0,
+          rir: 0,
+          completed: false,
+          created_at: new Date().toISOString()
+        })
       }
+      await supabase.from('routine_sets').insert(newSets)
+
+      setRoutineExercises(prev => [...prev, data])
+      setRoutineSets(newRoutineSets)
+
+      const { count } = await supabase
+        .from('routine_exercises')
+        .select('*', { count: 'exact', head: true })
+        .eq('routine_id', selectedRoutine.id)
+      setRoutineExerciseCounts(prev => ({
+        ...prev,
+        [selectedRoutine.id]: count || 0
+      }))
+
+      if (newExercisePrimary && !DEFAULT_EXERCISES.includes(baseName as any)) {
+        const groups: Record<string, { primary: string; secondary?: string }> = JSON.parse(localStorage.getItem('exercise_muscle_groups') || '{}')
+        groups[baseName] = { primary: newExercisePrimary, ...(newExerciseSecondary ? { secondary: newExerciseSecondary } : {}) }
+        localStorage.setItem('exercise_muscle_groups', JSON.stringify(groups))
+      }
+      setNewExerciseName('')
+      setNewExerciseVariant(null)
+      setNewExercisePrimary('')
+      setNewExerciseSecondary('')
+      setShowExerciseModal(false)
+      setSuccessMsg(t('routines.exerciseAdded'))
+    } catch (err) {
+      console.error('Error in handleAddExercise:', err)
+      setErrorMsg(t('routines.unexpectedError'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleRemoveExercise(exerciseId: string) {
+    await supabase.from('routine_sets').delete().eq('routine_exercise_id', exerciseId)
+
+    const { error } = await supabase
+      .from('routine_exercises')
+      .delete()
+      .eq('id', exerciseId)
+
+    if (error) {
+      setErrorMsg(t('routines.errorRemovingExercise'))
+      return
     }
 
-   // Eliminar exercici de la rutina
-   async function handleRemoveExercise(exerciseId: string) {
-     // Eliminar sets associats primer
-     await supabase.from('routine_sets').delete().eq('routine_exercise_id', exerciseId)
+    setRoutineExercises(prev => prev.filter(re => re.id !== exerciseId))
+    setRoutineSets(prev => {
+      const next = { ...prev }
+      delete next[exerciseId]
+      return next
+    })
+    setSuccessMsg(t('routines.exerciseRemoved'))
+  }
 
-     const { error } = await supabase
-       .from('routine_exercises')
-       .delete()
-       .eq('id', exerciseId)
-
-     if (error) {
-       setErrorMsg(t('routines.errorRemovingExercise'))
-       return
-     }
-
-     setRoutineExercises(prev => prev.filter(re => re.id !== exerciseId))
-     setRoutineSets(prev => {
-       const next = { ...prev }
-       delete next[exerciseId]
-       return next
-     })
-     setSuccessMsg(t('routines.exerciseRemoved'))
-   }
-
-  // Actualitzar paràmetres de l'exercici
   async function updateExercise(exerciseId: string, field: string, value: number) {
     const { error } = await supabase
       .from('routine_exercises')
@@ -680,12 +643,11 @@ export default function RutinesPage() {
       return
     }
 
-    setRoutineExercises(prev => prev.map(re => 
+    setRoutineExercises(prev => prev.map(re =>
       re.id === exerciseId ? { ...re, [field]: value } : re
     ))
   }
 
-  // Obtenir recomanció de pes per a un exercici
   async function getWeightRecommendation(exerciseName: string, targetReps: number) {
     if (!user) return null
 
@@ -700,121 +662,114 @@ export default function RutinesPage() {
     return data[0]
   }
 
-   // Funció per sincronitzar els sets d'un exercici amb el seu sets_target
-   async function syncExerciseSets(exerciseId: string, setsTarget: number) {
-     if (!exerciseId) return
+  async function syncExerciseSets(exerciseId: string, setsTarget: number) {
+    if (!exerciseId) return
 
-     try {
-       const { data: existingSets } = await supabase
-         .from('routine_sets')
-         .select('*')
-         .eq('routine_exercise_id', exerciseId)
-         .order('set_number', { ascending: true })
+    try {
+      const { data: existingSets } = await supabase
+        .from('routine_sets')
+        .select('*')
+        .eq('routine_exercise_id', exerciseId)
+        .order('set_number', { ascending: true })
 
-       const currentCount = existingSets?.length || 0
+      const currentCount = existingSets?.length || 0
 
-       if (currentCount < setsTarget) {
-         // Afegir sets faltants
-         const newSets: RoutineSet[] = []
-         for (let i = currentCount + 1; i <= setsTarget; i++) {
-           newSets.push({
-             id: crypto.randomUUID(),
-             routine_exercise_id: exerciseId,
-             set_number: i,
-             weight: 0,
-             reps: 0,
-             rir: 0,
-             completed: false,
-             created_at: new Date().toISOString()
-           })
-         }
-         const setsToInsert = newSets.map(s => ({
-           routine_exercise_id: s.routine_exercise_id,
-           set_number: s.set_number,
-           completed: false
-         }))
-         await supabase.from('routine_sets').insert(setsToInsert)
-         setRoutineSets(prev => ({
-           ...prev,
-           [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
-         }))
-       } else if (currentCount > setsTarget) {
-         // Eliminar sets sobrants (els més alts)
-         const setsToRemove = (existingSets || []).slice(setsTarget).map(s => s.id)
-         if (setsToRemove.length > 0) {
-           await supabase.from('routine_sets').delete().in('id', setsToRemove)
-           const newSets = (existingSets || []).slice(0, setsTarget)
-           setRoutineSets(prev => ({
-             ...prev,
-             [exerciseId]: newSets
-           }))
-         }
-       }
-     } catch (error) {
-       console.error('Error syncing sets:', error)
-     }
-   }
+      if (currentCount < setsTarget) {
+        const newSets: RoutineSet[] = []
+        for (let i = currentCount + 1; i <= setsTarget; i++) {
+          newSets.push({
+            id: crypto.randomUUID(),
+            routine_exercise_id: exerciseId,
+            set_number: i,
+            weight: 0,
+            reps: 0,
+            rir: 0,
+            completed: false,
+            created_at: new Date().toISOString()
+          })
+        }
+        const setsToInsert = newSets.map(s => ({
+          routine_exercise_id: s.routine_exercise_id,
+          set_number: s.set_number,
+          completed: false
+        }))
+        await supabase.from('routine_sets').insert(setsToInsert)
+        setRoutineSets(prev => ({
+          ...prev,
+          [exerciseId]: [...(prev[exerciseId] || []), ...newSets]
+        }))
+      } else if (currentCount > setsTarget) {
+        const setsToRemove = (existingSets || []).slice(setsTarget).map(s => s.id)
+        if (setsToRemove.length > 0) {
+          await supabase.from('routine_sets').delete().in('id', setsToRemove)
+          const newSets = (existingSets || []).slice(0, setsTarget)
+          setRoutineSets(prev => ({
+            ...prev,
+            [exerciseId]: newSets
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing sets:', error)
+    }
+  }
 
-// Marcar/desmarcar série com a completada
-   async function toggleSetCompletion(exerciseId: string, setNumber: number, completed: boolean) {
-     const set = routineSets[exerciseId]?.find(s => s.set_number === setNumber)
-     if (!set) return
+  async function toggleSetCompletion(exerciseId: string, setNumber: number, completed: boolean) {
+    const set = routineSets[exerciseId]?.find(s => s.set_number === setNumber)
+    if (!set) return
 
-     const { error } = await supabase
-       .from('routine_sets')
-       .update({ 
-         completed: completed,
-         completed_at: completed ? new Date().toISOString() : null
-       })
-       .eq('id', set.id)
+    const { error } = await supabase
+      .from('routine_sets')
+      .update({
+        completed: completed,
+        completed_at: completed ? new Date().toISOString() : null
+      })
+      .eq('id', set.id)
 
-     if (error) {
-       setErrorMsg(t('routines.errorUpdatingSet'))
-       return
-     }
+    if (error) {
+      setErrorMsg(t('routines.errorUpdatingSet'))
+      return
+    }
 
-     setRoutineSets(prev => {
-       const current = prev[exerciseId] || []
-       const updated = current.map(s =>
-         s.set_number === setNumber
-           ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
-           : s
-       )
-       return { ...prev, [exerciseId]: updated }
-     })
+    setRoutineSets(prev => {
+      const current = prev[exerciseId] || []
+      const updated = current.map(s =>
+        s.set_number === setNumber
+          ? ({ ...s, completed, completed_at: completed ? new Date().toISOString() : null } as RoutineSet)
+          : s
+      )
+      return { ...prev, [exerciseId]: updated }
+    })
 
-     // Auto-arrencar timer de descans quan es marca una sèrie completada
-     if (completed && typeof window !== 'undefined') {
-       const restPreset = parseInt(localStorage.getItem('rest_timer_default') || '90', 10)
-       window.dispatchEvent(new CustomEvent('rest-timer:start', { detail: { seconds: restPreset } }))
-     }
-   }
+    if (completed && typeof window !== 'undefined') {
+      const restPreset = parseInt(localStorage.getItem('rest_timer_default') || '90', 10)
+      window.dispatchEvent(new CustomEvent('rest-timer:start', { detail: { seconds: restPreset } }))
+    }
+  }
 
-   // Actualitzar pes i reps d'una sèrie
-   async function handleUpdateSet(exerciseId: string, setId: string, weight: number, reps: number) {
-     setRoutineSets(prev => {
-       const current = prev[exerciseId] || []
-       const updated = current.map(s => 
-         s.id === setId ? { ...s, weight, reps } : s
-       )
-       return { ...prev, [exerciseId]: updated }
-     })
+  async function handleUpdateSet(exerciseId: string, setId: string, weight: number, reps: number) {
+    setRoutineSets(prev => {
+      const current = prev[exerciseId] || []
+      const updated = current.map(s =>
+        s.id === setId ? { ...s, weight, reps } : s
+      )
+      return { ...prev, [exerciseId]: updated }
+    })
 
-     const { error } = await supabase
-       .from('routine_sets')
-       .update({ weight, reps })
-       .eq('id', setId)
+    const { error } = await supabase
+      .from('routine_sets')
+      .update({ weight, reps })
+      .eq('id', setId)
 
-     if (error) {
-       console.error('Error updating set:', error)
-     }
-   }
+    if (error) {
+      console.error('Error updating set:', error)
+    }
+  }
 
-  // Auto-completar totes les series d'un exercici (un cop acabades)
   function autoCompleteExercise(exerciseId: string) {
     const sets = routineSets[exerciseId] || []
     const allCompleted = sets.every(s => s.completed)
-    
+
     if (allCompleted) {
       setRoutineSets(prev => {
         const current = prev[exerciseId] || []
@@ -824,7 +779,6 @@ export default function RutinesPage() {
     }
   }
 
-  // Reset per a la següent rutina
   async function resetRoutineForNextDay() {
     if (!selectedRoutine) return
 
@@ -839,229 +793,426 @@ export default function RutinesPage() {
       return
     }
 
-    // Recarrega els sets
     loadRoutineSets(selectedRoutine.id)
     setSuccessMsg(t('routines.resetDone'))
   }
 
-  // Renderitzar llista de rutines
+  // ── LIST VIEW ────────────────────────────────────────────────
   if (!selectedRoutine) {
+    const deletedRoutines: DeletedRoutine[] = (() => {
+      try { return JSON.parse(localStorage.getItem('deleted_routines') || '[]') } catch { return [] }
+    })()
+
+    const filteredRoutines = activeTab === 'fav'
+      ? routines.filter(r => favoriteIds.includes(r.id))
+      : routines
+
+    const todayDow = new Date().getDay()
+
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-        <div className="px-6 pt-8 pb-4">
-          <h1 className="page-title">rutines.</h1>
-        </div>
-
-         <div className="px-6 space-y-3 max-w-2xl mx-auto animate-slide-up">
-           {routines.length === 0 ? (
-             <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('routines.noRoutines')}</p>
-           ) : (
-             <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleRoutineDragEnd}>
-               <SortableContext items={routines.map(r => r.id)} strategy={verticalListSortingStrategy}>
-                 <div className="space-y-3">
-                   {routines.map(routine => (
-                     <SortableExerciseItem key={routine.id} id={routine.id}>
-                       {({ ref, style, attributes, listeners, isDragging }) => (
-                         <div
-                           ref={ref}
-                           style={style}
-                           {...attributes}
-                           className={`card-surface p-4 flex items-center gap-3 hover:bg-[var(--surface-strong)] transition-colors ${isDragging ? 'opacity-60 border-[var(--color-text-tertiary)]' : ''}`}
-                         >
-                           <button
-                             {...listeners}
-                             type="button"
-                             className="touch-none cursor-grab active:cursor-grabbing text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] p-1 flex-shrink-0"
-                             aria-label={t('routines.dragToReorder')}
-                             title={t('routines.dragToReorder')}
-                           >
-                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
-                           </button>
-                           <button
-                             className="flex-1 text-left min-w-0"
-                             onClick={() => handleSelectRoutine(routine)}
-                           >
-                             <p className="text-[var(--color-text-primary)] font-light text-lg truncate">
-                               {routine.name}
-                             </p>
-                             <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
-                               {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
-                             </p>
-                             {(routineDays[routine.id]?.length ?? 0) > 0 && (
-                               <div className="flex gap-1 mt-1.5 flex-wrap">
-                                 {[0,1,2,3,4,5,6].map(d => {
-                                   const active = routineDays[routine.id]?.includes(d)
-                                   if (!active) return null
-                                   return (
-                                     <span key={d} className="text-[9px] font-black px-1.5 py-0.5 rounded-md"
-                                           style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 15%, transparent)', color: 'var(--accent-success)' }}>
-                                       {getDayAbbr(d)}
-                                     </span>
-                                   )
-                                 })}
-                               </div>
-                             )}
-                           </button>
-                           <div className="flex items-center gap-1 flex-shrink-0">
-                             <button
-                               onClick={() => toggleFavorite(routine.id)}
-                               className={`text-lg px-2 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors ${favoriteIds.includes(routine.id) ? 'text-yellow-400' : 'text-[var(--color-text-tertiary)] hover:text-yellow-400'}`}
-                               aria-label={favoriteIds.includes(routine.id) ? t('routines.unfavorite') : t('routines.favorite')}
-                             >
-                               {favoriteIds.includes(routine.id) ? '★' : '☆'}
-                             </button>
-                             <button
-                               onClick={() => handleOpenEditRoutine(routine)}
-                               className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xs px-3 py-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                               aria-label={t('routines.editBtn')}
-                             >
-                               {t('routines.editBtn')}
-                             </button>
-                           </div>
-                         </div>
-                       )}
-                     </SortableExerciseItem>
-                   ))}
-                 </div>
-               </SortableContext>
-             </DndContext>
-           )}
-
+      <div className="min-h-screen bg-[var(--bg)]">
+        {/* Header */}
+        <div className="px-5 pt-12 pb-0 flex items-end justify-between max-w-2xl mx-auto">
+          <div>
+            <p className="section-label mb-1">les teves rutines</p>
+            <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
+              Rutines.
+            </h1>
+          </div>
           <button
             onClick={() => setShowRoutineModal(true)}
-            className="w-full py-4 rounded-2xl font-medium border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium text-white tap-scale"
+            style={{ backgroundColor: 'var(--accent)' }}
           >
-            {t('routines.newBtn')}
+            + Nova
           </button>
         </div>
 
-         {/* Modal Nova Rutina */}
-         {showRoutineModal && (
-           <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.new')}</h3>
+        {/* Filter pills */}
+        <div className="flex gap-1.5 px-5 pt-4 pb-3 max-w-2xl mx-auto">
+          {[
+            { id: 'all' as const, label: 'Totes', count: routines.length },
+            { id: 'fav' as const, label: 'Preferides', count: routines.filter(r => favoriteIds.includes(r.id)).length },
+            { id: 'deleted' as const, label: 'Eliminades', count: deletedRoutines.length },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-1.5 px-3.5 py-[7px] rounded-full text-[12px] font-medium border transition-colors"
+              style={activeTab === tab.id
+                ? { backgroundColor: 'var(--text)', color: 'var(--bg)', borderColor: 'var(--text)' }
+                : { backgroundColor: 'transparent', color: 'var(--text-2)', borderColor: 'var(--rule)' }}
+            >
+              {tab.label}
+              <span className="font-mono text-[10px] opacity-70">{tab.count}</span>
+            </button>
+          ))}
+        </div>
 
-               <p className="section-label mb-2">{t('routines.template')}</p>
-               <div className="space-y-2 mb-4">
-                 <button
-                   type="button"
-                   onClick={() => setSelectedTemplate('')}
-                   className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-[var(--surface-strong)] border-[var(--color-text-tertiary)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] border-[var(--border)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)]'}`}
-                 >
-                   <p className="text-sm font-light">{t('routines.empty')}</p>
-                   <p className="text-xs text-[var(--color-text-tertiary)]">{t('routines.emptyDesc')}</p>
-                 </button>
-                 {ROUTINE_TEMPLATES.map(tpl => (
-                   <button
-                     key={tpl.id}
-                     type="button"
-                     onClick={() => setSelectedTemplate(tpl.id)}
-                     className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-[var(--surface-strong)] border-[var(--color-text-tertiary)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] border-[var(--border)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)]'}`}
-                   >
-                     <p className="text-sm font-light">{t(tpl.nameKey)}</p>
-                     <p className="text-xs text-[var(--color-text-tertiary)]">{t(tpl.descKey)}</p>
-                   </button>
-                 ))}
-               </div>
+        <div className="px-5 pb-6 max-w-2xl mx-auto">
+          {/* This-week calendar */}
+          <div className="card-surface px-3.5 py-3 mb-3">
+            <p className="section-label mb-2">aquesta setmana</p>
+            <div className="flex gap-1">
+              {[0, 1, 2, 3, 4, 5, 6].map(d => {
+                const isToday = todayDow === d
+                const hasRoutine = routines.some(r => (routineDays[r.id] || []).includes(d))
+                const diff = d - todayDow
+                const dateObj = new Date()
+                dateObj.setDate(dateObj.getDate() + diff)
+                const dateNum = dateObj.getDate()
+                return (
+                  <div
+                    key={d}
+                    className="flex-1 h-14 rounded-[10px] flex flex-col items-center justify-between py-1.5"
+                    style={{
+                      background: isToday ? 'color-mix(in srgb, var(--accent) 20%, transparent)' : hasRoutine ? 'var(--card-hi)' : 'transparent',
+                      border: `1px solid ${isToday ? 'var(--accent)' : 'var(--rule)'}`,
+                    }}
+                  >
+                    <span
+                      className="font-mono text-[9px] leading-none"
+                      style={{ color: isToday ? 'var(--accent)' : 'var(--text-3)', fontWeight: isToday ? 600 : 400 }}
+                    >
+                      {getDayAbbr(d)}
+                    </span>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: hasRoutine ? (isToday ? 'var(--accent)' : 'var(--text-3)') : 'transparent' }}
+                    />
+                    <span
+                      className="font-mono text-[11px] leading-none"
+                      style={{ color: isToday ? 'var(--accent)' : hasRoutine ? 'var(--text)' : 'var(--text-3)', fontWeight: isToday ? 600 : 500 }}
+                    >
+                      {dateNum}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
-               {(!selectedTemplate || ROUTINE_TEMPLATES.find(tpl => tpl.id === selectedTemplate)?.routines.length === 1) && (
-                 <input
-                   type="text"
-                   value={newRoutineName}
-                   onChange={(e) => setNewRoutineName(e.target.value)}
-                   placeholder={selectedTemplate ? t('routines.customName') : t('routines.routineName')}
-                   className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 />
-               )}
-               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
-               <div className="flex gap-3">
-                 <button onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
-                  <button onClick={handleCreateRoutine} disabled={loading} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium disabled:opacity-50 hover:opacity-90 transition-opacity">{loading ? '…' : t('common.create')}</button>
-               </div>
-             </div>
-           </div>
-         )}
+          {/* Deleted tab */}
+          {activeTab === 'deleted' ? (
+            deletedRoutines.length === 0 ? (
+              <p className="text-[var(--text-3)] text-sm py-6 text-center">Cap rutina eliminada</p>
+            ) : (
+              <div className="space-y-2">
+                {deletedRoutines.map((dr, idx) => (
+                  <div
+                    key={dr.id}
+                    className="card-surface px-4 py-3 opacity-60"
+                    style={{ animation: `dopSlideUp 500ms ${idx * 70}ms cubic-bezier(.22,1,.36,1) both` }}
+                  >
+                    <p className="text-[var(--text)] font-medium text-[15px] truncate">{dr.name}</p>
+                    <p className="text-[var(--text-3)] font-mono text-[10px] mt-0.5">
+                      {dr.exercises?.length || 0} exercicis · {new Date(dr.deletedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            <>
+              {filteredRoutines.length === 0 ? (
+                <p className="text-[var(--text-3)] text-sm py-6 text-center">
+                  {activeTab === 'fav' ? 'Cap rutina preferida' : t('routines.noRoutines')}
+                </p>
+              ) : (
+                <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleRoutineDragEnd}>
+                  <SortableContext items={filteredRoutines.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {filteredRoutines.map((routine, idx) => {
+                        const isFav = favoriteIds.includes(routine.id)
+                        const days = routineDays[routine.id] || []
+                        return (
+                          <SortableExerciseItem key={routine.id} id={routine.id}>
+                            {({ ref, style, attributes, listeners, isDragging }) => (
+                              <div
+                                ref={ref}
+                                style={{ ...style, animation: `dopSlideUp 500ms ${idx * 70}ms cubic-bezier(.22,1,.36,1) both` }}
+                                {...attributes}
+                                className={`card-surface overflow-hidden transition-all ${isDragging ? 'opacity-60' : ''}`}
+                              >
+                                <div className="px-4 pt-3.5 pb-3.5">
+                                  <div className="flex items-start gap-2.5">
+                                    {/* Drag handle */}
+                                    <button
+                                      {...listeners}
+                                      type="button"
+                                      className="touch-none cursor-grab active:cursor-grabbing mt-[5px] flex-shrink-0"
+                                      style={{ color: 'var(--text-3)' }}
+                                      aria-label={t('routines.dragToReorder')}
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                        <circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/>
+                                        <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                                        <circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/>
+                                      </svg>
+                                    </button>
 
-         {/* Modal Editar Rutina */}
-         {showEditRoutineModal && editingRoutine && (
-           <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}>
-             <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-               <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.edit')}</h3>
-               <input
-                 type="text"
-                 value={editRoutineName}
-                 onChange={(e) => setEditRoutineName(e.target.value)}
-                 placeholder={t('routines.routineName')}
-                 className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 autoFocus
-               />
-               {/* Day-of-week selector */}
-               <div className="mb-4">
-                 <p className="section-label mb-2">{t('routines.trainingDays')}</p>
-                 <div className="flex gap-1.5">
-                   {[0,1,2,3,4,5,6].map(d => {
-                     const active = routineDays[editingRoutine.id]?.includes(d)
-                     return (
-                       <button
-                         key={d}
-                         type="button"
-                         onClick={() => toggleRoutineDay(editingRoutine.id, d)}
-                         className="flex-1 py-2 rounded-xl text-xs font-black transition-all"
-                         style={{
-                           backgroundColor: active ? 'var(--accent-success)' : 'var(--surface-strong)',
-                           color: active ? '#fff' : 'var(--color-text-tertiary)',
-                           border: `1px solid ${active ? 'var(--accent-success)' : 'var(--border)'}`,
-                         }}
-                       >
-                         {getDayAbbr(d)}
-                       </button>
-                     )
-                   })}
-                 </div>
-               </div>
-               {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
-               <div className="flex gap-3 mb-3">
-                 <button onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
-                  <button onClick={handleUpdateRoutine} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
-               </div>
-               {!showDeleteConfirm ? (
-                 <button
-                   onClick={() => setShowDeleteConfirm(true)}
-                   className="w-full py-2.5 rounded-2xl text-sm font-light transition-colors"
-                   style={{ color: 'var(--accent-danger)', backgroundColor: 'color-mix(in srgb, var(--accent-danger) 10%, transparent)' }}
-                 >
-                   {t('routines.deleteRoutine')}
-                 </button>
-               ) : (
-                 <div className="space-y-2">
-                   <p className="text-sm text-center" style={{ color: 'var(--accent-danger)' }}>
-                     {t('routines.deleteConfirm', { name: editingRoutine.name })}
-                   </p>
-                   <div className="flex gap-2">
-                     <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 rounded-2xl text-sm bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
-                     <button onClick={handleDeleteRoutine} disabled={loading} className="flex-1 py-2.5 rounded-2xl text-sm font-medium disabled:opacity-50 transition-opacity" style={{ backgroundColor: 'var(--accent-danger)', color: '#fff' }}>{loading ? '…' : t('common.delete')}</button>
-                   </div>
-                 </div>
-               )}
-             </div>
-           </div>
-         )}
+                                    {/* Main tap area → detail */}
+                                    <button className="flex-1 min-w-0 text-left" onClick={() => handleSelectRoutine(routine)}>
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <h3 className="text-[22px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)] truncate">
+                                          {routine.name}
+                                        </h3>
+                                        {isFav && (
+                                          <span className="text-[13px] flex-shrink-0" style={{ color: 'var(--accent)' }}>★</span>
+                                        )}
+                                      </div>
+                                      {routine.description ? (
+                                        <p className="text-[var(--text-2)] text-[13px] leading-snug mt-1 mb-2">{routine.description}</p>
+                                      ) : (
+                                        <div className="mb-2" />
+                                      )}
+                                      <span className="font-mono text-[10px] text-[var(--text-3)]">
+                                        {t('routines.exercisesCount', { count: String(routineExerciseCounts[routine.id] || 0) })}
+                                      </span>
+                                    </button>
+
+                                    {/* Right column: day circles + action buttons */}
+                                    <div className="flex-shrink-0 flex flex-col items-end gap-2.5">
+                                      <div className="flex gap-0.5">
+                                        {[0, 1, 2, 3, 4, 5, 6].map(d => {
+                                          const active = days.includes(d)
+                                          return (
+                                            <span
+                                              key={d}
+                                              className="w-[18px] h-[18px] rounded-full flex items-center justify-center font-mono text-[8px] font-medium"
+                                              style={{
+                                                background: active ? 'var(--accent)' : 'transparent',
+                                                color: active ? '#fff' : 'var(--text-3)',
+                                                border: `1px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
+                                              }}
+                                            >
+                                              {getDayAbbr(d)[0]}
+                                            </span>
+                                          )
+                                        })}
+                                      </div>
+                                      <div className="flex items-center gap-0.5">
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); toggleFavorite(routine.id) }}
+                                          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--card-hi)]"
+                                          style={{ color: isFav ? 'var(--accent)' : 'var(--text-3)' }}
+                                          aria-label={isFav ? t('routines.unfavorite') : t('routines.favorite')}
+                                        >
+                                          {isFav ? '★' : '☆'}
+                                        </button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleOpenEditRoutine(routine) }}
+                                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[13px] transition-colors hover:bg-[var(--card-hi)]"
+                                          style={{ color: 'var(--text-3)' }}
+                                          aria-label={t('routines.editBtn')}
+                                        >
+                                          ✎
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </SortableExerciseItem>
+                        )
+                      })}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
+
+              <button
+                onClick={() => setShowRoutineModal(true)}
+                className="w-full mt-3 py-4 rounded-2xl text-sm font-medium border-2 border-dashed transition-colors"
+                style={{ borderColor: 'var(--rule)', color: 'var(--text-3)' }}
+              >
+                {t('routines.newBtn')}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Modal: Nova Rutina */}
+        {showRoutineModal && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in"
+            onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}
+          >
+            <div
+              className="bg-[var(--card)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in"
+              style={{ boxShadow: 'var(--shadow)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] mb-4">{t('routines.new')}</h3>
+
+              <p className="section-label mb-2">{t('routines.template')}</p>
+              <div className="space-y-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTemplate('')}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === '' ? 'bg-[var(--card-hi)] border-[var(--text-3)] text-[var(--text)]' : 'bg-[var(--card-hi)] border-[var(--rule)] text-[var(--text-3)] hover:border-[var(--text-3)]'}`}
+                >
+                  <p className="text-sm font-medium">{t('routines.empty')}</p>
+                  <p className="text-xs text-[var(--text-3)]">{t('routines.emptyDesc')}</p>
+                </button>
+                {ROUTINE_TEMPLATES.map(tpl => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(tpl.id)}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl border transition-colors ${selectedTemplate === tpl.id ? 'bg-[var(--card-hi)] border-[var(--text-3)] text-[var(--text)]' : 'bg-[var(--card-hi)] border-[var(--rule)] text-[var(--text-3)] hover:border-[var(--text-3)]'}`}
+                  >
+                    <p className="text-sm font-medium">{t(tpl.nameKey)}</p>
+                    <p className="text-xs text-[var(--text-3)]">{t(tpl.descKey)}</p>
+                  </button>
+                ))}
+              </div>
+
+              {(!selectedTemplate || ROUTINE_TEMPLATES.find(tpl => tpl.id === selectedTemplate)?.routines.length === 1) && (
+                <input
+                  type="text"
+                  value={newRoutineName}
+                  onChange={(e) => setNewRoutineName(e.target.value)}
+                  placeholder={selectedTemplate ? t('routines.customName') : t('routines.routineName')}
+                  className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-2xl px-4 py-3 mb-3 border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              )}
+              {errorMsg && <p className="text-sm mb-3 text-[var(--danger)]">{errorMsg}</p>}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowRoutineModal(false); setSelectedTemplate('') }}
+                  className="flex-1 py-3 rounded-2xl bg-[var(--card-hi)] text-[var(--text-2)] font-medium hover:bg-[var(--rule-soft)] transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleCreateRoutine}
+                  disabled={loading}
+                  className="flex-1 py-3 rounded-2xl font-medium text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: 'var(--accent)' }}
+                >
+                  {loading ? '…' : t('common.create')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Editar Rutina */}
+        {showEditRoutineModal && editingRoutine && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in"
+            onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}
+          >
+            <div
+              className="bg-[var(--card)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm max-h-[85vh] overflow-y-auto animate-scale-in"
+              style={{ boxShadow: 'var(--shadow)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] mb-4">{t('routines.edit')}</h3>
+              <input
+                type="text"
+                value={editRoutineName}
+                onChange={(e) => setEditRoutineName(e.target.value)}
+                placeholder={t('routines.routineName')}
+                className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-2xl px-4 py-3 mb-3 border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                autoFocus
+              />
+              {/* Day-of-week selector */}
+              <div className="mb-4">
+                <p className="section-label mb-2">{t('routines.trainingDays')}</p>
+                <div className="flex gap-1.5">
+                  {[0, 1, 2, 3, 4, 5, 6].map(d => {
+                    const active = routineDays[editingRoutine.id]?.includes(d)
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => toggleRoutineDay(editingRoutine.id, d)}
+                        className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                        style={{
+                          backgroundColor: active ? 'var(--good)' : 'var(--card-hi)',
+                          color: active ? '#fff' : 'var(--text-3)',
+                          border: `1px solid ${active ? 'var(--good)' : 'var(--rule)'}`,
+                        }}
+                      >
+                        {getDayAbbr(d)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {errorMsg && <p className="text-sm mb-3 text-[var(--danger)]">{errorMsg}</p>}
+              <div className="flex gap-3 mb-3">
+                <button
+                  onClick={() => { setShowEditRoutineModal(false); setShowDeleteConfirm(false) }}
+                  className="flex-1 py-3 rounded-2xl bg-[var(--card-hi)] text-[var(--text-2)] font-medium hover:bg-[var(--rule-soft)] transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleUpdateRoutine}
+                  className="flex-1 py-3 rounded-2xl font-medium text-white hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: 'var(--accent)' }}
+                >
+                  {t('common.save')}
+                </button>
+              </div>
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full py-2.5 rounded-2xl text-sm font-medium transition-colors"
+                  style={{ color: 'var(--danger)', backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)' }}
+                >
+                  {t('routines.deleteRoutine')}
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-center" style={{ color: 'var(--danger)' }}>
+                    {t('routines.deleteConfirm', { name: editingRoutine.name })}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 py-2.5 rounded-2xl text-sm bg-[var(--card-hi)] text-[var(--text-2)] hover:bg-[var(--rule-soft)] transition-colors"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                    <button
+                      onClick={handleDeleteRoutine}
+                      disabled={loading}
+                      className="flex-1 py-2.5 rounded-2xl text-sm font-medium text-white disabled:opacity-50 transition-opacity"
+                      style={{ backgroundColor: 'var(--danger)' }}
+                    >
+                      {loading ? '…' : t('common.delete')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {successMsg && (
-          <div className="fixed bottom-24 left-6 right-6 px-4 py-3 rounded-2xl fade-in z-50 backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent-success) 40%, transparent)' }}>
-            <p className="text-sm text-center" style={{ color: 'var(--accent-success)' }}>{successMsg}</p>
+          <div
+            className="fixed bottom-24 left-5 right-5 px-4 py-3 rounded-2xl fade-in z-50 backdrop-blur-md"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--good) 18%, var(--card))',
+              border: '1px solid color-mix(in srgb, var(--good) 40%, transparent)',
+            }}
+          >
+            <p className="text-sm text-center" style={{ color: 'var(--good)' }}>{successMsg}</p>
           </div>
         )}
 
         <QuickLogFab />
-        <div className="h-20" />
+        <div className="h-24" />
       </div>
     )
   }
 
-  // Renderitzar detall de rutina
-  const screens = [{ label: 'Llista' }]
-
+  // ── DETAIL VIEW ──────────────────────────────────────────────
   const completedExercises = routineExercises.filter(re => {
     const sets = routineSets[re.id] || []
     return sets.length > 0 && sets.every(s => s.completed)
@@ -1070,448 +1221,520 @@ export default function RutinesPage() {
   const progressPct = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[var(--bg)]">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4 max-w-2xl mx-auto">
         <button
           onClick={handleBackToList}
-          className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm transition-colors inline-flex items-center gap-1"
+          className="text-[var(--text-3)] hover:text-[var(--text)] text-sm transition-colors inline-flex items-center gap-1 mb-2"
         >
-          <span aria-hidden>‹</span> {t('common.back')}
+          <span aria-hidden>‹</span> Rutines
         </button>
-        <h1 className="page-title mt-2">{selectedRoutine?.name}</h1>
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
+          {selectedRoutine?.name}
+        </h1>
       </div>
 
-      <div className="px-6 space-y-5 max-w-2xl mx-auto animate-slide-up">
-        {/* Progres general */}
+      <div className="px-5 space-y-4 max-w-2xl mx-auto animate-slide-up">
+        {/* Progress card */}
         <div className="card-surface px-4 py-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[var(--color-text-secondary)] text-sm">
+            <p className="text-[var(--text-2)] text-sm">
               {t('routines.routineProgressFormat', { done: String(completedExercises), total: String(totalExercises) })}
             </p>
-            <p className="text-xs text-[var(--color-text-tertiary)] tabular-nums">{progressPct}%</p>
+            <p className="font-mono text-xs text-[var(--text-3)] tabular-nums">{progressPct}%</p>
           </div>
-          <div className="h-1 rounded-full overflow-hidden bg-[var(--surface-hover)]">
-            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progressPct}%`, backgroundColor: 'var(--accent-success)' }} />
+          <div className="h-[3px] rounded-full overflow-hidden bg-[var(--rule-soft)]">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%`, backgroundColor: 'var(--good)' }}
+            />
           </div>
         </div>
 
-        {/* Llista d'exercicis */}
+        {/* Exercise list */}
         <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleExerciseDragEnd}>
           <SortableContext items={routineExercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3">
-        {routineExercises.map(exercise => {
-          const sets = routineSets[exercise.id] || []
-          const completedSets = sets.filter(s => s.completed).length
-          const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
+            <div className="space-y-3">
+              {routineExercises.map(exercise => {
+                const sets = routineSets[exercise.id] || []
+                const completedSets = sets.filter(s => s.completed).length
+                const allCompleted = sets.length >= exercise.sets_target && sets.every(s => s.completed)
 
-          return (
-            <SortableExerciseItem key={exercise.id} id={exercise.id}>
-              {({ ref, style, attributes, listeners, isDragging }) => (
-            <div
-              ref={ref}
-              style={style}
-              {...attributes}
-              className={`card-surface p-4 space-y-3 ${isDragging ? 'border-[var(--color-text-tertiary)] bg-[var(--surface-strong)]' : ''} ${allCompleted ? 'opacity-75' : ''}`}
-            >
-               <div className="flex items-start gap-2">
-                 <button
-                   {...listeners}
-                   type="button"
-                   className="touch-none cursor-grab active:cursor-grabbing text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] -ml-1 p-1 flex-shrink-0"
-                   aria-label={t('routines.dragToReorder')}
-                   title={t('routines.dragToReorder')}
-                 >
-                   <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></svg>
-                 </button>
-                 <div className="flex-1 min-w-0">
-                   <p className="text-[var(--color-text-primary)] font-light truncate flex items-center gap-2">
-                     {tEx(exercise.exercise)}
-                     {allCompleted && <span className="text-xs" style={{ color: 'var(--accent-success)' }}>✓</span>}
-                   </p>
-                   <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">
-                      {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
-                      <span className="mx-1.5">·</span>
-                      <span className="tabular-nums">{completedSets}/{exercise.sets_target}</span>
-                      {(() => {
-                       const parts = exercise.exercise.split(' · ')
-                       const parsedVariant = parts.length > 1 ? parts[1] : null
-                       return parsedVariant ? (
-                         <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-tertiary)]">
-                           {VARIANT_KEYS[parsedVariant] ? t(VARIANT_KEYS[parsedVariant]) : parsedVariant}
-                         </span>
-                       ) : null
-                     })()}
-                   </p>
-                 </div>
-                 <div className="flex gap-0.5 flex-shrink-0">
-                   <button
-                     onClick={() => handleOpenEditExercise(exercise)}
-                     className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-sm w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                     title={t('routines.editExerciseTitle')}
-                     aria-label={t('routines.editExerciseTitle')}
-                   >
-                     ✎
-                   </button>
-                    <button
-                      onClick={() => handleRemoveExercise(exercise.id)}
-                      className="text-[var(--color-text-tertiary)] hover:text-[var(--accent-danger)] text-sm w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                      title={t('routines.removeExerciseTitle')}
-                      aria-label={t('routines.removeExerciseTitle')}
-                    >
-                      ✕
-                    </button>
-                 </div>
-               </div>
+                return (
+                  <SortableExerciseItem key={exercise.id} id={exercise.id}>
+                    {({ ref, style, attributes, listeners, isDragging }) => (
+                      <div
+                        ref={ref}
+                        style={style}
+                        {...attributes}
+                        className={`card-surface p-4 space-y-3 transition-all ${isDragging ? 'opacity-60' : ''} ${allCompleted ? 'opacity-75' : ''}`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <button
+                            {...listeners}
+                            type="button"
+                            className="touch-none cursor-grab active:cursor-grabbing -ml-1 p-1 flex-shrink-0 mt-0.5"
+                            style={{ color: 'var(--text-3)' }}
+                            aria-label={t('routines.dragToReorder')}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                              <circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/>
+                              <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                              <circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/>
+                            </svg>
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[var(--text)] font-medium truncate flex items-center gap-2">
+                              {tEx(exercise.exercise)}
+                              {allCompleted && <span className="text-xs" style={{ color: 'var(--good)' }}>✓</span>}
+                            </p>
+                            <p className="text-[var(--text-3)] font-mono text-xs mt-0.5">
+                              {t('routines.repsRangeFormat', { sets: String(exercise.sets_target), repsMin: String(exercise.reps_min), repsMax: String(exercise.reps_max) })}
+                              <span className="mx-1.5">·</span>
+                              <span className="tabular-nums">{completedSets}/{exercise.sets_target}</span>
+                              {(() => {
+                                const parts = exercise.exercise.split(' · ')
+                                const parsedVariant = parts.length > 1 ? parts[1] : null
+                                return parsedVariant ? (
+                                  <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-[var(--card-hi)] text-[var(--text-3)]">
+                                    {VARIANT_KEYS[parsedVariant] ? t(VARIANT_KEYS[parsedVariant]) : parsedVariant}
+                                  </span>
+                                ) : null
+                              })()}
+                            </p>
+                          </div>
+                          <div className="flex gap-0.5 flex-shrink-0">
+                            <button
+                              onClick={() => handleOpenEditExercise(exercise)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--card-hi)] text-sm"
+                              style={{ color: 'var(--text-3)' }}
+                              title={t('routines.editExerciseTitle')}
+                              aria-label={t('routines.editExerciseTitle')}
+                            >
+                              ✎
+                            </button>
+                            <button
+                              onClick={() => handleRemoveExercise(exercise.id)}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--card-hi)] text-sm"
+                              style={{ color: 'var(--text-3)' }}
+                              title={t('routines.removeExerciseTitle')}
+                              aria-label={t('routines.removeExerciseTitle')}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
 
-              {/* Última sessió */}
-              {lastSessions[exercise.exercise] && (
-                <div className="px-3 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)]">{t('workouts.lastSession')}</p>
-                    <p className="text-[10px] text-[var(--color-text-tertiary)]">
-                      {new Date(lastSessions[exercise.exercise].date).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {lastSessions[exercise.exercise].sets.map((s, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light tabular-nums">
-                        {format(s.weight)}{unit} × {s.reps}
-                        {s.rir != null && <span className="text-[var(--color-text-tertiary)]"> · RIR {s.rir}</span>}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                        {/* Last session */}
+                        {lastSessions[exercise.exercise] && (
+                          <div className="px-3 py-2 rounded-xl border" style={{ backgroundColor: 'var(--card-hi)', borderColor: 'var(--rule)' }}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <p className="section-label">{t('workouts.lastSession')}</p>
+                              <p className="font-mono text-[10px] text-[var(--text-3)]">
+                                {new Date(lastSessions[exercise.exercise].date).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {lastSessions[exercise.exercise].sets.map((s, i) => (
+                                <span key={i} className="font-mono text-xs px-2 py-0.5 rounded-md bg-[var(--rule-soft)] text-[var(--text-2)] tabular-nums">
+                                  {format(s.weight)}{unit} × {s.reps}
+                                  {s.rir != null && <span className="text-[var(--text-3)]"> · RIR {s.rir}</span>}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-              {/* Llista de series */}
-              <div className="space-y-1.5">
-               {sets.map((set) => {
-                 const prev = lastSessions[exercise.exercise]?.sets[set.set_number - 1]
-                 const curW = set.weight || 0, curR = set.reps || 0
-                 const hasCurrent = curR > 0 && (curW > 0 || (prev?.weight === 0))
-                 const isBodyweight = prev?.weight === 0 && curW === 0
-                 const curMetric = isBodyweight ? curR : calculate1RM(curW, curR)
-                 const prevMetric = prev ? (isBodyweight ? prev.reps : calculate1RM(prev.weight, prev.reps)) : 0
-                 const diff = curMetric - prevMetric
-                 const diffPct = prevMetric > 0 ? Math.round((diff / prevMetric) * 100) : 0
-                 return (
-                 <div
-                   key={set.id}
-                   className={`flex items-center gap-2 p-2 rounded-xl border transition-colors ${
-                     set.completed
-                       ? 'border-transparent'
-                       : 'bg-[var(--surface)] border-[var(--border)]'
-                   }`}
-                   style={set.completed ? { backgroundColor: 'color-mix(in srgb, var(--accent-success) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent-success) 25%, transparent)' } : undefined}
-                 >
-                   <span className="text-[var(--color-text-tertiary)] text-[11px] font-medium tabular-nums w-5 text-center flex-shrink-0">{set.set_number}</span>
+                        {/* Sets */}
+                        <div className="space-y-1.5">
+                          {sets.map((set) => {
+                            const prev = lastSessions[exercise.exercise]?.sets[set.set_number - 1]
+                            const curW = set.weight || 0, curR = set.reps || 0
+                            const hasCurrent = curR > 0 && (curW > 0 || (prev?.weight === 0))
+                            const isBodyweight = prev?.weight === 0 && curW === 0
+                            const curMetric = isBodyweight ? curR : calculate1RM(curW, curR)
+                            const prevMetric = prev ? (isBodyweight ? prev.reps : calculate1RM(prev.weight, prev.reps)) : 0
+                            const diff = curMetric - prevMetric
+                            const diffPct = prevMetric > 0 ? Math.round((diff / prevMetric) * 100) : 0
+                            return (
+                              <div
+                                key={set.id}
+                                className="flex items-center gap-2 p-2 rounded-xl border transition-colors"
+                                style={set.completed
+                                  ? { backgroundColor: 'color-mix(in srgb, var(--good) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--good) 25%, transparent)' }
+                                  : { backgroundColor: 'var(--card-hi)', borderColor: 'var(--rule)' }}
+                              >
+                                <span className="font-mono text-[11px] font-medium tabular-nums w-5 text-center flex-shrink-0" style={{ color: 'var(--text-3)' }}>
+                                  {set.set_number}
+                                </span>
 
-                   <button
-                     onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
-                     className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
-                     style={set.completed
-                       ? { backgroundColor: 'var(--accent-success)', borderColor: 'var(--accent-success)', color: '#fff' }
-                       : { borderColor: 'var(--border)' }}
-                     aria-label={set.completed ? t('routines.completed') : t('routines.pending')}
-                   >
-                     {set.completed && <span className="text-xs leading-none">✓</span>}
-                   </button>
+                                <button
+                                  onClick={() => toggleSetCompletion(exercise.id, set.set_number, !set.completed)}
+                                  className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
+                                  style={set.completed
+                                    ? { backgroundColor: 'var(--good)', borderColor: 'var(--good)', color: '#fff' }
+                                    : { borderColor: 'var(--rule)' }}
+                                  aria-label={set.completed ? t('routines.completed') : t('routines.pending')}
+                                >
+                                  {set.completed && <span className="text-xs leading-none">✓</span>}
+                                </button>
 
-                   {!set.completed ? (
-                     <>
-                       <input
-                         type="number"
-                         value={set.weight ? (unit === 'kg' ? set.weight : Number(fromKg(set.weight).toFixed(1))) : ''}
-                         onChange={(e) => {
-                           const inputVal = parseFloat(e.target.value) || 0
-                           handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
-                         }}
-                         placeholder={prev ? format(prev.weight) : unit}
-                         className="w-16 bg-[var(--card)] text-[var(--color-text-primary)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--border)] focus:outline-none focus:border-[var(--color-text-tertiary)]"
-                       />
-                       <span className="text-[var(--color-text-tertiary)] text-xs">×</span>
-                       <input
-                         type="number"
-                         value={set.reps || ''}
-                         onChange={(e) => {
-                           const r = parseInt(e.target.value) || 0
-                           handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
-                         }}
-                         placeholder={prev ? String(prev.reps) : t('routines.repsLabel')}
-                         className="w-14 bg-[var(--card)] text-[var(--color-text-primary)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--border)] focus:outline-none focus:border-[var(--color-text-tertiary)]"
-                       />
-                     </>
-                   ) : (
-                     <span className="text-[var(--color-text-secondary)] text-sm tabular-nums">{format(set.weight)}{unit} × {set.reps}</span>
-                   )}
+                                {!set.completed ? (
+                                  <>
+                                    <input
+                                      type="number"
+                                      value={set.weight ? (unit === 'kg' ? set.weight : Number(fromKg(set.weight).toFixed(1))) : ''}
+                                      onChange={(e) => {
+                                        const inputVal = parseFloat(e.target.value) || 0
+                                        handleUpdateSet(exercise.id, set.id, toKg(inputVal), set.reps || 0)
+                                      }}
+                                      placeholder={prev ? format(prev.weight) : unit}
+                                      className="w-16 bg-[var(--card)] text-[var(--text)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                                    />
+                                    <span className="text-[var(--text-3)] text-xs">×</span>
+                                    <input
+                                      type="number"
+                                      value={set.reps || ''}
+                                      onChange={(e) => {
+                                        const r = parseInt(e.target.value) || 0
+                                        handleUpdateSet(exercise.id, set.id, set.weight || 0, r)
+                                      }}
+                                      placeholder={prev ? String(prev.reps) : t('routines.repsLabel')}
+                                      className="w-14 bg-[var(--card)] text-[var(--text)] rounded-lg px-2 py-1.5 text-sm tabular-nums border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                                    />
+                                  </>
+                                ) : (
+                                  <span className="font-mono text-sm tabular-nums text-[var(--text-2)]">
+                                    {format(set.weight)}{unit} × {set.reps}
+                                  </span>
+                                )}
 
-                   <div className="ml-auto flex items-center gap-1.5">
-                     {prev && hasCurrent && prevMetric > 0 && diff !== 0 && (
-                       <span
-                         className="text-[10px] px-1.5 py-0.5 rounded font-medium tabular-nums"
-                         style={diff > 0
-                           ? { backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, transparent)', color: 'var(--accent-success)' }
-                           : { color: 'var(--color-text-tertiary)' }}
-                         title={`${t('workouts.previous')}: ${format(prev.weight)}${unit} × ${prev.reps}`}
-                       >
-                         {diff > 0 ? `▲${diffPct}%` : `▼${Math.abs(diffPct)}%`}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-                 )
-               })}
-              </div>
+                                <div className="ml-auto flex items-center gap-1.5">
+                                  {prev && hasCurrent && prevMetric > 0 && diff !== 0 && (
+                                    <span
+                                      className="font-mono text-[10px] px-1.5 py-0.5 rounded font-medium tabular-nums"
+                                      style={diff > 0
+                                        ? { backgroundColor: 'color-mix(in srgb, var(--good) 18%, transparent)', color: 'var(--good)' }
+                                        : { color: 'var(--text-3)' }}
+                                      title={`${t('workouts.previous')}: ${format(prev.weight)}${unit} × ${prev.reps}`}
+                                    >
+                                      {diff > 0 ? `▲${diffPct}%` : `▼${Math.abs(diffPct)}%`}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
 
-              {/* Auto-completar quan totes les series estan fetes */}
-              {allCompleted && (
-                <button
-                  onClick={() => autoCompleteExercise(exercise.id)}
-                  className="w-full text-xs py-2 rounded-xl transition-colors"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 12%, transparent)', color: 'var(--accent-success)', border: '1px solid color-mix(in srgb, var(--accent-success) 30%, transparent)' }}
-                >
-                  ✓ {t('routines.exerciseCompleted')}
-                </button>
-              )}
+                        {allCompleted && (
+                          <button
+                            onClick={() => autoCompleteExercise(exercise.id)}
+                            className="w-full text-xs py-2 rounded-xl transition-colors"
+                            style={{
+                              backgroundColor: 'color-mix(in srgb, var(--good) 12%, transparent)',
+                              color: 'var(--good)',
+                              border: '1px solid color-mix(in srgb, var(--good) 30%, transparent)',
+                            }}
+                          >
+                            ✓ {t('routines.exerciseCompleted')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </SortableExerciseItem>
+                )
+              })}
             </div>
-              )}
-            </SortableExerciseItem>
-          )
-        })}
-        </div>
           </SortableContext>
         </DndContext>
 
-        {/* Afegir exercici */}
+        {/* Add exercise */}
         <button
           onClick={() => setShowExerciseModal(true)}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-[var(--border)] text-[var(--color-text-tertiary)] hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="w-full py-3 rounded-2xl border-2 border-dashed text-sm transition-colors"
+          style={{ borderColor: 'var(--rule)', color: 'var(--text-3)' }}
         >
           + {t('routines.addExercise')}
         </button>
 
-        {/* Reset per demà */}
+        {/* Reset */}
         <button
           onClick={resetRoutineForNextDay}
-          className="w-full py-3 rounded-2xl bg-[var(--surface)] text-[var(--color-text-tertiary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)] text-sm transition-colors"
+          className="w-full py-3 rounded-2xl text-sm transition-colors"
+          style={{ backgroundColor: 'var(--card-hi)', color: 'var(--text-3)', border: '1px solid var(--rule)' }}
         >
           ↺ {t('routines.resetForSession')}
         </button>
       </div>
 
-{/* Modal Afegir Exercici */}
-        {showExerciseModal && (
-          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-              <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('routines.addExercise')}</h3>
+      {/* Modal: Afegir Exercici */}
+      {showExerciseModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in"
+          onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}
+        >
+          <div
+            className="bg-[var(--card)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm max-h-[80vh] flex flex-col animate-scale-in"
+            style={{ boxShadow: 'var(--shadow)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] mb-4">{t('routines.addExercise')}</h3>
 
-              {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
+            {errorMsg && <p className="text-sm mb-3 text-[var(--danger)]">{errorMsg}</p>}
 
-              {(() => {
-                const muscleOptions = [
-                  { value: 'Pectoral', key: 'exercise.muscleGroupPectoral' },
-                  { value: 'Esquena', key: 'exercise.muscleGroupEsquena' },
-                  { value: 'Cames', key: 'exercise.muscleGroupCames' },
-                  { value: 'Esquitxos', key: 'exercise.muscleGroupEsquitxos' },
-                  { value: 'Braços', key: 'exercise.muscleGroupBracos' },
-                  { value: 'Abdominals', key: 'exercise.muscleGroupAbdominals' },
-                  { value: 'Gluts', key: 'exercise.muscleGroupGluts' },
-                  { value: 'Full Body', key: 'exercise.muscleGroupFullBody' },
-                ]
-                const isCustom = newExerciseName.trim() && !DEFAULT_EXERCISES.includes(newExerciseName.trim() as any)
-                const exerciseVariants = EXERCISE_VARIANTS[newExerciseName.trim()] ?? null
-                return (
-                  <div className="mb-3 space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newExerciseName}
-                        onChange={(e) => { setNewExerciseName(e.target.value); setNewExerciseVariant(null) }}
-                        placeholder={t('routines.exerciseNamePlaceholder')}
-                        className="flex-1 bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]"
-                        onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => { if (newExerciseName.trim()) handleAddExercise() }}
-                        disabled={!newExerciseName.trim()}
-                        className="px-4 py-2.5 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] text-sm font-medium whitespace-nowrap disabled:opacity-40 hover:opacity-90 transition-opacity"
-                      >
-                        + {t('routines.add')}
-                      </button>
-                    </div>
-                    {exerciseVariants && (
-                      <div>
-                        <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
-                        <div className="flex flex-wrap gap-1.5">
-                          <button
-                            onClick={() => setNewExerciseVariant(null)}
-                            className={`px-3 py-1 rounded-lg text-xs transition-colors ${newExerciseVariant === null ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
-                          >
-                            {t('routines.variantAny')}
-                          </button>
-                          {exerciseVariants.map(v => (
-                            <button
-                              key={v}
-                              onClick={() => setNewExerciseVariant(v)}
-                              className={`px-3 py-1 rounded-lg text-xs transition-colors ${newExerciseVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
-                            >
-                              {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {isCustom && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="section-label block mb-1">{t('exercise.primaryMuscle')}</label>
-                          <select
-                            value={newExercisePrimary}
-                            onChange={(e) => setNewExercisePrimary(e.target.value)}
-                            className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-3 py-2 text-xs border border-transparent focus:outline-none focus:border-[var(--border)]"
-                          >
-                            <option value="">—</option>
-                            {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="section-label block mb-1">{t('exercise.secondaryMuscle')}</label>
-                          <select
-                            value={newExerciseSecondary}
-                            onChange={(e) => setNewExerciseSecondary(e.target.value)}
-                            className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-3 py-2 text-xs border border-transparent focus:outline-none focus:border-[var(--border)]"
-                          >
-                            <option value="">{t('exercise.noSecondary')}</option>
-                            {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    )}
+            {(() => {
+              const muscleOptions = [
+                { value: 'Pectoral', key: 'exercise.muscleGroupPectoral' },
+                { value: 'Esquena', key: 'exercise.muscleGroupEsquena' },
+                { value: 'Cames', key: 'exercise.muscleGroupCames' },
+                { value: 'Esquitxos', key: 'exercise.muscleGroupEsquitxos' },
+                { value: 'Braços', key: 'exercise.muscleGroupBracos' },
+                { value: 'Abdominals', key: 'exercise.muscleGroupAbdominals' },
+                { value: 'Gluts', key: 'exercise.muscleGroupGluts' },
+                { value: 'Full Body', key: 'exercise.muscleGroupFullBody' },
+              ]
+              const isCustom = newExerciseName.trim() && !DEFAULT_EXERCISES.includes(newExerciseName.trim() as any)
+              const exerciseVariants = EXERCISE_VARIANTS[newExerciseName.trim()] ?? null
+              return (
+                <div className="mb-3 space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newExerciseName}
+                      onChange={(e) => { setNewExerciseName(e.target.value); setNewExerciseVariant(null) }}
+                      placeholder={t('routines.exerciseNamePlaceholder')}
+                      className="flex-1 bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-4 py-2.5 text-sm border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                      onKeyDown={(e) => { if (e.key === 'Enter' && newExerciseName.trim()) handleAddExercise() }}
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => { if (newExerciseName.trim()) handleAddExercise() }}
+                      disabled={!newExerciseName.trim()}
+                      className="px-4 py-2.5 rounded-xl text-sm font-medium text-white whitespace-nowrap disabled:opacity-40 hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: 'var(--accent)' }}
+                    >
+                      + {t('routines.add')}
+                    </button>
                   </div>
-                )
-              })()}
+                  {exerciseVariants && (
+                    <div>
+                      <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => setNewExerciseVariant(null)}
+                          className="px-3 py-1 rounded-lg text-xs transition-colors"
+                          style={newExerciseVariant === null
+                            ? { backgroundColor: 'var(--text)', color: 'var(--bg)' }
+                            : { backgroundColor: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}
+                        >
+                          {t('routines.variantAny')}
+                        </button>
+                        {exerciseVariants.map(v => (
+                          <button
+                            key={v}
+                            onClick={() => setNewExerciseVariant(v)}
+                            className="px-3 py-1 rounded-lg text-xs transition-colors"
+                            style={newExerciseVariant === v
+                              ? { backgroundColor: 'var(--text)', color: 'var(--bg)' }
+                              : { backgroundColor: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}
+                          >
+                            {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {isCustom && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="section-label block mb-1">{t('exercise.primaryMuscle')}</label>
+                        <select
+                          value={newExercisePrimary}
+                          onChange={(e) => setNewExercisePrimary(e.target.value)}
+                          className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-3 py-2 text-xs border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                        >
+                          <option value="">—</option>
+                          {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="section-label block mb-1">{t('exercise.secondaryMuscle')}</label>
+                        <select
+                          value={newExerciseSecondary}
+                          onChange={(e) => setNewExerciseSecondary(e.target.value)}
+                          className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-3 py-2 text-xs border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                        >
+                          <option value="">{t('exercise.noSecondary')}</option>
+                          {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
-              <p className="section-label mb-2">{t('workouts.exercise')}</p>
-              <div className="space-y-1.5 overflow-y-auto -mx-1 px-1 flex-1 min-h-0">
-                {allExercises.map(ex => (
-                  <button
-                    key={ex}
-                    onClick={() => {
-                      if (EXERCISE_VARIANTS[ex]) {
-                        setNewExerciseName(ex)
-                        setNewExerciseVariant(null)
-                      } else {
-                        handleAddExercise(ex)
-                      }
-                    }}
-                    className={`w-full px-4 py-2.5 rounded-xl text-sm text-left transition-colors ${newExerciseName === ex ? 'bg-[var(--surface-strong)] text-[var(--color-text-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)]'}`}
-                  >
-                    {tEx(ex)}
-                  </button>
-                ))}
-              </div>
+            <p className="section-label mb-2">{t('workouts.exercise')}</p>
+            <div className="space-y-1 overflow-y-auto -mx-1 px-1 flex-1 min-h-0">
+              {allExercises.map(ex => (
+                <button
+                  key={ex}
+                  onClick={() => {
+                    if (EXERCISE_VARIANTS[ex]) {
+                      setNewExerciseName(ex)
+                      setNewExerciseVariant(null)
+                    } else {
+                      handleAddExercise(ex)
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl text-sm text-left transition-colors"
+                  style={newExerciseName === ex
+                    ? { backgroundColor: 'var(--card-hi)', color: 'var(--text)' }
+                    : { backgroundColor: 'transparent', color: 'var(--text-2)' }}
+                >
+                  {tEx(ex)}
+                </button>
+              ))}
+            </div>
 
-              <div className="flex gap-3 mt-4">
-                <button onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
-              </div>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => { setShowExerciseModal(false); setNewExerciseName(''); setNewExerciseVariant(null); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}
+                className="flex-1 py-3 rounded-2xl bg-[var(--card-hi)] text-[var(--text-2)] font-medium hover:bg-[var(--rule-soft)] transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-       {/* Modal Editar Exercici */}
-       {showEditExerciseModal && editingExercise && (
-         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => setShowEditExerciseModal(false)}>
-           <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-             <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-1">{t('routines.editExercise')}</h3>
-             <p className="text-[var(--color-text-tertiary)] text-sm mb-4">{tEx(editingExercise.exercise)}</p>
+      {/* Modal: Editar Exercici */}
+      {showEditExerciseModal && editingExercise && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in"
+          onClick={() => setShowEditExerciseModal(false)}
+        >
+          <div
+            className="bg-[var(--card)] border border-[var(--rule)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in"
+            style={{ boxShadow: 'var(--shadow)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] mb-1">{t('routines.editExercise')}</h3>
+            <p className="text-[var(--text-3)] text-sm mb-4">{tEx(editingExercise.exercise)}</p>
 
-             <div className="space-y-4">
-               <div>
-                 <label className="section-label block mb-2">{t('routines.setsTarget')}</label>
-                 <input
-                   type="number"
-                   min="1"
-                   value={editSetsTarget}
-                   onChange={(e) => setEditSetsTarget(parseInt(e.target.value) || 1)}
-                   className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                 />
-               </div>
-               <div className="grid grid-cols-2 gap-3">
-                 <div>
-                   <label className="section-label block mb-2">{t('routines.repsMin')}</label>
-                   <input
-                     type="number"
-                     min="1"
-                     value={editRepsMin}
-                     onChange={(e) => setEditRepsMin(parseInt(e.target.value) || 1)}
-                     className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                   />
-                 </div>
-                 <div>
-                   <label className="section-label block mb-2">{t('routines.repsMax')}</label>
-                   <input
-                     type="number"
-                     min="1"
-                     value={editRepsMax}
-                     onChange={(e) => setEditRepsMax(parseInt(e.target.value) || 1)}
-                     className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]"
-                   />
-                 </div>
-               </div>
-               {editingExercise && EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]] && (
-                 <div>
-                   <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
-                   <div className="flex flex-wrap gap-1.5">
-                     <button
-                       onClick={() => setEditVariant(null)}
-                       className={`px-3 py-1 rounded-lg text-xs transition-colors ${editVariant === null ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
-                     >
-                       {t('routines.variantAny')}
-                     </button>
-                     {EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]].map(v => (
-                       <button
-                         key={v}
-                         onClick={() => setEditVariant(v)}
-                         className={`px-3 py-1 rounded-lg text-xs transition-colors ${editVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'}`}
-                       >
-                         {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
-                       </button>
-                     ))}
-                   </div>
-                 </div>
-               )}
-             </div>
+            <div className="space-y-4">
+              <div>
+                <label className="section-label block mb-2">{t('routines.setsTarget')}</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editSetsTarget}
+                  onChange={(e) => setEditSetsTarget(parseInt(e.target.value) || 1)}
+                  className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-4 py-3 border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="section-label block mb-2">{t('routines.repsMin')}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editRepsMin}
+                    onChange={(e) => setEditRepsMin(parseInt(e.target.value) || 1)}
+                    className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-4 py-3 border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+                <div>
+                  <label className="section-label block mb-2">{t('routines.repsMax')}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editRepsMax}
+                    onChange={(e) => setEditRepsMax(parseInt(e.target.value) || 1)}
+                    className="w-full bg-[var(--card-hi)] text-[var(--text)] rounded-xl px-4 py-3 border border-[var(--rule)] focus:outline-none focus:border-[var(--accent)]"
+                  />
+                </div>
+              </div>
+              {editingExercise && EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]] && (
+                <div>
+                  <label className="section-label block mb-1.5">{t('routines.variantLabel')}</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      onClick={() => setEditVariant(null)}
+                      className="px-3 py-1 rounded-lg text-xs transition-colors"
+                      style={editVariant === null
+                        ? { backgroundColor: 'var(--text)', color: 'var(--bg)' }
+                        : { backgroundColor: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}
+                    >
+                      {t('routines.variantAny')}
+                    </button>
+                    {EXERCISE_VARIANTS[editingExercise.exercise.split(' · ')[0]].map(v => (
+                      <button
+                        key={v}
+                        onClick={() => setEditVariant(v)}
+                        className="px-3 py-1 rounded-lg text-xs transition-colors"
+                        style={editVariant === v
+                          ? { backgroundColor: 'var(--text)', color: 'var(--bg)' }
+                          : { backgroundColor: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}
+                      >
+                        {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-             {errorMsg && <p className="text-sm mt-4" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
+            {errorMsg && <p className="text-sm mt-4 text-[var(--danger)]">{errorMsg}</p>}
 
-             <button
-               onClick={async () => {
-                 if (!editingExercise) return
-                 const rec = await getWeightRecommendation(editingExercise.exercise, editRepsMin)
-                 if (rec) {
-                   setSuccessMsg(t('routines.recommendation', { exercise: tEx(editingExercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
-                 } else {
-                   setSuccessMsg(t('routines.noExerciseHistory'))
-                 }
-                 setShowEditExerciseModal(false)
-               }}
-               className="w-full mt-4 py-2.5 rounded-2xl text-sm transition-colors text-[var(--color-text-tertiary)] bg-[var(--surface)] hover:bg-[var(--surface-strong)] hover:text-[var(--color-text-primary)]"
-             >
-               💡 {t('routines.recommendWeight')}
-             </button>
+            <button
+              onClick={async () => {
+                if (!editingExercise) return
+                const rec = await getWeightRecommendation(editingExercise.exercise, editRepsMin)
+                if (rec) {
+                  setSuccessMsg(t('routines.recommendation', { exercise: tEx(editingExercise.exercise), weight: format(rec.recommended_weight), unit, prevWeight: format(rec.previous_weight), prevReps: String(rec.previous_reps) }))
+                } else {
+                  setSuccessMsg(t('routines.noExerciseHistory'))
+                }
+                setShowEditExerciseModal(false)
+              }}
+              className="w-full mt-4 py-2.5 rounded-2xl text-sm transition-colors"
+              style={{ color: 'var(--text-3)', backgroundColor: 'var(--card-hi)', border: '1px solid var(--rule)' }}
+            >
+              💡 {t('routines.recommendWeight')}
+            </button>
 
-             <div className="flex gap-3 mt-3">
-               <button onClick={() => setShowEditExerciseModal(false)} className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
-                <button onClick={handleUpdateExercise} className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.save')}</button>
-             </div>
-           </div>
-         </div>
-       )}
+            <div className="flex gap-3 mt-3">
+              <button
+                onClick={() => setShowEditExerciseModal(false)}
+                className="flex-1 py-3 rounded-2xl bg-[var(--card-hi)] text-[var(--text-2)] font-medium hover:bg-[var(--rule-soft)] transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleUpdateExercise}
+                className="flex-1 py-3 rounded-2xl font-medium text-white hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: 'var(--accent)' }}
+              >
+                {t('common.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {successMsg && (
-        <div className="fixed bottom-24 left-6 right-6 px-4 py-3 rounded-2xl z-50 fade-in backdrop-blur-md" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 18%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent-success) 40%, transparent)' }}>
-          <p className="text-sm text-center" style={{ color: 'var(--accent-success)' }}>{successMsg}</p>
+        <div
+          className="fixed bottom-24 left-5 right-5 px-4 py-3 rounded-2xl z-50 fade-in backdrop-blur-md"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--good) 18%, var(--card))',
+            border: '1px solid color-mix(in srgb, var(--good) 40%, transparent)',
+          }}
+        >
+          <p className="text-sm text-center" style={{ color: 'var(--good)' }}>{successMsg}</p>
         </div>
       )}
 

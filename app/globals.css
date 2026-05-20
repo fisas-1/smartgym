@@ -1,45 +1,84 @@
 @import "tailwindcss";
 
+/* ── Gymmoo Design Tokens ───────────────────────────────────── */
+
 :root {
-  --background: #f5f4f0;
-  --foreground: #1c1b18;
-  --card: #ffffff;
-  --card-foreground: #1c1b18;
-  --border: #dddbd3;
-  --input: #eceae3;
-  --color-bg-primary: #f5f4f0;
-  --color-text-primary: #1c1b18;
-  --color-text-secondary: #4b4a45;
-  --color-text-tertiary: #86857e;
-  --surface: #eceae3;
-  --surface-strong: #e2e0d8;
-  --surface-hover: #d5d3ca;
-  --accent-success: #16a34a;
-  --accent-danger: #dc2626;
-  --accent-warn: #ffff3f;
-  --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08);
-  --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.07);
+  /* Core palette */
+  --bg:          #F5F2EA;
+  --card:        #FFFFFF;
+  --card-hi:     #FBF8EF;
+  --input-big:   #FFFFFF;
+  --rule:        #E7E2D2;
+  --rule-soft:   #EFEBDD;
+
+  /* Text */
+  --text:        #1A1815;
+  --text-2:      #56524A;
+  --text-3:      #8F8B81;
+
+  /* Brand */
+  --accent:      #B14E2C;
+  --accent-soft: rgba(177,78,44,0.13);
+  --accent-tint: rgba(177,78,44,0.06);
+  --good:        #5E8F3A;
+  --danger:      #A04A30;
+  --nav-bg:      rgba(245,242,234,0.85);
+
+  --shadow:      0 1px 2px rgba(20,15,5,0.03), 0 4px 16px rgba(20,15,5,0.04);
+
+  /* ── Backward-compat aliases for untouched components ── */
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --color-bg-primary:     var(--bg);
+  --color-text-primary:   var(--text);
+  --color-text-secondary: var(--text-2);
+  --color-text-tertiary:  var(--text-3);
+  --card-foreground:      var(--text);
+  --border:               var(--rule);
+  --input:                var(--card-hi);
+  --surface:              var(--card-hi);
+  --surface-strong:       var(--rule-soft);
+  --surface-hover:        #DDD9CC;
+  --accent-success:       var(--good);
+  --accent-danger:        var(--danger);
+  --accent-warn:          var(--accent);
+  --shadow-soft:          var(--shadow);
+  --shadow-card:          var(--shadow);
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #0f0f10;
-  --card-foreground: #fafafa;
-  --border: #272727;
-  --input: #1c1c1d;
-  --color-bg-primary: #0a0a0a;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a3a3a3;
-  --color-text-tertiary: #737373;
-  --surface: #121213;
-  --surface-strong: #1c1c1d;
-  --surface-hover: #232325;
-  --accent-success: #22c55e;
-  --accent-danger: #ef4444;
-  --accent-warn: #ffff3f;
-  --shadow-soft: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
-  --shadow-card: none;
+  --bg:          #0B0A09;
+  --card:        #15130F;
+  --card-hi:     #1C1A15;
+  --input-big:   #15130F;
+  --rule:        #2A2620;
+  --rule-soft:   #1C1A15;
+
+  --text:        #FAF7F0;
+  --text-2:      #A19C8E;
+  --text-3:      #6B6759;
+
+  --good:        #7CB35B;
+  --nav-bg:      rgba(11,10,9,0.85);
+  --shadow:      none;
+
+  --background:           var(--bg);
+  --foreground:           var(--text);
+  --color-bg-primary:     var(--bg);
+  --color-text-primary:   var(--text);
+  --color-text-secondary: var(--text-2);
+  --color-text-tertiary:  var(--text-3);
+  --card-foreground:      var(--text);
+  --border:               var(--rule);
+  --input:                var(--card-hi);
+  --surface:              var(--card-hi);
+  --surface-strong:       #1E1C17;
+  --surface-hover:        #28251E;
+  --accent-success:       var(--good);
+  --accent-danger:        #C85A3C;
+  --accent-warn:          var(--accent);
+  --shadow-soft:          var(--shadow);
+  --shadow-card:          var(--shadow);
 }
 
 * {
@@ -47,8 +86,9 @@
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans, system-ui, sans-serif);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -56,117 +96,171 @@ input, button, select, textarea {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
+/* ── Component layer ─────────────────────────────────────────── */
+
 @layer components {
-  .bg-app-card {
-    background-color: var(--card);
-  }
-  .text-app-fg {
-    color: var(--card-foreground);
-  }
-  .border-app-border {
-    border-color: var(--border);
-  }
-  .bg-app-input {
-    background-color: var(--input);
-  }
+  .bg-app-card        { background-color: var(--card); }
+  .text-app-fg        { color: var(--card-foreground); }
+  .border-app-border  { border-color: var(--rule); }
+  .bg-app-input       { background-color: var(--input); }
 }
 
 .scrollbar-hidden {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none;
-}
+.scrollbar-hidden::-webkit-scrollbar { display: none; }
 
-.bg-surface { background-color: var(--surface); }
+/* Utility aliases */
+.bg-surface        { background-color: var(--surface); }
 .bg-surface-strong { background-color: var(--surface-strong); }
 .bg-surface-hover:hover { background-color: var(--surface-hover); }
-.text-muted { color: var(--color-text-tertiary); }
-.text-secondary { color: var(--color-text-secondary); }
-.border-app { border-color: var(--border); }
+.text-muted        { color: var(--text-3); }
+.text-secondary    { color: var(--text-2); }
+.border-app        { border-color: var(--rule); }
 
+/* Typography */
 .page-title {
   font-size: 1.125rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text);
 }
 
 .section-label {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  color: var(--text-3);
+  font-family: var(--font-mono, ui-monospace, monospace);
 }
 
+/* Cards */
 .card-surface {
   background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
+/* Buttons */
 .btn-primary {
-  background-color: var(--color-text-primary);
-  color: var(--color-bg-primary);
+  background-color: var(--accent);
+  color: #fff;
+  border-radius: 9999px;
 }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary:hover  { opacity: 0.9; }
 .btn-primary:disabled { opacity: 0.5; }
 
-/* ─── Animations ───────────────────────────────────────────── */
+/* ── Existing animation keyframes (kept for backward compat) ── */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
 @keyframes bounceIn {
-  0%  { opacity: 0; transform: scale(0.88) translateY(-6px); }
-  60% { transform: scale(1.04) translateY(0); }
-  100%{ opacity: 1; transform: scale(1); }
+  0%   { opacity: 0; transform: scale(0.88) translateY(-6px); }
+  60%  { transform: scale(1.04) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
 }
-
 @keyframes fillBar {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
 }
-
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
-
-/* ─── Animation utility classes ────────────────────────────── */
-
-.fade-in {
-  animation: fadeIn 0.22s ease-out both;
+@keyframes magmaGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(177,78,44,0.08), 0 0 40px rgba(177,78,44,0.04); }
+  50%       { box-shadow: 0 0 35px rgba(177,78,44,0.18), 0 0 70px rgba(177,78,44,0.09); }
+}
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* ── Dopamine keyframes ───────────────────────────────────────── */
+
+@keyframes dopConf {
+  0%   { transform: translate(0,0) rotate(0); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translate(var(--dx), calc(var(--dy) + 80px)) rotate(var(--rot)); opacity: 0; }
+}
+@keyframes dopSpark {
+  0%   { transform: translate(0,0) rotate(0) scale(0); opacity: 0; }
+  20%  { transform: translate(calc(var(--dx)*0.3), calc(var(--dy)*0.3)) rotate(var(--rot)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0); opacity: 0; }
+}
+@keyframes dopFlip {
+  0%   { transform: translateY(-12px) scale(1.2); opacity: 0; }
+  60%  { transform: translateY(2px) scale(1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes dopFlame {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50%       { transform: scale(1.1) rotate(3deg); }
+}
+@keyframes dopPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--pulse-color), 0 8px 20px var(--pulse-shadow); }
+  50%       { box-shadow: 0 0 0 8px transparent, 0 8px 20px var(--pulse-shadow); }
+}
+@keyframes dopBreathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.015); }
+}
+@keyframes dopGlow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--glow), 0 8px 30px var(--glow); }
+  50%       { box-shadow: 0 0 0 14px transparent, 0 14px 50px var(--glow); }
+}
+@keyframes dopSlideUp {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes dopScalePop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes dopShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-3px); }
+  75%       { transform: translateX(3px); }
+}
+@keyframes dopStarPop {
+  0%   { transform: scale(0) rotate(0); opacity: 0; }
+  50%  { transform: scale(1.4) rotate(180deg); opacity: 1; }
+  100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+@keyframes dopFade {
+  from { opacity: 0; }
+  30%  { opacity: 1; }
+  to   { opacity: 0; }
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+/* ── Animation utility classes ───────────────────────────────── */
 
-.animate-bounce-in {
-  animation: bounceIn 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
+.fade-in           { animation: fadeIn 0.22s ease-out both; }
+.animate-slide-up  { animation: slideUp 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-scale-in  { animation: scaleIn 0.22s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-bounce-in { animation: bounceIn 0.38s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-/* Stagger delays — combine with any animation class */
+.dop-slide-up   { animation: dopSlideUp 500ms cubic-bezier(.22,1,.36,1) both; }
+.dop-scale-pop  { animation: dopScalePop 380ms cubic-bezier(.34,1.56,.64,1) both; }
+.dop-breathe    { animation: dopBreathe 2400ms ease-in-out infinite; }
+.dop-flame      { animation: dopFlame 1400ms ease-in-out infinite; transform-origin: bottom center; }
+.dop-flame-intense { animation: dopFlame 800ms ease-in-out infinite; transform-origin: bottom center; }
+
+/* Stagger delays */
 .stagger-1 { animation-delay: 40ms; }
 .stagger-2 { animation-delay: 80ms; }
 .stagger-3 { animation-delay: 120ms; }
@@ -174,45 +268,22 @@ input, button, select, textarea {
 .stagger-5 { animation-delay: 200ms; }
 .stagger-6 { animation-delay: 240ms; }
 
-/* ─── Progress bar ──────────────────────────────────────────── */
-
+/* Progress bar */
 .progress-fill {
   transform-origin: left;
-  animation: fillBar 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: fillBar 0.7s cubic-bezier(0.4,0,0.2,1) both;
 }
 
-/* ─── Streak card magma glow ────────────────────────────────── */
+/* Streak glow */
+.streak-pulse { animation: magmaGlow 3s ease-in-out infinite; }
 
-@keyframes magmaGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 69, 0, 0.06), 0 0 40px rgba(255, 69, 0, 0.03);
-  }
-  50% {
-    box-shadow: 0 0 35px rgba(255, 69, 0, 0.13), 0 0 70px rgba(255, 69, 0, 0.07);
-  }
-}
-.streak-pulse {
-  animation: magmaGlow 3s ease-in-out infinite;
-}
+/* Reaction pop */
+.reaction-pop { animation: bounceIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
 
-/* Reaction feedback pop */
-.reaction-pop {
-  animation: bounceIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
+/* Timer pulse */
+.timer-pulse { animation: timerPulse 0.8s ease-in-out infinite; }
 
-/* ─── Timer pulse (últims 5s) ───────────────────────────────── */
-
-@keyframes timerPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.timer-pulse {
-  animation: timerPulse 0.8s ease-in-out infinite;
-}
-
-/* ─── Skeleton shimmer ──────────────────────────────────────── */
-
+/* Skeleton shimmer */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -224,3 +295,10 @@ input, button, select, textarea {
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 0.5rem;
 }
+
+/* Tap scale */
+.tap-scale {
+  display: inline-block;
+  transition: transform 120ms cubic-bezier(.34,1.36,.64,1);
+}
+.tap-scale:active { transform: scale(0.94); }

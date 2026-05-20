@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gymmoo · Active Session — 3 directions</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; background: #ECE7DA; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #1A1815; }
+    * { box-sizing: border-box; }
+
+    .design-notes {
+      font-family: 'EB Garamond', Georgia, serif;
+      color: #1A1815;
+    }
+    .design-notes h2 {
+      font-size: 18px; font-weight: 500; margin: 0 0 6px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700;
+    }
+    .design-notes p { margin: 0 0 6px; font-size: 14px; line-height: 1.4; font-style: italic; }
+    .design-notes ul { margin: 6px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 1.5; }
+    .design-notes ul li { font-family: 'Plus Jakarta Sans', sans-serif; font-style: normal; }
+    .design-notes strong { font-family: 'Plus Jakarta Sans', sans-serif; font-style: normal; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="data.jsx"></script>
+  <script type="text/babel" src="dopamine.jsx"></script>
+  <script type="text/babel" src="paper.jsx"></script>
+  <script type="text/babel" src="lift.jsx"></script>
+  <script type="text/babel" src="moo.jsx"></script>
+  <script type="text/babel" src="refined.jsx"></script>
+  <script type="text/babel" src="quicklog.jsx"></script>
+  <script type="text/babel" src="routines-screen.jsx"></script>
+  <script type="text/babel" src="stats-screen.jsx"></script>
+  <script type="text/babel" src="friends-profile-screens.jsx"></script>
+  <script type="text/babel" src="logo.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAKS = /*EDITMODE-BEGIN*/{
+      "showDeviceFrame": true,
+      "accent": "#B14E2C",
+      "typography": "geist"
+    }/*EDITMODE-END*/;
+
+    const TYPOGRAPHY_OPTIONS = [
+      { value: 'plex',      name: 'Plex',       hint: 'tècnic, neutral · IBM Plex' },
+      { value: 'geist',     name: 'Geist',      hint: 'modern, cristal·lí · Vercel' },
+      { value: 'bricolage', name: 'Bricolage',  hint: 'variable, distintiu · més caràcter' },
+      { value: 'editorial', name: 'Editorial',  hint: 'serif Instrument + DM Sans · revista' },
+      { value: 'space',     name: 'Space',      hint: 'esportiu, sci-fi · Space Grotesk' },
+    ];
+
+    const ACCENT_OPTIONS = [
+      { value: '#C68A1E', name: 'saffron',  hint: 'càlid · mantega/mel · lligat al "moo"' },
+      { value: '#B14E2C', name: 'sienna',   hint: 'terrós · ric · té gravetat' },
+      { value: '#5E8F3A', name: 'moss',     hint: 'natural · esport · serè' },
+      { value: '#2D5BD7', name: 'cobalt',   hint: 'fresc · tecnològic · contrast' },
+      { value: '#D43E9E', name: 'fuchsia',  hint: 'vibrant · social · jove' },
+    ];
+
+    // Refined wrapper with autoLog/autoRest demo states
+    function RefinedFramed({ accent, showFrame, autoLog, autoRest }) {
+      const inner = <RefinedDirection accent={accent} />;
+      const wrap = showFrame
+        ? <IOSDevice width={402} height={874}>{inner}</IOSDevice>
+        : <div style={{ width: 402, height: 874, borderRadius: 36, overflow: 'hidden', background: '#000' }}>{inner}</div>;
+      return wrap;
+    }
+
+    // Quick-log direction — both light/dark variants
+    function QuickLogFramed({ mode, accent, typography, showFrame }) {
+      const inner = <QuickLogForm mode={mode} accent={accent} typography={typography} />;
+      const isDark = mode === 'dark';
+      return showFrame
+        ? <IOSDevice width={402} height={874} dark={isDark}>{inner}</IOSDevice>
+        : <div style={{ width: 402, height: 874, borderRadius: 36, overflow: 'hidden', background: isDark ? '#0B0A09' : '#F5F2EA' }}>{inner}</div>;
+    }
+
+    // Logo display artboard — centered logo on a paper bg with caption underneath
+    function LogoArtboard({ children, accent, mode = 'light', caption }) {
+      const isDark = mode === 'dark';
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          background: isDark ? '#0B0A09' : '#FBF8EF',
+          color: isDark ? '#FAF7F0' : '#1A1815',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '32px 36px', fontFamily: '"Geist", system-ui, sans-serif',
+          borderRadius: 24, overflow: 'hidden', position: 'relative',
+          gap: 28,
+        }}>
+          <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {children}
+          </div>
+          {caption && (
+            <div style={{
+              fontFamily: '"Geist Mono", ui-monospace, monospace', fontSize: 11,
+              color: isDark ? '#A19C8E' : '#56524A',
+              lineHeight: 1.45, textAlign: 'center', maxWidth: 340,
+              opacity: 0.85, letterSpacing: '0.005em',
+            }}>{caption}</div>
+          )}
+        </div>
+      );
+    }
+
+    // Other screens — generic wrapper
+    function ScreenFramed({ Screen, mode, accent, typography, showFrame }) {
+      const inner = <Screen mode={mode} accent={accent} typography={typography} />;
+      const isDark = mode === 'dark';
+      return showFrame
+        ? <IOSDevice width={402} height={874} dark={isDark}>{inner}</IOSDevice>
+        : <div style={{ width: 402, height: 874, borderRadius: 36, overflow: 'hidden', background: isDark ? '#0B0A09' : '#F5F2EA' }}>{inner}</div>;
+    }
+
+    // Quick-log notes
+    function QuickLogNotesCard({ accent }) {
+      return (
+        <div className="design-notes" style={{
+          width: 420, height: 874, padding: '36px 32px',
+          background: '#FBF8EF', borderRadius: 24, overflow: 'auto',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 14, height: 14, borderRadius: 14, background: accent }}/>
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#56524A' }}>quick-log</span>
+          </div>
+          <h1 style={{
+            fontFamily: 'IBM Plex Sans, sans-serif', fontWeight: 500, fontSize: 34,
+            lineHeight: 1.05, letterSpacing: '-0.02em', margin: '0 0 12px', color: '#1A1815',
+          }}>El teu formulari, polit. Més rodó, més personalitat — fosc i clar.</h1>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: '#56524A', fontStyle: 'normal', fontFamily: 'IBM Plex Sans, sans-serif' }}>
+            Mateixa estructura que ja tens (exercici → variant → pes → reps → RIR → notes → desar), però amb més ritme i alguns detalls que el fan menys avorrit.
+          </p>
+          <div style={{ height: 1, background: '#E7E2D2', margin: '18px 0' }} />
+          <h2 style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: 'IBM Plex Sans', fontWeight: 600, margin: '0 0 10px', color: '#1A1815' }}>Què hi he afegit</h2>
+          <ul style={{ fontStyle: 'normal', fontSize: 13, lineHeight: 1.7, color: '#56524A', fontFamily: 'IBM Plex Sans', paddingLeft: 18, margin: 0 }}>
+            <li><strong style={{ fontWeight: 600 }}>Recap d'avui</strong> a dalt — sèries, volum, sessió</li>
+            <li><strong style={{ fontWeight: 600 }}>Etiquetes musculars</strong> en pills d'exercici no seleccionats (PEC/ESP)</li>
+            <li><strong style={{ fontWeight: 600 }}>Card de pes</strong> amb stepper ±2.5 i nombre gegant centrat</li>
+            <li><strong style={{ fontWeight: 600 }}>Pills de reps</strong> amb punt d'accent al rang objectiu</li>
+            <li><strong style={{ fontWeight: 600 }}>RIR com a pills</strong> amb etiqueta de sensació (fallo, dur, fàcil…)</li>
+            <li><strong style={{ fontWeight: 600 }}>1RM estimat live + millor 1RM</strong> en cards — accent si bates rècord</li>
+            <li><strong style={{ fontWeight: 600 }}>Badge "RÈCORD"</strong> al card de pes si supera l'anterior</li>
+            <li><strong style={{ fontWeight: 600 }}>CTA dinàmica</strong> mostrant pes×reps abans de desar</li>
+            <li><strong style={{ fontWeight: 600 }}>Notes col·lapsables</strong> — només si cal</li>
+            <li><strong style={{ fontWeight: 600 }}>Tab bar</strong> idèntic al teu, amb el tab actiu en accent</li>
+          </ul>
+          <div style={{ height: 1, background: '#E7E2D2', margin: '18px 0' }} />
+          <p style={{ fontSize: 13, fontStyle: 'italic', color: '#8F8B81', margin: 0, fontFamily: 'IBM Plex Sans' }}>
+            Prova-ho: canvia d'exercici, prem reps, prem +/− al pes, prem "Anotar sèrie" per veure el ribbon.
+          </p>
+        </div>
+      );
+    }
+
+    // Refined notes — short description card next to the polished direction
+    function RefinedNotesCard({ accent }) {
+      return (
+        <div className="design-notes" style={{
+          width: 420, height: 874, padding: '36px 32px',
+          background: '#FBF8EF',
+          borderRadius: 24, overflow: 'auto',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 14, height: 14, borderRadius: 14, background: accent }}/>
+            <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#56524A' }}>refined</span>
+          </div>
+          <h1 style={{
+            fontFamily: 'IBM Plex Sans, sans-serif', fontWeight: 500, fontSize: 36,
+            lineHeight: 1.05, letterSpacing: '-0.02em', margin: '0 0 12px', color: '#1A1815',
+          }}>The polished take — Lift's data clarity on the warm paper you already love.</h1>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: '#56524A', fontStyle: 'normal', fontFamily: 'IBM Plex Sans, sans-serif' }}>
+            Mateixa cremosa de fons, lletra Plex (sans + mono per als númors). Cells per sèrie, valors actuals i històrics visibles a primera vista, accent només al que importa: la sèrie actual, els PRs, el botó d'anotar.
+          </p>
+
+          <div style={{ height: 1, background: '#E7E2D2', margin: '20px 0' }} />
+
+          <h2 style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: 'IBM Plex Sans', fontWeight: 600, margin: '0 0 10px', color: '#1A1815' }}>Sistema</h2>
+          <ul style={{ fontStyle: 'normal', fontSize: 13, lineHeight: 1.65, color: '#56524A', fontFamily: 'IBM Plex Sans', paddingLeft: 18, margin: 0 }}>
+            <li>Fons paper càlid (#F5F2EA) · tinta càlida</li>
+            <li>IBM Plex Sans (UI) + IBM Plex Mono (nombres tabulars)</li>
+            <li>Accent <span style={{ color: accent, fontWeight: 600 }}>{accent}</span> només en: sèrie activa, PR, CTA</li>
+            <li>Cap rebombori cromatic, cap gradient, cap glow</li>
+            <li>Cels per sèrie amb pes/reps/RIR llegibles d'un cop d'ull</li>
+          </ul>
+
+          <div style={{ height: 1, background: '#E7E2D2', margin: '20px 0' }} />
+
+          <h2 style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: 'IBM Plex Sans', fontWeight: 600, margin: '0 0 10px', color: '#1A1815' }}>Accents per provar</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 10 }}>
+            {ACCENT_OPTIONS.map(o => (
+              <div key={o.value} style={{
+                textAlign: 'center',
+                opacity: accent === o.value ? 1 : 0.5,
+                transition: 'opacity 200ms',
+              }}>
+                <div style={{
+                  width: '100%', aspectRatio: '1', background: o.value, borderRadius: 10,
+                  border: accent === o.value ? `2px solid #1A1815` : '2px solid transparent',
+                }}/>
+                <div style={{ fontFamily: 'IBM Plex Mono', fontSize: 9, marginTop: 4, color: '#56524A', textTransform: 'lowercase' }}>{o.name}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12, fontStyle: 'italic', color: '#8F8B81', margin: '8px 0 0', fontFamily: 'IBM Plex Sans' }}>
+            Toca el botó “Tweaks” (a dalt a la dreta) per canviar l'accent en directe.
+          </p>
+
+          <div style={{ height: 1, background: '#E7E2D2', margin: '20px 0' }} />
+
+          <h2 style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: 'IBM Plex Sans', fontWeight: 600, margin: '0 0 10px', color: '#1A1815' }}>Tres estats</h2>
+          <ul style={{ fontStyle: 'normal', fontSize: 13, lineHeight: 1.65, color: '#56524A', fontFamily: 'IBM Plex Sans', paddingLeft: 18, margin: 0 }}>
+            <li><strong style={{ fontWeight: 600 }}>ready</strong> — estat estàndard, sèrie activa amb vora d'accent</li>
+            <li><strong style={{ fontWeight: 600 }}>logging</strong> — panell sliding amb stepper de pes + pills de reps</li>
+            <li><strong style={{ fontWeight: 600 }}>rest</strong> — banner amb barra de progres i countdown</li>
+          </ul>
+        </div>
+      );
+    }
+
+    // ─── Wraps any direction in an iPhone frame (or naked, per tweak)
+    function FramedDirection({ Direction, dark, showFrame }) {
+      const content = <Direction />;
+      if (!showFrame) {
+        return (
+          <div style={{ width: 402, height: 874, borderRadius: 36, overflow: 'hidden', position: 'relative', background: '#000' }}>
+            {content}
+          </div>
+        );
+      }
+      return (
+        <IOSDevice width={402} height={874} dark={dark}>
+          {content}
+        </IOSDevice>
+      );
+    }
+
+    // ─── Design-notes card (sits in first row of canvas)
+    function DesignNotesCard() {
+      return (
+        <div className="design-notes" style={{
+          width: 460, height: 874, padding: '36px 32px',
+          background: '#FBF9F2',
+          borderRadius: 24, overflow: 'auto',
+        }}>
+          <div style={{
+            fontFamily: 'Caveat, cursive', fontSize: 38, lineHeight: 1, color: '#7A5C2A', marginBottom: 8,
+          }}>gymmoo. <span style={{ fontSize: 16, color: '#9A9588' }}>· moo of cow</span></div>
+          <h1 style={{
+            fontFamily: 'DM Serif Display, serif', fontSize: 42, lineHeight: 1.05, letterSpacing: '-0.02em',
+            margin: '0 0 16px',
+          }}>Active workout session — 3 directions to compare.</h1>
+
+          <p style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 20 }}>
+            Same scenario across all three: <strong style={{ fontStyle: 'normal' }}>Push routine, mid-session, on Press Banca set 3</strong>.
+            All Catalan copy, all interactive — tap any active set to log it, tap empty rows to advance.
+          </p>
+
+          <div style={{ height: 1, background: '#D9D4C4', margin: '14px 0 20px' }} />
+
+          <h2>① paper</h2>
+          <p>Warm cream, editorial serif, hand-written ratios. The notebook in your gym bag — calm, ink-on-paper. Slide-up keypad.</p>
+
+          <h2 style={{ marginTop: 20 }}>② lift</h2>
+          <p>Pitch-black scoreboard. Lime accent. Huge tabular numerals, set-cells you tap to log via a wheel + stepper. Performance mode.</p>
+
+          <h2 style={{ marginTop: 20 }}>③ moo</h2>
+          <p>The mascot. Cream + ink, cow-spot accents, a reactive cow that comments your sets. Sliders & sticker buttons, a soft hug between PRs.</p>
+
+          <div style={{ height: 1, background: '#D9D4C4', margin: '20px 0' }} />
+
+          <h2>shared system</h2>
+          <ul style={{ fontStyle: 'normal' }}>
+            <li><strong>Routine:</strong> Push · Dilluns</li>
+            <li><strong>Time:</strong> 24:18 elapsed</li>
+            <li><strong>Volume:</strong> 1.43t so far (+10% vs same point last session)</li>
+            <li><strong>Streak:</strong> 12 days (best: 18)</li>
+            <li><strong>Exercises:</strong> 5 · 2/18 sets done</li>
+          </ul>
+
+          <p style={{ marginTop: 18, fontSize: 13 }}>
+            Toggle the <strong style={{ fontStyle: 'normal' }}>Tweaks</strong> button (top-right) to strip device frames or change scenario.
+          </p>
+        </div>
+      );
+    }
+
+    function App() {
+      const [t, setTweak] = useTweaks(TWEAKS);
+
+      return (
+        <>
+          <DesignCanvas>
+          <DCSection id="logo" title="Logotip · concepts finalistes" subtitle="Tot tipografia. La gym.moo. com a wordmark principal.">
+              <DCArtboard id="logo-2" label="① gym.moo. · domini (principal)" width={460} height={520}>
+                <LogoArtboard accent={t.accent} mode="light" caption="Estil URL — gym 'punt' moo 'punt'. Modern, mnemotècnic, fàcil de dir.">
+                  <LogoDomain size={68} accent={t.accent}/>
+                </LogoArtboard>
+              </DCArtboard>
+              <DCArtboard id="logo-4" label="② moo. · curt" width={460} height={520}>
+                <LogoArtboard accent={t.accent} mode="light" caption="Marca curta per a icones d'app. 'gym.moo.' es reserva per a usos llargs.">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 28, alignItems: 'center' }}>
+                    <LogoMooShort size={120} accent={t.accent}/>
+                    <div style={{ fontFamily: 'Geist Mono', fontSize: 11, color: '#8F8B81', letterSpacing: '0.12em', textTransform: 'uppercase' }}>+ wordmark llarg</div>
+                    <LogoDomain size={32} accent={t.accent}/>
+                  </div>
+                </LogoArtboard>
+              </DCArtboard>
+              <DCArtboard id="logo-5" label="③ gym/moo · contrast de pes" width={460} height={520}>
+                <LogoArtboard accent={t.accent} mode="light" caption="'gym' subtil en majúscules petites, 'moo' enorme en bold. Dues personalitats.">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 36, alignItems: 'center' }}>
+                    <LogoStack size={64} accent={t.accent}/>
+                    <LogoStack size={42} accent={t.accent} orientation="inline"/>
+                  </div>
+                </LogoArtboard>
+              </DCArtboard>
+              <DCArtboard id="logo-icons" label="icones d'app" width={460} height={520}>
+                <LogoArtboard accent={t.accent} mode="light" caption="Variants quadrades per a iOS / Android — pots barrejar amb qualsevol concept.">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 96px)', gap: 20 }}>
+                    <LogoIcon variant="gm" size={96} accent={t.accent} bg="#FBF8EF"/>
+                    <LogoIcon variant="moo" size={96} accent={t.accent} bg={t.accent} color="#FFFFFF"/>
+                    <LogoIcon variant="g" size={96} accent={t.accent} bg="#1A1815" color="#FFFFFF"/>
+                    <LogoIcon variant="oo" size={96} accent={t.accent} bg="#FBF8EF"/>
+                  </div>
+                </LogoArtboard>
+              </DCArtboard>
+              <DCArtboard id="logo-dark" label="sobre fosc" width={460} height={520}>
+                <LogoArtboard accent={t.accent} mode="dark" caption="Validació en mode fosc.">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 36, alignItems: 'center' }}>
+                    <LogoDomain size={60} accent={t.accent} color="#FAF7F0"/>
+                    <LogoMooShort size={80} accent={t.accent} color="#FAF7F0"/>
+                    <LogoStack size={44} accent={t.accent} color="#FAF7F0"/>
+                  </div>
+                </LogoArtboard>
+              </DCArtboard>
+            </DCSection>
+            <DCSection id="full-app" title="Full app · Rutines / Stats / Amics / Perfil" subtitle="Mateix sistema (Geist + sienna) aplicat a la resta de pantalles.">
+              <DCArtboard id="app-rutines" label="Rutines" width={402} height={874}>
+                <ScreenFramed Screen={RoutinesScreen} mode="light" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="app-stats" label="Estadístiques" width={402} height={874}>
+                <ScreenFramed Screen={StatsScreen} mode="light" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="app-friends" label="Amics" width={402} height={874}>
+                <ScreenFramed Screen={FriendsScreen} mode="light" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="app-perfil" label="Perfil" width={402} height={874}>
+                <ScreenFramed Screen={ProfileScreen} mode="light" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="app-rutines-dark" label="Rutines · fosc" width={402} height={874}>
+                <ScreenFramed Screen={RoutinesScreen} mode="dark" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="app-stats-dark" label="Estadístiques · fosc" width={402} height={874}>
+                <ScreenFramed Screen={StatsScreen} mode="dark" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+            </DCSection>
+            <DCSection id="quicklog" title="Quick-log form · light + dark" subtitle="Polished take on your existing layout. Rounder, with personality. Accent tunable.">
+              <DCArtboard id="ql-light" label={`clar · ${TYPOGRAPHY_OPTIONS.find(o => o.value === t.typography)?.name || ''}`} width={402} height={874}>
+                <QuickLogFramed mode="light" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="ql-dark" label={`fosc · ${TYPOGRAPHY_OPTIONS.find(o => o.value === t.typography)?.name || ''}`} width={402} height={874}>
+                <QuickLogFramed mode="dark" accent={t.accent} typography={t.typography} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="ql-notes" label="Notes" width={420} height={874}>
+                <QuickLogNotesCard accent={t.accent}/>
+              </DCArtboard>
+            </DCSection>
+            <DCSection id="refined" title="Refined direction" subtitle="Lift's structure ported to warm paper. Accent tunable via Tweaks.">
+              <DCArtboard id="refined-notes" label="Notes" width={420} height={874}>
+                <RefinedNotesCard accent={t.accent}/>
+              </DCArtboard>
+              <DCArtboard id="refined-main" label="refined · ready" width={402} height={874}>
+                <RefinedFramed accent={t.accent} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="refined-logging" label="refined · logging" width={402} height={874}>
+                <RefinedFramed accent={t.accent} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="refined-rest" label="refined · rest" width={402} height={874}>
+                <RefinedFramed accent={t.accent} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+            </DCSection>
+            <DCSection id="directions" title="Original three directions" subtitle="Kept for reference.">
+              <DCArtboard id="notes" label="Design notes" width={460} height={874}>
+                <DesignNotesCard />
+              </DCArtboard>
+              <DCArtboard id="paper" label="① paper · warm minimal" width={402} height={874}>
+                <FramedDirection Direction={PaperDirection} dark={false} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="lift" label="② lift · bold dark athletic" width={402} height={874}>
+                <FramedDirection Direction={LiftDirection} dark={true} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+              <DCArtboard id="moo" label="③ moo · playful character" width={402} height={874}>
+                <FramedDirection Direction={MooDirection} dark={false} showFrame={t.showDeviceFrame}/>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection title="Tipografia" subtitle="5 sistemes per audicionar">
+              <TweakSelect
+                label="Sistema"
+                value={t.typography}
+                options={TYPOGRAPHY_OPTIONS.map(o => ({ value: o.value, label: o.name }))}
+                onChange={v => setTweak('typography', v)}/>
+              <div style={{ fontSize: 11, opacity: 0.7, lineHeight: 1.4, marginTop: 6, fontStyle: 'italic' }}>
+                {TYPOGRAPHY_OPTIONS.find(o => o.value === t.typography)?.hint || ''}
+              </div>
+            </TweakSection>
+            <TweakSection title="Accent color" subtitle="Audicionant per a la refined">
+              <TweakColor
+                label="Accent"
+                value={t.accent}
+                options={ACCENT_OPTIONS.map(o => o.value)}
+                onChange={v => setTweak('accent', v)}/>
+              <div style={{ fontSize: 11, opacity: 0.7, lineHeight: 1.4, marginTop: 6, fontStyle: 'italic' }}>
+                {ACCENT_OPTIONS.find(a => a.value === t.accent)?.hint || 'custom'}
+              </div>
+            </TweakSection>
+            <TweakSection title="Display">
+              <TweakToggle label="iPhone frame" value={t.showDeviceFrame}
+                onChange={v => setTweak('showDeviceFrame', v)}/>
+            </TweakSection>
+            <TweakSection title="Tip">
+              <div style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.4 }}>
+                Toca una cèl·lula activa (vora amb accent) per anotar una sèrie.
+                Cada artboard → ⋯ → obrir pantalla completa.
+              </div>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

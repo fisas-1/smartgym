@@ -54,33 +54,36 @@ export default function Navigation() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl"
+      className="fixed bottom-0 left-0 right-0 z-50 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl"
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--card) 88%, transparent)',
-        borderTop: '1px solid var(--border)',
+        backgroundColor: 'var(--nav-bg)',
+        borderTop: '1px solid var(--rule)',
       }}
     >
-      <div className="flex items-stretch justify-around max-w-3xl mx-auto">
+      <div className="flex items-stretch justify-around max-w-3xl mx-auto px-1">
         {navItems.map(({ href, key, Icon }) => {
           const active = pathname === href
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 min-h-[48px] rounded-xl transition-colors ${
-                active
-                  ? 'text-[var(--color-text-primary)]'
-                  : 'text-[var(--color-text-tertiary)]'
-              }`}
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 min-h-[48px] transition-colors"
+              style={{ color: active ? 'var(--accent)' : 'var(--text-3)' }}
             >
-              {/* Icon with animated pill background */}
+              {/* Pill background behind active icon */}
               <div
-                className="flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200"
-                style={active ? { backgroundColor: 'var(--surface-strong)', transform: 'scale(1.08)' } : {}}
+                className="flex items-center justify-center w-11 h-[26px] rounded-full transition-all duration-200"
+                style={active ? { backgroundColor: 'var(--accent-tint)' } : {}}
               >
                 <Icon />
               </div>
-              <span className="text-[9px] leading-none tracking-wide truncate w-full text-center px-0.5">
+              <span
+                className="text-[9px] leading-none tracking-wide truncate w-full text-center px-0.5"
+                style={{
+                  fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+                  fontWeight: active ? 500 : 400,
+                }}
+              >
                 {t(`nav.${key}`)}
               </span>
             </Link>

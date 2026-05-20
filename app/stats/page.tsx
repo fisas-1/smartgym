@@ -51,7 +51,7 @@ export default function EstadistiquesPage() {
     if (!user) return
     const now = new Date()
     const dayMs = 24 * 60 * 60 * 1000
-    const dayOfWeek = (now.getDay() + 6) % 7 // Monday = 0
+    const dayOfWeek = (now.getDay() + 6) % 7
     const startThis = new Date(now.getTime() - dayOfWeek * dayMs)
     startThis.setHours(0, 0, 0, 0)
     const startLast = new Date(startThis.getTime() - 7 * dayMs)
@@ -172,28 +172,36 @@ export default function EstadistiquesPage() {
 
   const totalImprovement = stats.filter(s => s.improvement > 0).reduce((sum, s) => sum + s.improvement, 0)
   const improvedCount = stats.filter(s => s.improvement > 0).length
+  const maxImp = Math.max(...stats.map(s => Math.abs(s.improvement)), 1)
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-8 pb-4 max-w-2xl mx-auto">
-        <h1 className="page-title">stats.</h1>
+    <div className="min-h-screen bg-[var(--bg)]">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-0 max-w-2xl mx-auto">
+        <p className="section-label mb-1">el teu progrés</p>
+        <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
+          Estadístiques.
+        </h1>
       </div>
 
-      <div className="px-6 space-y-6 max-w-2xl mx-auto animate-slide-up">
-        <div className="flex gap-1.5 p-1 rounded-full bg-[var(--surface-strong)]">
+      <div className="px-5 pt-5 pb-6 space-y-5 max-w-2xl mx-auto animate-slide-up">
+        {/* Period segmented control */}
+        <div
+          className="flex gap-1 p-1 rounded-full border"
+          style={{ backgroundColor: 'var(--card-hi)', borderColor: 'var(--rule)' }}
+        >
           {[
-            { key: '30', label: '1M' },
-            { key: '90', label: '3M' },
+            { key: '30', label: '1 mes' },
+            { key: '90', label: '3 mesos' },
             { key: 'all', label: t('stats.periodAll') },
           ].map((p) => (
             <button
               key={p.key}
               onClick={() => setPeriod(p.key as '30' | '90' | 'all')}
-              className={`flex-1 py-2 rounded-full text-xs uppercase tracking-wider transition-colors ${
-                period === p.key
-                  ? 'bg-[var(--card)] text-[var(--color-text-primary)] shadow-sm'
-                  : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
-              }`}
+              className="flex-1 py-[7px] rounded-full text-[12px] transition-all"
+              style={period === p.key
+                ? { backgroundColor: 'var(--card)', color: 'var(--text)', fontWeight: 500, border: '1px solid var(--rule)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }
+                : { backgroundColor: 'transparent', color: 'var(--text-2)', fontWeight: 400, border: '1px solid transparent' }}
             >
               {p.label}
             </button>
@@ -203,48 +211,73 @@ export default function EstadistiquesPage() {
         {loading ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="card-surface p-4 space-y-2"><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-8 w-16 rounded" /></div>
-              <div className="card-surface p-4 space-y-2"><div className="skeleton h-3 w-20 rounded" /><div className="skeleton h-8 w-10 rounded" /></div>
+              <div className="card-surface p-4 space-y-2">
+                <div className="skeleton h-2.5 w-20 rounded" />
+                <div className="skeleton h-8 w-16 rounded" />
+              </div>
+              <div className="card-surface p-4 space-y-2">
+                <div className="skeleton h-2.5 w-20 rounded" />
+                <div className="skeleton h-8 w-10 rounded" />
+              </div>
             </div>
             <div className="space-y-3">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map(i => (
                 <div key={i} className="space-y-1.5">
-                  <div className="flex justify-between"><div className="skeleton h-3 w-24 rounded" /><div className="skeleton h-3 w-10 rounded" /></div>
-                  <div className="skeleton h-1.5 w-full rounded-full" />
+                  <div className="flex justify-between">
+                    <div className="skeleton h-3 w-24 rounded" />
+                    <div className="skeleton h-3 w-10 rounded" />
+                  </div>
+                  <div className="skeleton h-[5px] w-full rounded-full" />
                 </div>
               ))}
             </div>
           </div>
         ) : (
           <>
+            {/* KPI cards */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="card-surface p-4 animate-slide-up stagger-1">
+              <div className="card-surface px-3.5 py-3 dop-slide-up stagger-1">
                 <p className="section-label mb-1">{t('stats.totalImprovement')}</p>
-                <p className="text-3xl font-light tabular-nums" style={{ color: totalImprovement > 0 ? 'var(--accent-success)' : 'var(--color-text-primary)' }}>{totalImprovement}%</p>
+                <p
+                  className="font-mono text-[30px] font-medium leading-none tabular-nums tracking-[-0.02em]"
+                  style={{ color: totalImprovement > 0 ? 'var(--good)' : 'var(--text)' }}
+                >
+                  +{totalImprovement}<span className="text-[16px]" style={{ color: 'var(--text-3)' }}>%</span>
+                </p>
               </div>
-              <div className="card-surface p-4 animate-slide-up stagger-2">
+              <div className="card-surface px-3.5 py-3 dop-slide-up stagger-2">
                 <p className="section-label mb-1">{t('stats.groupsImproved')}</p>
-                <p className="text-3xl font-light tabular-nums">{improvedCount}</p>
+                <p className="font-mono text-[30px] font-medium leading-none tabular-nums tracking-[-0.02em] text-[var(--text)]">
+                  {improvedCount}<span className="text-[16px]" style={{ color: 'var(--text-3)' }}>/{MUSCLE_GROUPS.length}</span>
+                </p>
               </div>
             </div>
 
+            {/* Muscle improvement bars */}
             <div>
               <p className="section-label mb-3">{t('stats.byMuscleGroup')}</p>
-              <div className="space-y-3">
-                {stats.sort((a, b) => b.improvement - a.improvement).map((stat) => (
-                  <div key={stat.muscle}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-[var(--color-text-secondary)] font-light">{stat.label}</span>
-                      <span className="tabular-nums" style={{ color: stat.improvement > 0 ? 'var(--accent-success)' : 'var(--color-text-tertiary)' }}>
+              <div className="space-y-2.5">
+                {stats.sort((a, b) => b.improvement - a.improvement).map((stat, idx) => (
+                  <div
+                    key={stat.muscle}
+                    style={{ animation: `dopSlideUp 480ms ${idx * 60}ms cubic-bezier(.22,1,.36,1) both` }}
+                  >
+                    <div className="flex justify-between text-[13px] mb-1">
+                      <span className="text-[var(--text-2)]">{stat.label}</span>
+                      <span
+                        className="font-mono text-[12px] tabular-nums"
+                        style={{ color: stat.improvement > 0 ? 'var(--good)' : stat.improvement < 0 ? 'var(--danger)' : 'var(--text-3)' }}
+                      >
                         {stat.improvement > 0 ? '+' : ''}{stat.improvement}%
                       </span>
                     </div>
-                    <div className="h-1 bg-[var(--surface-strong)] rounded-full overflow-hidden">
+                    <div className="h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: 'var(--card-hi)' }}>
                       <div
                         className="h-full rounded-full progress-fill"
                         style={{
-                          width: `${Math.min(Math.abs(stat.improvement), 100)}%`,
-                          backgroundColor: stat.improvement > 0 ? 'var(--accent-success)' : stat.improvement < 0 ? 'var(--accent-danger)' : 'var(--border)',
+                          width: `${Math.min((Math.abs(stat.improvement) / maxImp) * 100, 100)}%`,
+                          backgroundColor: stat.improvement > 0 ? 'var(--good)' : stat.improvement < 0 ? 'var(--danger)' : 'var(--rule)',
+                          animationDelay: `${idx * 80 + 100}ms`,
                         }}
                       />
                     </div>
@@ -255,54 +288,70 @@ export default function EstadistiquesPage() {
           </>
         )}
 
-        {/* Volum setmanal per grup muscular */}
+        {/* Weekly volume */}
         {weeklyVolume.length > 0 && (
-          <div className="pt-4 border-t border-[var(--border)]">
-            <p className="section-label mb-3">{t('stats.weeklyVolume')}</p>
+          <div className="pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+            <div className="flex items-baseline justify-between mb-3">
+              <p className="section-label">{t('stats.weeklyVolume')}</p>
+              <span className="font-mono text-[9px] flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--rule)' }} />
+                ant
+                <span className="inline-block w-1.5 h-1.5 rounded-full ml-1.5" style={{ backgroundColor: 'var(--accent)' }} />
+                ara
+              </span>
+            </div>
             <div className="space-y-3">
               {weeklyVolume.sort((a, b) => b.thisWeek - a.thisWeek).map(v => {
                 const max = Math.max(v.thisWeek, v.lastWeek, 1)
                 const diff = v.lastWeek > 0 ? Math.round(((v.thisWeek - v.lastWeek) / v.lastWeek) * 100) : (v.thisWeek > 0 ? 100 : 0)
                 return (
                   <div key={v.muscle}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-[var(--color-text-secondary)] font-light">{v.label}</span>
-                      <span className="flex items-center gap-2">
-                        <span className="text-[var(--color-text-primary)] tabular-nums">{format(v.thisWeek)}{unit}</span>
+                    <div className="flex justify-between text-[13px] mb-1">
+                      <span className="text-[var(--text-2)]">{v.label}</span>
+                      <span className="flex items-baseline gap-2">
+                        <span className="font-mono tabular-nums text-[var(--text)]">{format(v.thisWeek)}{unit}</span>
                         {v.lastWeek > 0 && (
-                          <span className="text-xs tabular-nums" style={{ color: diff > 0 ? 'var(--accent-success)' : diff < 0 ? 'var(--accent-danger)' : 'var(--color-text-tertiary)' }}>
+                          <span
+                            className="font-mono text-[11px] tabular-nums"
+                            style={{ color: diff > 0 ? 'var(--good)' : diff < 0 ? 'var(--danger)' : 'var(--text-3)' }}
+                          >
                             {diff > 0 ? '+' : ''}{diff}%
                           </span>
                         )}
                       </span>
                     </div>
-                    <div className="relative h-1.5 bg-[var(--surface-strong)] rounded-full overflow-hidden">
-                      <div className="absolute h-full rounded-full progress-fill" style={{ width: `${(v.lastWeek / max) * 100}%`, backgroundColor: 'var(--border)' }} />
-                      <div className="absolute h-full rounded-full progress-fill stagger-1" style={{ width: `${(v.thisWeek / max) * 100}%`, backgroundColor: 'var(--accent-success)', opacity: 0.85 }} />
+                    <div className="relative h-[6px] rounded-full overflow-hidden" style={{ backgroundColor: 'var(--card-hi)' }}>
+                      <div
+                        className="absolute h-full rounded-full progress-fill"
+                        style={{ width: `${(v.lastWeek / max) * 100}%`, backgroundColor: 'var(--rule)' }}
+                      />
+                      <div
+                        className="absolute h-full rounded-full progress-fill stagger-1"
+                        style={{ width: `${(v.thisWeek / max) * 100}%`, backgroundColor: 'var(--accent)', opacity: 0.85 }}
+                      />
                     </div>
                   </div>
                 )
               })}
             </div>
-            <p className="text-[10px] text-[var(--color-text-tertiary)] mt-3">{t('stats.weeklyVolumeLegend')}</p>
+            <p className="font-mono text-[9px] mt-3" style={{ color: 'var(--text-3)' }}>{t('stats.weeklyVolumeLegend')}</p>
           </div>
         )}
 
-        {/* Historial per exercici */}
+        {/* Exercise history */}
         {exerciseList.length > 0 && (
-          <div className="pt-4 border-t border-[var(--border)]">
+          <div className="pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
             <p className="section-label mb-3">{t('stats.exerciseHistory')}</p>
 
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden mb-4">
+            <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hidden mb-4">
               {exerciseList.map(ex => (
                 <button
                   key={ex}
                   onClick={() => setSelectedExercise(ex)}
-                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
-                    selectedExercise === ex
-                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]'
-                      : 'bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)]'
-                  }`}
+                  className="px-3.5 py-[7px] rounded-full text-[12px] font-medium whitespace-nowrap flex-shrink-0 transition-colors border"
+                  style={selectedExercise === ex
+                    ? { backgroundColor: 'var(--text)', color: 'var(--bg)', borderColor: 'var(--text)' }
+                    : { backgroundColor: 'var(--card-hi)', color: 'var(--text-2)', borderColor: 'var(--rule)' }}
                 >
                   {tEx(ex)}
                 </button>
@@ -311,7 +360,7 @@ export default function EstadistiquesPage() {
 
             {historyLoading ? (
               <div className="space-y-2">
-                {[1,2,3].map(i => (
+                {[1, 2, 3].map(i => (
                   <div key={i} className="flex justify-between py-2">
                     <div className="skeleton h-3 w-32 rounded" />
                     <div className="skeleton h-3 w-20 rounded" />
@@ -319,57 +368,68 @@ export default function EstadistiquesPage() {
                 ))}
               </div>
             ) : exerciseLogs.length === 0 ? (
-              <p className="text-[var(--color-text-tertiary)] text-sm py-6 text-center">{t('stats.noHistory')}</p>
+              <p className="text-[var(--text-3)] text-sm py-6 text-center">{t('stats.noHistory')}</p>
             ) : (
               <>
-                {/* Mini-gràfic d'evolució 1RM */}
                 {chartData.length >= 2 && (
                   <ProgressChart points={chartData} unit={unit} format={format} label={t('stats.oneRMEvolution')} locale={locale} />
                 )}
 
-                {/* Sessions agrupades per dia */}
                 {(() => {
                   const allTimeMax = Math.max(...exerciseLogs.map(l => l.one_rm || 0))
                   return (
-                <div className="space-y-2 mt-4">
-                  {groupedByDay.map(([day, logs]) => {
-                    const maxOneRM = Math.max(...logs.map(l => l.one_rm || 0))
-                    const isPrDay = maxOneRM > 0 && maxOneRM === allTimeMax
-                    const notes = logs.map(l => l.note).filter(Boolean) as string[]
-                    return (
-                      <div
-                        key={day}
-                        className="card-surface p-3"
-                        style={isPrDay ? { borderColor: 'color-mix(in srgb, var(--accent-warn) 50%, transparent)' } : undefined}
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-light text-[var(--color-text-secondary)] flex items-center gap-1.5">
-                            {isPrDay && <span title={t('home.personalRecord')}>🏆</span>}
-                            {new Date(day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </p>
-                          {maxOneRM > 0 && (
-                            <p className="text-xs text-[var(--color-text-tertiary)]">1RM: <span className="text-[var(--color-text-primary)] tabular-nums">{format(maxOneRM)}{unit}</span></p>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {logs.map(l => (
-                            <span key={l.id} className="text-xs px-2 py-1 rounded-md bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light tabular-nums">
-                              {format(l.weight)}{unit} × {l.reps}
-                              {l.rir != null && <span className="text-[var(--color-text-tertiary)]"> · RIR {l.rir}</span>}
-                            </span>
-                          ))}
-                        </div>
-                        {notes.length > 0 && (
-                          <div className="mt-2 space-y-0.5">
-                            {notes.map((n, i) => (
-                              <p key={i} className="text-xs text-[var(--color-text-tertiary)] italic">“{n}”</p>
-                            ))}
+                    <div className="space-y-2 mt-4">
+                      {groupedByDay.map(([day, logs]) => {
+                        const maxOneRM = Math.max(...logs.map(l => l.one_rm || 0))
+                        const isPrDay = maxOneRM > 0 && maxOneRM === allTimeMax
+                        const notes = logs.map(l => l.note).filter(Boolean) as string[]
+                        return (
+                          <div
+                            key={day}
+                            className="card-surface p-3"
+                            style={isPrDay ? { borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)' } : undefined}
+                          >
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-[13px] text-[var(--text-2)] flex items-center gap-1.5">
+                                {isPrDay && (
+                                  <span
+                                    className="font-mono text-[9px] px-1.5 py-0.5 rounded text-white"
+                                    style={{ backgroundColor: 'var(--accent)', letterSpacing: '0.06em' }}
+                                  >
+                                    PR
+                                  </span>
+                                )}
+                                {new Date(day).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </p>
+                              {maxOneRM > 0 && (
+                                <p className="font-mono text-[11px] text-[var(--text-3)]">
+                                  1RM <span className="text-[var(--text)] font-medium tabular-nums">{format(maxOneRM)}{unit}</span>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {logs.map(l => (
+                                <span
+                                  key={l.id}
+                                  className="font-mono text-[11px] px-2 py-1 rounded-md tabular-nums"
+                                  style={{ backgroundColor: 'var(--card-hi)', color: 'var(--text-2)' }}
+                                >
+                                  {format(l.weight)}{unit} × {l.reps}
+                                  {l.rir != null && <span style={{ color: 'var(--text-3)' }}> · RIR {l.rir}</span>}
+                                </span>
+                              ))}
+                            </div>
+                            {notes.length > 0 && (
+                              <div className="mt-2 space-y-0.5">
+                                {notes.map((n, i) => (
+                                  <p key={i} className="text-[12px] italic" style={{ color: 'var(--text-3)' }}>"{n}"</p>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
+                        )
+                      })}
+                    </div>
                   )
                 })()}
               </>
@@ -379,20 +439,26 @@ export default function EstadistiquesPage() {
       </div>
 
       <QuickLogFab />
-      <div className="h-20" />
+      <div className="h-24" />
     </div>
   )
 }
 
-function ProgressChart({ points, unit, format, label, locale }: { points: { day: string; max: number }[]; unit: string; format: (kg: number) => string; label: string; locale: string }) {
-  const W = 320, H = 100, P = 12
-  const xs = points.map((_, i) => P + (i * (W - 2 * P)) / Math.max(1, points.length - 1))
+function ProgressChart({ points, unit, format, label, locale }: {
+  points: { day: string; max: number }[]
+  unit: string
+  format: (kg: number) => string
+  label: string
+  locale: string
+}) {
+  const W = 320, H = 110, padX = 12, padY = 12
+  const xs = points.map((_, i) => padX + (i * (W - 2 * padX)) / Math.max(1, points.length - 1))
   const maxY = Math.max(...points.map(p => p.max))
   const minY = Math.min(...points.map(p => p.max))
   const range = maxY - minY || 1
-  const ys = points.map(p => H - P - ((p.max - minY) / range) * (H - 2 * P))
+  const ys = points.map(p => H - padY - ((p.max - minY) / range) * (H - 2 * padY))
   const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'} ${x} ${ys[i]}`).join(' ')
-  const areaPath = `${path} L ${xs[xs.length - 1]} ${H - P} L ${xs[0]} ${H - P} Z`
+  const areaPath = `${path} L ${xs[xs.length - 1]} ${H - padY} L ${xs[0]} ${H - padY} Z`
   const first = points[0].max, last = points[points.length - 1].max
   const trend = last - first
   const trendPct = first > 0 ? Math.round((trend / first) * 100) : 0
@@ -401,24 +467,27 @@ function ProgressChart({ points, unit, format, label, locale }: { points: { day:
     <div className="card-surface p-4">
       <div className="flex justify-between items-baseline mb-2">
         <p className="section-label">{label}</p>
-        <p className="text-xs tabular-nums" style={{ color: trend > 0 ? 'var(--accent-success)' : trend < 0 ? 'var(--accent-danger)' : 'var(--color-text-tertiary)' }}>
+        <p
+          className="font-mono text-[12px] tabular-nums"
+          style={{ color: trend > 0 ? 'var(--good)' : trend < 0 ? 'var(--danger)' : 'var(--text-3)' }}
+        >
           {trend > 0 ? '+' : ''}{format(trend)}{unit} ({trendPct > 0 ? '+' : ''}{trendPct}%)
         </p>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24">
         <defs>
           <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent-success)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="var(--accent-success)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#chartGrad)" />
-        <path d={path} fill="none" stroke="var(--accent-success)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {xs.map((x, i) => (
-          <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 3 : 2} fill="var(--accent-success)" />
+          <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 4 : 2.4} fill="var(--accent)" />
         ))}
       </svg>
-      <div className="flex justify-between text-[10px] text-[var(--color-text-tertiary)] mt-1 tabular-nums">
+      <div className="flex justify-between font-mono text-[9px] mt-1 tabular-nums" style={{ color: 'var(--text-3)' }}>
         <span>{new Date(points[0].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>
         <span>{format(minY)}–{format(maxY)}{unit}</span>
         <span>{new Date(points[points.length - 1].day).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</span>

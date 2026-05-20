@@ -8,6 +8,7 @@ import { useTranslation } from './contexts/LanguageContext'
 import { useTheme } from './contexts/ThemeContext'
 import { useUnit } from './contexts/UnitContext'
 import NumericKeyboard from './components/NumericKeyboard'
+import Logo from './components/Logo'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -57,29 +58,37 @@ type LastSessions = Record<string, { date: string; sets: { weight: number; reps:
 
 function LoggedOutView({ t }: { t: (key: string) => string }) {
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col px-6 py-16">
-      <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto space-y-8 animate-slide-up">
-        <div className="text-center space-y-3">
-          <h1 className="text-4xl font-light tracking-tight">Gymmoo.</h1>
-          <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{t('home.welcome')}</p>
+    <div className="min-h-screen flex flex-col px-5 py-16" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto gap-8 dop-slide-up">
+        <div className="text-center space-y-2">
+          <Logo size="lg" />
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.12em' }}>
+            el teu gimnàs
+          </p>
         </div>
-        <div className="card-surface divide-y divide-[var(--border)]">
+
+        <div className="rounded-[14px] overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
           {[
-            { icon: '📈', label: t('home.featureProgress'), delay: 'stagger-2' },
-            { icon: '📋', label: t('home.featureRoutines'), delay: 'stagger-3' },
-            { icon: '🏆', label: t('home.featureFriends'), delay: 'stagger-4' },
-          ].map(({ icon, label, delay }) => (
-            <div key={icon} className={`flex items-center gap-3 px-4 py-3 animate-slide-up ${delay}`}>
+            { icon: '📈', label: t('home.featureProgress') },
+            { icon: '📋', label: t('home.featureRoutines') },
+            { icon: '🏆', label: t('home.featureFriends') },
+          ].map(({ icon, label }, i) => (
+            <div key={icon} className="flex items-center gap-3 px-4 py-3.5" style={{ borderTop: i > 0 ? '1px solid var(--rule-soft)' : 'none' }}>
               <span className="text-lg w-7 text-center flex-shrink-0">{icon}</span>
-              <span className="text-sm text-[var(--color-text-secondary)]">{label}</span>
+              <span className="text-sm" style={{ color: 'var(--text-2)', fontFamily: 'var(--font-sans)' }}>{label}</span>
             </div>
           ))}
         </div>
+
         <div className="flex flex-col gap-3">
-          <a href="/login" className="w-full py-4 px-6 rounded-2xl font-medium text-center bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 transition-opacity">
+          <a href="/login"
+            className="w-full py-4 px-6 rounded-[999px] font-medium text-center text-sm transition-opacity hover:opacity-90"
+            style={{ background: 'var(--accent)', color: '#fff' }}>
             {t('common.register')}
           </a>
-          <a href="/login" className="w-full py-4 px-6 rounded-2xl font-medium text-center border border-[var(--border)] text-[var(--color-text-primary)] hover:bg-[var(--surface-strong)] transition-colors">
+          <a href="/login"
+            className="w-full py-4 px-6 rounded-[999px] font-medium text-center text-sm transition-colors hover:opacity-80"
+            style={{ border: '1px solid var(--rule)', color: 'var(--text-2)', background: 'transparent' }}>
             {t('common.login')}
           </a>
         </div>
@@ -144,7 +153,7 @@ export default function HomePage() {
   const [variant, setVariant] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<string>('')
-  const [rir, setRir] = useState<string>('')
+  const [rir, setRir] = useState<string>('2')
   const [oneRM, setOneRM] = useState<number>(0)
   const [displayedOneRM, setDisplayedOneRM] = useState(0)
   const [weightType, setWeightType] = useState('pes')
@@ -161,6 +170,8 @@ export default function HomePage() {
   const [bestPerExercise, setBestPerExercise] = useState<Record<string, number>>({})
   const [activeInput, setActiveInput] = useState<'weight' | 'reps' | null>(null)
   const [showExtraOptions, setShowExtraOptions] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
   const [userBodyweightKg, setUserBodyweightKg] = useState<number | null>(null)
   const animRef = useRef<number | null>(null)
 
@@ -194,14 +205,12 @@ export default function HomePage() {
   async function initSession() {
     setSessionLoading(true)
     try {
-      // User name from auth metadata
       const rawName: string = (user?.user_metadata?.username as string) || user?.email?.split('@')[0] || 'Usuari'
       const firstName = rawName.split(/[\s._]/)[0]
       const cap = firstName.charAt(0).toUpperCase() + firstName.slice(1)
       setUserName(cap)
       setUserInitials(rawName.slice(0, 2).toUpperCase())
 
-      // Find today's routine
       const routineDays: Record<string, number[]> = JSON.parse(localStorage.getItem('routine_days') || '{}')
       const today = new Date().getDay()
       const todayRoutineId = Object.entries(routineDays).find(([, days]) => days.includes(today))?.[0]
@@ -211,7 +220,6 @@ export default function HomePage() {
       const { data: routine } = await supabase.from('routines').select('*').eq('id', todayRoutineId).eq('user_id', user!.id).single()
       if (!routine) { setSessionLoading(false); return }
 
-      // Get or create session start time (scoped to today)
       const todayStr = new Date().toISOString().slice(0, 10)
       const stored = localStorage.getItem('active_session')
       let session: ActiveSession
@@ -230,7 +238,6 @@ export default function HomePage() {
       }
       setActiveSession(session)
 
-      // Load all data
       await Promise.all([
         loadRoutineData(todayRoutineId),
         loadTodayStats(),
@@ -319,7 +326,7 @@ export default function HomePage() {
     return () => clearInterval(iv)
   }, [activeSession])
 
-  // ─── Rest timer (inline, synced with RestTimer component via localStorage) ──
+  // ─── Rest timer ────────────────────────────────────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem('rest_timer_state')
     if (saved) {
@@ -402,7 +409,6 @@ export default function HomePage() {
       const rirVal = logRir === '' ? null : parseFloat(logRir)
       const one_rm = wKg > 0 ? calc1RM(wKg, r) : 0
 
-      // Check PR
       let isPr = false
       if (one_rm > 0) {
         const prev = bestOneRM[currentExercise.exercise] || 0
@@ -555,9 +561,16 @@ export default function HomePage() {
       if (note.trim()) insertData.note = note.trim()
       const { error } = await supabase.from('workout_logs').insert(insertData)
       if (error) { setErrorMsg(t('common.saveError') + error.message); return }
-      setWeight(''); setReps(''); setRir(''); setNote(''); setActiveInput(null)
+      setWeight(''); setReps(''); setRir('2'); setNote(''); setActiveInput(null); setNotesOpen(false)
       if (navigator.vibrate) navigator.vibrate(isPr ? [60, 40, 60, 40, 120] : 40)
-      if (isPr) { setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(effectiveOneRM), unit })); setTimeout(() => setPrMsg(null), 6000) }
+      if (isPr) {
+        setJustSaved(true)
+        setPrMsg(t('home.newPr', { exercise: tEx(exerciseToStore), value: format(effectiveOneRM), unit }))
+        setTimeout(() => { setPrMsg(null); setJustSaved(false) }, 6000)
+      } else {
+        setJustSaved(true)
+        setTimeout(() => setJustSaved(false), 1600)
+      }
       await loadSavedSets()
     } finally { setFormLoading(false) }
   }
@@ -591,8 +604,9 @@ export default function HomePage() {
 
   if (sessionLoading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-[var(--border)] border-t-[var(--color-text-primary)] animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="w-6 h-6 rounded-full border-2 animate-spin"
+          style={{ borderColor: 'var(--rule)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
   }
@@ -600,31 +614,60 @@ export default function HomePage() {
   // ── Active session view ────────────────────────────────────────────────────
   if (activeSession) {
     const volDiff = Math.round((todayVolume - prevVolume) * 10) / 10
+    const volPct = prevVolume > 0 ? Math.round(((todayVolume - prevVolume) / prevVolume) * 100) : 0
+
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+      <div className="min-h-screen pb-28" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
 
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 flex items-start justify-between">
-          <div>
-            <p className="text-xs text-[var(--color-text-tertiary)] font-medium tracking-wide mb-0.5">
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+          <div className="dop-slide-up">
+            <Logo />
+            <p className="mt-1" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.06em' }}>
               {capitalizedDay} · {activeSession.routineName}
             </p>
-            <h1 className="text-2xl font-light leading-snug">
-              {t(greetingKey, { name: userName })}
-            </h1>
           </div>
-          <div className="w-10 h-10 rounded-full bg-[var(--surface-strong)] border border-[var(--border)] flex items-center justify-center text-xs font-semibold tracking-wider flex-shrink-0 mt-1">
-            {userInitials}
+          {/* Streak chip */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl dop-slide-up"
+            style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
+            <span className="dop-flame text-sm">🔥</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{streak}</span>
           </div>
         </div>
 
-        {/* Registrar sèrie button */}
-        <div className="px-6 pb-4">
+        {/* Today recap strip */}
+        <div className="mx-5 mb-4 rounded-[14px] overflow-hidden"
+          style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
+          <div className="grid grid-cols-3">
+            {[
+              { label: 'sèries', value: `${completedSetsToday}`, sub: `/${totalSetsTarget}`, accent: false },
+              { label: 'volum', value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 ? `${volPct >= 0 ? '+' : ''}${volPct}%` : '', accent: volPct > 0 },
+              { label: 'sessió', value: `${elapsedMins}`, sub: 'min', accent: false },
+            ].map((s, i) => (
+              <div key={i} className="py-3 text-center" style={{ borderLeft: i > 0 ? '1px solid var(--rule-soft)' : 'none' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)' }}>{s.label}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 500, color: 'var(--text)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: s.accent ? 'var(--good)' : 'var(--text-3)' }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* PR banner */}
+        {prMsg && (
+          <div className="mx-5 mb-3 px-4 py-3 rounded-[14px] animate-bounce-in"
+            style={{ background: 'var(--accent-tint)', border: '1px solid var(--accent-soft)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--accent)' }}>{prMsg}</p>
+          </div>
+        )}
+
+        {/* Log Set CTA */}
+        <div className="px-5 mb-4">
           <button
             onClick={openLogModal}
             disabled={!currentExercise || !nextIncompleteSet}
-            className="w-full py-4 rounded-2xl font-medium flex items-center justify-between px-5 transition-opacity disabled:opacity-40 active:scale-[0.98]"
-            style={{ backgroundColor: 'var(--accent-warn)', color: '#000' }}
+            className="w-full py-4 rounded-2xl font-medium flex items-center justify-between px-5 transition-all disabled:opacity-40 active:scale-[0.98] dop-breathe"
+            style={{ background: 'var(--accent)', color: '#fff' }}
           >
             <span className="text-xl font-light leading-none">+</span>
             <span className="text-base font-semibold tracking-wide">{t('home.logSet')}</span>
@@ -632,115 +675,54 @@ export default function HomePage() {
           </button>
         </div>
 
-        <div className="px-6 space-y-4 pb-24 max-w-2xl mx-auto animate-slide-up">
+        <div className="px-5 space-y-3 max-w-2xl mx-auto">
 
-          {/* PR banner */}
-          {prMsg && (
-            <div className="px-4 py-3 rounded-2xl animate-bounce-in" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-warn) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-warn) 45%, transparent)' }}>
-              <p className="text-sm font-medium" style={{ color: 'var(--accent-warn)' }}>{prMsg}</p>
-            </div>
-          )}
-
-          {/* AVUI stats */}
-          <div>
-            <p className="section-label mb-2">{t('home.today')}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {/* Volume */}
-              <div className="card-surface px-4 py-3">
-                <p className="section-label text-[10px] mb-1">{t('home.totalVolume')}</p>
-                <p className="text-xl font-light tabular-nums">
-                  {format(todayVolume)} <span className="text-xs text-[var(--color-text-tertiary)]">{unit}</span>
-                </p>
-                {prevVolume > 0 && (
-                  <p className="text-xs mt-0.5 tabular-nums" style={{ color: volDiff >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
-                    {volDiff >= 0 ? '+' : ''}{format(volDiff)} {t('home.vsLast')}
-                  </p>
-                )}
-              </div>
-
-              {/* Sèries */}
-              <div className="card-surface px-4 py-3">
-                <p className="section-label text-[10px] mb-1">{t('home.setsDone')}</p>
-                <p className="text-xl font-light tabular-nums">
-                  {completedSetsToday}<span className="text-[var(--color-text-tertiary)] text-sm">/{totalSetsTarget}</span>
-                </p>
-                <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
-                  {routineExercises.filter(re => (routineSets[re.id] || []).every(s => s.completed) && (routineSets[re.id] || []).length > 0).length}/{routineExercises.length} {t('home.exercises')}
-                </p>
-              </div>
-
-              {/* Temps */}
-              <div className="card-surface px-4 py-3">
-                <p className="section-label text-[10px] mb-1">{t('home.time')}</p>
-                <p className="text-xl font-light tabular-nums">
-                  {elapsedMins} <span className="text-xs text-[var(--color-text-tertiary)]">min</span>
-                </p>
-                {estimatedRemainingMins > 0 && (
-                  <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{t('home.estimatedMore', { mins: String(estimatedRemainingMins) })}</p>
-                )}
-              </div>
-
-              {/* Ratxa */}
-              <div className="card-surface px-4 py-3">
-                <p className="section-label text-[10px] mb-1">{t('home.streak')}</p>
-                <p className="text-xl font-light tabular-nums">
-                  {streak} <span className="text-xs text-[var(--color-text-tertiary)]">{t('home.streakDays')}</span>
-                </p>
-                {bestStreak > 0 && (
-                  <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">{t('home.bestStreak', { days: String(bestStreak) })}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* DESCANS — inline rest timer */}
+          {/* Rest timer */}
           {restRunning && (
-            <div className="card-surface px-4 py-3 fade-in">
+            <div className="rounded-[14px] px-4 py-3 fade-in" style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
               <p className="section-label mb-2">{t('home.rest')}</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <p className="text-3xl font-light tabular-nums">
+                  <p className="text-3xl font-light tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>
                     {Math.floor(restRemaining / 60)}:{(restRemaining % 60).toString().padStart(2, '0')}
                   </p>
                   {nextExercise && (
                     <div>
-                      <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wide">{t('home.next')}</p>
-                      <p className="text-sm text-[var(--color-text-secondary)] font-light">{tEx(nextExercise.exercise)}</p>
+                      <p className="section-label">{t('home.next')}</p>
+                      <p className="text-sm mt-0.5" style={{ color: 'var(--text-2)' }}>{tEx(nextExercise.exercise)}</p>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={skipRest}
-                  className="px-4 py-2 rounded-xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] text-sm hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
-                >
+                <button onClick={skipRest}
+                  className="px-4 py-2 rounded-xl text-sm transition-colors"
+                  style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)', color: 'var(--text-2)' }}>
                   {t('home.skip')}
                 </button>
               </div>
-              <div className="mt-2 h-0.5 bg-[var(--surface-hover)] rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-none" style={{ width: `${(restRemaining / restPreset) * 100}%`, backgroundColor: restRemaining <= 10 ? 'var(--accent-danger)' : 'var(--accent-success)' }} />
+              <div className="mt-2 h-0.5 rounded-full overflow-hidden" style={{ background: 'var(--rule)' }}>
+                <div className="h-full rounded-full transition-none"
+                  style={{ width: `${(restRemaining / restPreset) * 100}%`, background: restRemaining <= 10 ? 'var(--danger)' : 'var(--accent)' }} />
               </div>
             </div>
           )}
 
-          {/* EN CURS */}
+          {/* Current exercise */}
           {currentExercise && (
-            <div className="card-surface p-4">
+            <div className="rounded-[14px] p-4" style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
               <div className="flex items-center justify-between mb-3">
-                <p className="font-light text-[var(--color-text-primary)] truncate flex-1 mr-2">{tEx(currentExercise.exercise)}</p>
+                <p className="font-medium truncate flex-1 mr-2" style={{ color: 'var(--text)' }}>{tEx(currentExercise.exercise)}</p>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide flex-shrink-0"
-                      style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 15%, transparent)', color: 'var(--accent-success)' }}>
+                  style={{ background: 'var(--accent-tint)', color: 'var(--accent)' }}>
                   {t('home.inProgress')}
                 </span>
               </div>
 
-              {/* Table header */}
               <div className="grid grid-cols-4 px-2 mb-1">
                 {['#', t('home.weightCol'), t('home.repsCol'), t('common.rir')].map(h => (
-                  <span key={h} className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wide">{h}</span>
+                  <span key={h} className="section-label">{h}</span>
                 ))}
               </div>
 
-              {/* Sets rows */}
               <div className="space-y-0.5">
                 {currentSets.map((set, i) => {
                   const isCompleted = set.completed
@@ -753,32 +735,31 @@ export default function HomePage() {
 
                   return (
                     <div key={set.id}
-                      className={`grid grid-cols-4 px-2 py-1.5 rounded-xl items-center text-sm transition-colors ${isCompleted ? '' : isNext ? '' : 'opacity-35'}`}
-                      style={isCompleted ? { backgroundColor: 'color-mix(in srgb, var(--accent-success) 10%, transparent)' } : undefined}
+                      className={`grid grid-cols-4 px-2 py-1.5 rounded-xl items-center text-sm transition-colors ${!isCompleted && !isNext ? 'opacity-35' : ''}`}
+                      style={isCompleted ? { background: 'var(--accent-tint)' } : undefined}
                     >
-                      <span className="text-[var(--color-text-tertiary)] text-xs tabular-nums">{set.set_number}</span>
-                      <span className="tabular-nums font-light">
+                      <span className="text-xs tabular-nums" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{set.set_number}</span>
+                      <span className="tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>
                         {dispW > 0 ? `${format(unit === 'kg' ? dispW : fromKg(dispW))}${unit}` : '—'}
                       </span>
-                      <span className="tabular-nums">{dispR || '—'}</span>
+                      <span className="tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{dispR || '—'}</span>
                       <div className="flex items-center gap-1.5">
-                        <span className="tabular-nums text-[var(--color-text-secondary)]">{dispRir ?? '—'}</span>
-                        {isCompleted && <span className="text-xs leading-none" style={{ color: 'var(--accent-success)' }}>✓</span>}
-                        {isNext && <span className="w-3.5 h-3.5 rounded-full border flex-shrink-0 inline-block" style={{ borderColor: 'var(--color-text-tertiary)' }} />}
+                        <span className="tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-2)' }}>{dispRir ?? '—'}</span>
+                        {isCompleted && <span className="text-xs leading-none" style={{ color: 'var(--good)' }}>✓</span>}
+                        {isNext && <span className="w-3.5 h-3.5 rounded-full border flex-shrink-0 inline-block" style={{ borderColor: 'var(--text-3)' }} />}
                       </div>
                     </div>
                   )
                 })}
               </div>
 
-              {/* 1RM row */}
               {current1RM > 0 && (
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border)]">
-                  <span className="text-xs text-[var(--color-text-tertiary)]">{t('home.estimated1RM')}</span>
+                <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid var(--rule)' }}>
+                  <span className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{t('home.estimated1RM')}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-light tabular-nums">{format(current1RM)} {unit}</span>
+                    <span className="text-sm tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{format(current1RM)} {unit}</span>
                     {oneRMDiff !== null && (
-                      <span className="text-xs tabular-nums" style={{ color: oneRMDiff >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }}>
+                      <span className="text-xs tabular-nums" style={{ fontFamily: 'var(--font-mono)', color: oneRMDiff >= 0 ? 'var(--good)' : 'var(--danger)' }}>
                         {oneRMDiff >= 0 ? '+' : ''}{format(Math.abs(oneRMDiff))} vs PR
                       </span>
                     )}
@@ -788,18 +769,18 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Completed state */}
+          {/* Session done */}
           {!currentExercise && routineExercises.length > 0 && (
-            <div className="card-surface p-6 text-center">
+            <div className="rounded-[14px] p-6 text-center" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
               <p className="text-2xl mb-2">🎉</p>
-              <p className="font-light text-[var(--color-text-primary)]">{t('home.sessionDone')}</p>
-              <p className="text-sm text-[var(--color-text-tertiary)] mt-1">{activeSession.routineName}</p>
+              <p className="font-medium" style={{ color: 'var(--text)' }}>{t('home.sessionDone')}</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{activeSession.routineName}</p>
             </div>
           )}
 
-          {/* A CONTINUACIÓ */}
+          {/* Upcoming */}
           {upcomingExercises.length > 0 && (
-            <div className="card-surface p-4">
+            <div className="rounded-[14px] p-4" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
               <p className="section-label mb-3">{t('home.upcoming')}</p>
               <div className="space-y-3">
                 {upcomingExercises.slice(0, 5).map(re => {
@@ -808,18 +789,17 @@ export default function HomePage() {
                   const abbr = MUSCLE_ABBR[muscleGroup] || baseName.slice(0, 3).toUpperCase()
                   const lastS = lastSessions[re.exercise]
                   const recW = lastS?.sets[0]?.weight || 0
-                  const prevRecW = recW > 0 ? recW : 0
                   return (
                     <div key={re.id} className="flex items-center gap-3">
-                      <span className="text-[10px] font-black w-7 flex-shrink-0 text-center px-1 py-0.5 rounded-md"
-                            style={{ backgroundColor: 'color-mix(in srgb, var(--accent-success) 10%, transparent)', color: 'var(--color-text-tertiary)' }}>
+                      <span className="text-[10px] font-bold w-7 flex-shrink-0 text-center px-1 py-0.5 rounded-md"
+                        style={{ background: 'var(--accent-tint)', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
                         {abbr}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[var(--color-text-secondary)] font-light truncate">{tEx(re.exercise)}</p>
-                        <p className="text-xs text-[var(--color-text-tertiary)]">
+                        <p className="text-sm truncate" style={{ color: 'var(--text-2)' }}>{tEx(re.exercise)}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
                           {re.sets_target} {t('routines.seriesLabel')}
-                          {prevRecW > 0 && <> · rec. {format(unit === 'kg' ? prevRecW : fromKg(prevRecW))}{unit}</>}
+                          {recW > 0 && <> · rec. {format(unit === 'kg' ? recW : fromKg(recW))}{unit}</>}
                         </p>
                       </div>
                     </div>
@@ -829,12 +809,12 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* EXERCICIS EXTRA (fora rutina) */}
-          <div className="card-surface p-4">
-            <button type="button" onClick={() => setShowExtraLog(v => !v)}
-              className="w-full flex items-center justify-between text-left">
+          {/* Extra exercise */}
+          <div className="rounded-[14px] p-4" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
+            <button type="button" onClick={() => setShowExtraLog(v => !v)} className="w-full flex items-center justify-between text-left">
               <p className="section-label">{t('workouts.exercise')} extra</p>
-              <span className={`text-[var(--color-text-tertiary)] text-lg font-light transition-transform duration-200 ${showExtraLog ? 'rotate-45' : ''}`}>+</span>
+              <span className={`transition-transform duration-200 ${showExtraLog ? 'rotate-45' : ''}`}
+                style={{ color: 'var(--text-3)', fontSize: 18, fontWeight: 300 }}>+</span>
             </button>
 
             {showExtraLog && (
@@ -842,7 +822,12 @@ export default function HomePage() {
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hidden">
                   {getDisplayExercises().map(ex => (
                     <button key={ex} type="button" onClick={() => { setExtraExercise(ex as Exercise); setExtraVariant('') }}
-                      className={`px-4 py-2 rounded-full text-sm whitespace-nowrap flex-shrink-0 transition-colors min-h-[40px] ${extraExercise === ex ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)]'}`}>
+                      className="px-4 py-2 rounded-full text-sm whitespace-nowrap flex-shrink-0 transition-all min-h-[40px]"
+                      style={{
+                        background: extraExercise === ex ? 'var(--text)' : 'transparent',
+                        color: extraExercise === ex ? 'var(--bg)' : 'var(--text-2)',
+                        border: `1px solid ${extraExercise === ex ? 'var(--text)' : 'var(--rule)'}`,
+                      }}>
                       {tEx(ex)}
                     </button>
                   ))}
@@ -852,7 +837,12 @@ export default function HomePage() {
                   <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden">
                     {EXERCISE_VARIANTS[extraExercise as string].map(v => (
                       <button key={v} type="button" onClick={() => setExtraVariant(extraVariant === v ? '' : v)}
-                        className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors ${extraVariant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'}`}>
+                        className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] transition-all"
+                        style={{
+                          background: extraVariant === v ? 'var(--text)' : 'transparent',
+                          color: extraVariant === v ? 'var(--bg)' : 'var(--text-3)',
+                          border: `1px solid ${extraVariant === v ? 'var(--text)' : 'var(--rule)'}`,
+                        }}>
                         {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
                       </button>
                     ))}
@@ -863,25 +853,38 @@ export default function HomePage() {
                   <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
                   <input type="text" inputMode="none" readOnly value={extraWeight}
                     onClick={() => setActiveExtraInput('weight')} placeholder="0"
-                    className={`w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none cursor-pointer ${activeExtraInput === 'weight' ? 'border-[var(--border)]' : ''}`}
+                    className="w-full text-2xl font-light rounded-[14px] px-4 py-3 border cursor-pointer outline-none"
+                    style={{
+                      background: 'var(--card-hi)', color: 'var(--text)', fontFamily: 'var(--font-mono)',
+                      borderColor: activeExtraInput === 'weight' ? 'var(--accent)' : 'var(--rule)',
+                    }}
                   />
                 </div>
 
                 <div>
                   <label className="section-label block mb-2">{t('workouts.reps')}</label>
-                  <div className="flex items-center justify-between rounded-2xl px-3 py-2.5 bg-[var(--surface-strong)]">
+                  <div className="flex items-center justify-between rounded-[14px] px-3 py-2.5" style={{ background: 'var(--card-hi)' }}>
                     <button type="button" onClick={() => { const n = parseInt(extraReps) || 0; if (n > 0) setExtraReps(String(n - 1)) }}
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-light bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--surface-hover)] active:scale-95 transition-all">−</button>
-                    <div onClick={() => setActiveExtraInput('reps')} className="flex-1 mx-2 text-center text-4xl font-light tabular-nums cursor-pointer select-none">
-                      {extraReps || <span className="text-[var(--color-text-tertiary)]">0</span>}
+                      className="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl transition-all active:scale-95"
+                      style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>−</button>
+                    <div onClick={() => setActiveExtraInput('reps')} className="flex-1 mx-2 text-center text-4xl cursor-pointer select-none"
+                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
+                      {extraReps || <span style={{ color: 'var(--text-3)' }}>0</span>}
                     </div>
                     <button type="button" onClick={() => setExtraReps(String((parseInt(extraReps) || 0) + 1))}
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 active:scale-95 transition-all">+</button>
+                      className="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl transition-all active:scale-95"
+                      style={{ background: 'var(--accent)', color: '#fff', fontFamily: 'var(--font-mono)' }}>+</button>
                   </div>
                   <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
                     {[5, 8, 10, 12, 15, 20].map(n => (
                       <button key={n} type="button" onClick={() => setExtraReps(String(n))}
-                        className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${extraReps === String(n) ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}>
+                        className="px-3 py-1.5 rounded-full text-sm whitespace-nowrap flex-shrink-0 transition-all"
+                        style={{
+                          background: extraReps === String(n) ? 'var(--accent)' : 'transparent',
+                          color: extraReps === String(n) ? '#fff' : 'var(--text-2)',
+                          border: `1px solid ${extraReps === String(n) ? 'var(--accent)' : 'var(--rule)'}`,
+                          fontFamily: 'var(--font-mono)',
+                        }}>
                         {n}
                       </button>
                     ))}
@@ -890,7 +893,8 @@ export default function HomePage() {
 
                 <div>
                   <button type="button" onClick={() => setExtraShowExtra(v => !v)}
-                    className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1">
+                    className="text-xs flex items-center gap-1 transition-colors"
+                    style={{ color: 'var(--text-3)' }}>
                     <span className={`inline-block transition-transform duration-200 ${extraShowExtra ? 'rotate-45' : ''}`}>+</span>
                     {extraShowExtra ? t('workouts.lessOptions') : t('workouts.moreOptions')}
                   </button>
@@ -899,25 +903,17 @@ export default function HomePage() {
                 {extraShowExtra && (
                   <div className="space-y-4 animate-slide-up">
                     <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="section-label">{t('common.rir')}</label>
-                        <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{extraRir === '' ? '—' : extraRir}</span>
-                      </div>
-                      <input type="range" min="0" max="3" step="1" value={extraRir === '' ? 0 : extraRir} onChange={e => setExtraRir(e.target.value)}
-                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
-                      <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
-                    </div>
-                    <div>
                       <label className="section-label block mb-2">{t('workouts.notes')}</label>
                       <input type="text" value={extraNote} onChange={e => setExtraNote(e.target.value)} placeholder={t('workouts.notesPlaceholder')} maxLength={200}
-                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]" />
+                        className="w-full text-sm rounded-[14px] px-4 py-3 outline-none"
+                        style={{ background: 'var(--card-hi)', color: 'var(--text)', border: '1px solid var(--rule)' }} />
                     </div>
                   </div>
                 )}
 
                 <button type="button" onClick={handleExtraLogSave} disabled={extraLoading || !extraReps || parseInt(extraReps) <= 0}
-                  className="w-full py-3 rounded-2xl font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: 'var(--color-text-primary)', color: 'var(--color-bg-primary)' }}>
+                  className="w-full py-3 rounded-2xl font-medium disabled:opacity-40 transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--accent)', color: '#fff' }}>
                   {extraLoading ? '…' : t('common.save')}
                 </button>
               </div>
@@ -927,34 +923,50 @@ export default function HomePage() {
 
         {/* Log Set Modal */}
         {showLogModal && currentExercise && nextIncompleteSet && (
-          <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowLogModal(false); setActiveLogInput(null) }}>
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-              <p className="font-light text-lg mb-0.5">{tEx(currentExercise.exercise)}</p>
-              <p className="text-xs text-[var(--color-text-tertiary)] mb-5">{t('home.setNumber', { n: String(nextIncompleteSet.set_number) })}</p>
+          <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm fade-in"
+            onClick={() => { setShowLogModal(false); setActiveLogInput(null) }}>
+            <div className="rounded-t-3xl px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in"
+              style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}
+              onClick={e => e.stopPropagation()}>
+              <p className="font-medium text-lg mb-0.5" style={{ color: 'var(--text)', letterSpacing: '-0.02em' }}>{tEx(currentExercise.exercise)}</p>
+              <p className="text-xs mb-5" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{t('home.setNumber', { n: String(nextIncompleteSet.set_number) })}</p>
 
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
                   <input type="text" inputMode="none" readOnly value={logWeight}
                     onClick={() => setActiveLogInput('weight')} placeholder="0"
-                    className={`w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none cursor-pointer ${activeLogInput === 'weight' ? 'border-[var(--border)]' : ''}`}
+                    className="w-full text-2xl font-light rounded-[14px] px-4 py-3 border cursor-pointer outline-none"
+                    style={{
+                      background: 'var(--card-hi)', color: 'var(--text)', fontFamily: 'var(--font-mono)',
+                      borderColor: activeLogInput === 'weight' ? 'var(--accent)' : 'var(--rule)',
+                    }}
                   />
                 </div>
                 <div>
                   <label className="section-label block mb-2">{t('workouts.reps')}</label>
-                  <div className="flex items-center justify-between rounded-2xl px-3 py-2.5 bg-[var(--surface-strong)]">
+                  <div className="flex items-center justify-between rounded-[14px] px-3 py-2.5" style={{ background: 'var(--card-hi)' }}>
                     <button type="button" onClick={() => { const n = parseInt(logReps) || 0; if (n > 0) setLogReps(String(n - 1)) }}
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-light bg-[var(--card)] border border-[var(--border)] hover:bg-[var(--surface-hover)] active:scale-95 transition-all">−</button>
-                    <div onClick={() => setActiveLogInput('reps')} className="flex-1 mx-2 text-center text-4xl font-light tabular-nums cursor-pointer select-none">
-                      {logReps || <span className="text-[var(--color-text-tertiary)]">0</span>}
+                      className="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl transition-all active:scale-95"
+                      style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>−</button>
+                    <div onClick={() => setActiveLogInput('reps')} className="flex-1 mx-2 text-center text-4xl cursor-pointer select-none"
+                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
+                      {logReps || <span style={{ color: 'var(--text-3)' }}>0</span>}
                     </div>
                     <button type="button" onClick={() => setLogReps(String((parseInt(logReps) || 0) + 1))}
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 active:scale-95 transition-all">+</button>
+                      className="w-11 h-11 rounded-[14px] flex items-center justify-center text-xl transition-all active:scale-95"
+                      style={{ background: 'var(--accent)', color: '#fff', fontFamily: 'var(--font-mono)' }}>+</button>
                   </div>
                   <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
                     {[5, 8, 10, 12, 15, 20].map(n => (
                       <button key={n} type="button" onClick={() => setLogReps(String(n))}
-                        className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${logReps === String(n) ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}>
+                        className="px-3 py-1.5 rounded-full text-sm whitespace-nowrap flex-shrink-0 transition-all"
+                        style={{
+                          background: logReps === String(n) ? 'var(--accent)' : 'transparent',
+                          color: logReps === String(n) ? '#fff' : 'var(--text-2)',
+                          border: `1px solid ${logReps === String(n) ? 'var(--accent)' : 'var(--rule)'}`,
+                          fontFamily: 'var(--font-mono)',
+                        }}>
                         {n}
                       </button>
                     ))}
@@ -962,7 +974,8 @@ export default function HomePage() {
                 </div>
                 <div>
                   <button type="button" onClick={() => setLogShowExtra(v => !v)}
-                    className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1">
+                    className="text-xs flex items-center gap-1 transition-colors"
+                    style={{ color: 'var(--text-3)' }}>
                     <span className={`inline-block transition-transform duration-200 ${logShowExtra ? 'rotate-45' : ''}`}>+</span>
                     {logShowExtra ? t('workouts.lessOptions') : t('workouts.moreOptions')}
                   </button>
@@ -972,16 +985,17 @@ export default function HomePage() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="section-label">{t('common.rir')}</label>
-                        <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{logRir}</span>
+                        <span className="text-xl tabular-nums w-5 text-right" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{logRir}</span>
                       </div>
                       <input type="range" min="0" max="3" step="1" value={logRir} onChange={e => setLogRir(e.target.value)}
-                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
-                      <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
+                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--accent)' }} />
+                      <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="section-label">{v}</span>)}</div>
                     </div>
                     <div>
                       <label className="section-label block mb-2">{t('workouts.notes')}</label>
                       <input type="text" value={logNote} onChange={e => setLogNote(e.target.value)} placeholder={t('workouts.notesPlaceholder')} maxLength={200}
-                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]" />
+                        className="w-full text-sm rounded-[14px] px-4 py-3 outline-none"
+                        style={{ background: 'var(--card-hi)', color: 'var(--text)', border: '1px solid var(--rule)' }} />
                     </div>
                   </div>
                 )}
@@ -989,12 +1003,13 @@ export default function HomePage() {
 
               <div className="flex gap-3">
                 <button onClick={() => { setShowLogModal(false); setActiveLogInput(null) }}
-                  className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">
+                  className="flex-1 py-3 rounded-2xl transition-colors"
+                  style={{ background: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}>
                   {t('common.cancel')}
                 </button>
                 <button onClick={handleLogSet} disabled={logLoading}
-                  className="flex-1 py-3 rounded-2xl font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: 'var(--color-text-primary)', color: 'var(--color-bg-primary)' }}>
+                  className="flex-1 py-3 rounded-2xl font-medium disabled:opacity-50 transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--accent)', color: '#fff' }}>
                   {logLoading ? '…' : t('common.save')}
                 </button>
               </div>
@@ -1019,186 +1034,378 @@ export default function HomePage() {
   }
 
   // ── No-session quick-log form ──────────────────────────────────────────────
+
+  const wNum = parseFloat(weight)
+  const rNum = parseInt(reps)
+  const exInfo = EXERCISE_INFO[exercise as Exercise]
+  const repsMin = exInfo?.repsMin ?? 8
+  const repsMax = exInfo?.repsMax ?? 12
+  const inRange = !isNaN(rNum) && rNum >= repsMin && rNum <= repsMax
+  const isPRweight = !isNaN(wNum) && wNum > 0 && (bestPerExercise[exercise] || 0) > 0 && calc1RM(toKg(wNum), rNum || 1) > (bestPerExercise[exercise] || 0)
+  const repPills = [5, 8, 10, 12, 15, 20]
+  const rirLabels: Record<string, string> = { '0': 'fallo', '1': 'molt', '2': 'dur', '3': 'còmode', '4': 'fàcil' }
+  const ctaEnabled = !isNaN(rNum) && rNum > 0
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-      <div className="px-6 pt-5 pb-2 flex items-center justify-between">
-        <h1 className="page-title">Gymmoo.</h1>
-        {displayedOneRM > 0 && (
-          <div className="flex items-baseline gap-1 fade-in">
-            <span className="text-2xl font-light tracking-tight tabular-nums">{format(displayedOneRM)}</span>
-            <span className="text-[var(--color-text-tertiary)] text-sm">{unit}</span>
-            <span className="text-[var(--color-text-tertiary)] text-xs ml-1">1RM</span>
-            {EXERCISE_INFO[exercise as Exercise]?.addsBodyweightToRM && (
-              <span className="text-[var(--color-text-tertiary)] text-[10px] ml-0.5">({t('workouts.bodyweightShort')})</span>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
 
-      <div className="px-6 space-y-4 max-w-2xl mx-auto animate-slide-up">
-        {suggestion && (
-          <div className="px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl fade-in">
-            <p className="text-[var(--color-text-secondary)] text-sm">{suggestion}</p>
-          </div>
-        )}
-        {errorMsg && (
-          <div className="px-4 py-3 rounded-2xl fade-in" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-danger) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-danger) 40%, transparent)' }}>
-            <p className="text-sm" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>
-          </div>
-        )}
-        {prMsg && (
-          <div className="px-4 py-3 rounded-2xl animate-bounce-in" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-warn) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--accent-warn) 45%, transparent)' }}>
-            <p className="text-sm font-medium" style={{ color: 'var(--accent-warn)' }}>{prMsg}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="section-label block mb-3">{t('workouts.exercise')}</label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hidden">
-              {getDisplayExercises().map((ex) => {
-                const isActive = exercise === ex
-                const isCustom = !DEFAULT_EXERCISES.includes(ex as Exercise)
-                return (
-                  <div key={ex} className="relative flex-shrink-0 group">
-                    <button type="button" onClick={() => setExercise(ex)}
-                      className={`px-4 py-2.5 rounded-full text-sm whitespace-nowrap transition-colors min-h-[44px] ${isCustom ? 'pr-8' : ''} ${isActive ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)]'}`}>
-                      {tEx(ex)}
-                    </button>
-                    {isCustom && (
-                      <button type="button" onClick={e => { e.stopPropagation(); handleDeleteExercise(ex) }}
-                        className={`absolute top-1/2 -translate-y-1/2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] leading-none ${isActive ? 'text-[var(--color-bg-primary)]/70 hover:text-[var(--color-bg-primary)] hover:bg-black/10' : 'text-[var(--color-text-tertiary)] hover:text-[var(--accent-danger)] hover:bg-[var(--surface-hover)]'}`}
-                        aria-label={`Delete ${ex}`}>✕</button>
-                    )}
-                  </div>
-                )
-              })}
-              <button type="button" onClick={() => setShowModal(true)}
-                className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-lg bg-[var(--surface-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--color-text-primary)] transition-colors"
-                aria-label={t('common.newExercise')}>+</button>
-            </div>
-
-            {EXERCISE_VARIANTS[exercise as string] && (
-              <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden">
-                {EXERCISE_VARIANTS[exercise as string].map(v => {
-                  const unilateral = isVariantUnilateral(exercise as string, v)
-                  return (
-                    <button key={v} type="button" onClick={() => setVariant(variant === v ? '' : v)}
-                      className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] tracking-wide transition-colors flex items-center gap-1 ${variant === v ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:text-[var(--color-text-primary)]'}`}>
-                      {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
-                      {unilateral && <span className="opacity-50 text-[9px] leading-none">1B</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="section-label block mb-2">{t('workouts.weight')} ({unit})</label>
-              <input type="text" inputMode="none" readOnly value={weight}
-                onClick={() => { const isDisabled = EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === 'corporal'; if (!isDisabled) setActiveInput('weight') }}
-                placeholder={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight ? (weightType === 'corporal' ? `0 (${t('workouts.bodyweight')})` : '0') : '0'}
-                disabled={EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && weightType === 'corporal'}
-                className={`w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-2xl font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none disabled:opacity-50 cursor-pointer ${activeInput === 'weight' ? 'border-[var(--border)]' : ''}`}
-              />
-              {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
-                <button type="button" onClick={() => setWeightType(weightType === 'corporal' ? 'pes' : 'corporal')}
-                  className={`mt-2 px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-colors min-h-[36px] ${weightType === 'corporal' ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface-strong)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'}`}>
-                  {weightType === 'corporal' ? `✓ ${t('workouts.bodyweight')}` : t('workouts.bodyweight')}
-                </button>
-              )}
-              {EXERCISE_INFO[exercise as Exercise]?.hasBodyweight && !EXERCISE_INFO[exercise as Exercise]?.hasWeight && (
-                <span className="mt-2 inline-block px-4 py-2 rounded-full text-xs font-medium tracking-wide bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]">✓ {t('workouts.bodyweight')}</span>
-              )}
-            </div>
-
-            <div>
-              <label className="section-label block mb-3">{t('workouts.reps')}</label>
-              <div className="flex items-center justify-between rounded-2xl px-3 py-2.5 bg-[var(--surface-strong)]">
-                <button type="button" onClick={() => { const n = parseInt(reps) || 0; if (n > 0) setReps(String(n - 1)) }}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-light bg-[var(--card)] border border-[var(--border)] text-[var(--color-text-primary)] hover:bg-[var(--surface-hover)] active:scale-95 transition-all disabled:opacity-30"
-                  disabled={!reps || parseInt(reps) <= 0} aria-label={t('workouts.decreaseReps')}>−</button>
-                <div onClick={() => setActiveInput('reps')} className="flex-1 mx-2 text-center text-4xl font-light text-[var(--color-text-primary)] tabular-nums cursor-pointer select-none">
-                  {reps || <span className="text-[var(--color-text-tertiary)]">0</span>}
-                </div>
-                <button type="button" onClick={() => { const n = parseInt(reps) || 0; setReps(String(n + 1)) }}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-light bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 active:scale-95 transition-all" aria-label={t('workouts.increaseReps')}>+</button>
-              </div>
-              <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hidden">
-                {[5, 8, 10, 12, 15, 20].map(n => (
-                  <button key={n} type="button" onClick={() => setReps(String(n))}
-                    className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex-shrink-0 ${reps === String(n) ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)]' : 'bg-[var(--surface)] text-[var(--color-text-tertiary)] border border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}>
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <button type="button" onClick={() => setShowExtraOptions(v => !v)}
-                className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1">
-                <span className={`inline-block transition-transform duration-200 ${showExtraOptions ? 'rotate-45' : ''}`}>+</span>
-                {showExtraOptions ? t('workouts.lessOptions') : t('workouts.moreOptions')}
-              </button>
-            </div>
-
-            {showExtraOptions && (
-              <div className="space-y-4 animate-slide-up">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="section-label">{t('common.rir')}</label>
-                    <span className="text-[var(--color-text-primary)] text-xl font-light tabular-nums w-5 text-right">{rir === '' ? '—' : rir}</span>
-                  </div>
-                  <input type="range" min="0" max="3" step="1" value={rir === '' ? 0 : rir} onChange={e => setRir(e.target.value)}
-                    className="w-full h-1.5 rounded-full appearance-none cursor-pointer" style={{ accentColor: 'var(--color-text-primary)' }} />
-                  <div className="flex justify-between mt-1">{[0,1,2,3].map(v => <span key={v} className="text-[10px] text-[var(--color-text-tertiary)]">{v}</span>)}</div>
-                </div>
-                <div>
-                  <label className="section-label block mb-2">{t('workouts.notes')}</label>
-                  <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder={t('workouts.notesPlaceholder')} maxLength={200}
-                    className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] text-sm font-light rounded-2xl px-4 py-3 border border-transparent focus:outline-none focus:border-[var(--border)]" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button type="submit" disabled={formLoading} className="w-full py-4 rounded-2xl font-medium bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] hover:opacity-90 disabled:opacity-50 transition-opacity">
-            {formLoading ? t('common.saving') : t('common.save')}
-          </button>
-        </form>
-
-        <div className="pt-4">
-          <p className="section-label mb-3">{t('home.recent')}</p>
-          {savedSets.length === 0 ? (
-            <p className="text-[var(--color-text-tertiary)] text-sm py-2">{t('home.noHistory')}</p>
-          ) : (
-            <div className="space-y-1">
-              {savedSets.map((set) => {
-                const isPr = set.one_rm > 0 && bestPerExercise[set.exercise] === set.one_rm
-                return (
-                  <div key={set.id} className="flex justify-between items-start py-3 border-b border-[var(--border)]">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[var(--color-text-primary)] font-light flex items-center gap-1.5 truncate">
-                        {isPr && <span title={t('home.personalRecord')}>🏆</span>}
-                        <span className="truncate">{tEx(set.exercise)}</span>
-                      </p>
-                      <p className="text-[var(--color-text-tertiary)] text-xs mt-0.5">{new Date(set.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</p>
-                      {set.note && <p className="text-[var(--color-text-tertiary)] text-xs italic mt-1 truncate">"{set.note}"</p>}
-                    </div>
-                    <div className="text-right ml-3 flex-shrink-0">
-                      <p className="text-[var(--color-text-primary)] font-light tabular-nums">{format(set.weight)}{unit} × {set.reps}</p>
-                      {set.rir != null && <p className="text-[var(--color-text-tertiary)] text-xs">RIR {set.rir}</p>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+      {/* Header */}
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+        <div className="dop-slide-up">
+          <Logo />
+          <p className="mt-1" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.06em' }}>
+            Bon dia, {userName || 'usuari'} — entrenem?
+          </p>
+        </div>
+        {/* Streak chip */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl dop-slide-up"
+          style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
+          <span className="dop-flame text-sm">🔥</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{streak}</span>
         </div>
       </div>
 
+      {/* Today recap strip */}
+      <div className="mx-5 mb-4 rounded-[14px] overflow-hidden"
+        style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
+        <div className="grid grid-cols-3">
+          {[
+            { label: 'sèries', value: savedSets.length > 0 ? String(savedSets.length) : '—', sub: 'avui', accent: false },
+            { label: 'volum', value: todayVolume > 0 ? `${(todayVolume / 1000).toFixed(2)}t` : '—', sub: prevVolume > 0 && todayVolume > 0 ? `+${Math.round(((todayVolume - prevVolume) / prevVolume) * 100)}%` : '', accent: todayVolume > prevVolume },
+            { label: '1RM', value: displayedOneRM > 0 ? `${format(displayedOneRM)}` : '—', sub: displayedOneRM > 0 ? unit : '', accent: false },
+          ].map((s, i) => (
+            <div key={i} className="py-3 text-center" style={{ borderLeft: i > 0 ? '1px solid var(--rule-soft)' : 'none' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)' }}>{s.label}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 500, color: 'var(--text)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: s.accent ? 'var(--good)' : 'var(--text-3)' }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Suggestion / error banners */}
+      {suggestion && (
+        <div className="mx-5 mb-3 px-4 py-3 rounded-[14px] fade-in"
+          style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>{suggestion}</p>
+        </div>
+      )}
+      {errorMsg && (
+        <div className="mx-5 mb-3 px-4 py-3 rounded-[14px] fade-in"
+          style={{ background: 'var(--accent-tint)', border: '1px solid var(--accent-soft)' }}>
+          <p className="text-sm" style={{ color: 'var(--danger)' }}>{errorMsg}</p>
+        </div>
+      )}
+      {prMsg && (
+        <div className="mx-5 mb-3 px-4 py-3 rounded-[14px] animate-bounce-in"
+          style={{ background: 'var(--accent-tint)', border: '1px solid var(--accent-soft)' }}>
+          <p className="text-sm font-medium" style={{ color: 'var(--accent)' }}>{prMsg}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSave} className="px-5 space-y-4 max-w-2xl mx-auto">
+
+        {/* Exercise pills */}
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
+              exercici
+            </span>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hidden">
+            {getDisplayExercises().map(ex => {
+              const isActive = exercise === ex
+              const info = EXERCISE_INFO[ex as Exercise]
+              const muscleGroup = info?.muscleGroup || ''
+              const abbr = MUSCLE_ABBR[muscleGroup] || ''
+              const isCustom = !DEFAULT_EXERCISES.includes(ex as Exercise)
+              return (
+                <div key={ex} className="relative flex-shrink-0 group">
+                  <button type="button" onClick={() => setExercise(ex)}
+                    className={`flex items-center gap-1.5 whitespace-nowrap transition-all min-h-[40px] ${isCustom ? 'pr-7' : ''}`}
+                    style={{
+                      padding: '8px 14px', borderRadius: 9999, fontSize: 14,
+                      background: isActive ? 'var(--text)' : 'transparent',
+                      color: isActive ? 'var(--bg)' : 'var(--text-2)',
+                      border: `1px solid ${isActive ? 'var(--text)' : 'var(--rule)'}`,
+                      fontFamily: 'var(--font-sans)',
+                    }}>
+                    {tEx(ex)}
+                    {abbr && !isActive && (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, padding: '1px 5px', background: 'var(--rule)', color: 'var(--text-3)', borderRadius: 4, letterSpacing: '0.06em' }}>{abbr}</span>
+                    )}
+                  </button>
+                  {isCustom && (
+                    <button type="button" onClick={e => { e.stopPropagation(); handleDeleteExercise(ex) }}
+                      className="absolute top-1/2 -translate-y-1/2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
+                      style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-3)' }}>✕</button>
+                  )}
+                </div>
+              )
+            })}
+            <button type="button" onClick={() => setShowModal(true)}
+              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all"
+              style={{ background: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}
+              aria-label={t('common.newExercise')}>+</button>
+          </div>
+
+          {/* Variant pills */}
+          {EXERCISE_VARIANTS[exercise as string] && (
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden mt-1">
+              {EXERCISE_VARIANTS[exercise as string].map(v => (
+                <button key={v} type="button" onClick={() => setVariant(variant === v ? '' : v)}
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-xs tracking-wide transition-all flex items-center gap-1"
+                  style={{
+                    background: variant === v ? 'var(--text)' : 'transparent',
+                    color: variant === v ? 'var(--bg)' : 'var(--text-3)',
+                    border: `1px solid ${variant === v ? 'var(--text)' : 'var(--rule)'}`,
+                    fontFamily: 'var(--font-mono)',
+                  }}>
+                  {VARIANT_KEYS[v] ? t(VARIANT_KEYS[v]) : v}
+                  {isVariantUnilateral(exercise as string, v) && <span className="opacity-50 text-[9px]">1B</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Weight card */}
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
+              pes ({unit})
+            </span>
+            {!isNaN(wNum) && wNum > 0 && lastSessions[exercise] && (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>
+                anterior {format(unit === 'kg' ? (lastSessions[exercise]?.sets[0]?.weight || 0) : fromKg(lastSessions[exercise]?.sets[0]?.weight || 0))}{unit}
+              </span>
+            )}
+          </div>
+          <div className="relative rounded-[18px] flex items-center gap-3 p-4 transition-all"
+            style={{
+              background: 'var(--input-big)',
+              border: `1px solid ${isPRweight ? 'var(--accent)' : 'var(--rule)'}`,
+              boxShadow: 'var(--shadow)',
+            }}>
+            {isPRweight && (
+              <span className="absolute top-3 right-4 dop-scale-pop"
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, padding: '2px 7px', background: 'var(--accent)', color: '#fff', borderRadius: 9999, letterSpacing: '0.06em', fontWeight: 500 }}>
+                RÈCORD
+              </span>
+            )}
+            <button type="button"
+              onClick={() => { const v = Math.max(0, (parseFloat(weight) || 0) - 2.5); setWeight(v % 1 === 0 ? String(v) : v.toFixed(1)) }}
+              className="w-14 h-14 flex items-center justify-center text-2xl flex-shrink-0 rounded-[18px] transition-all active:scale-95"
+              style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>−</button>
+            <div className="flex-1 text-center relative" onClick={() => setActiveInput('weight')}>
+              <div className="cursor-pointer select-none leading-none"
+                style={{ fontFamily: 'var(--font-mono)', fontWeight: 400, fontSize: 56, color: isPRweight ? 'var(--accent)' : (weight ? 'var(--text)' : 'var(--text-3)'), fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', transition: 'color 200ms' }}>
+                {weight || '0'}
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.08em' }}>±2.5</div>
+            </div>
+            <button type="button"
+              onClick={() => { const v = (parseFloat(weight) || 0) + 2.5; setWeight(v % 1 === 0 ? String(v) : v.toFixed(1)) }}
+              className="w-14 h-14 flex items-center justify-center text-2xl flex-shrink-0 rounded-[18px] transition-all active:scale-95"
+              style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>+</button>
+          </div>
+          {exInfo?.hasBodyweight && exInfo?.hasWeight && (
+            <button type="button" onClick={() => setWeightType(weightType === 'corporal' ? 'pes' : 'corporal')}
+              className="mt-2 px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all"
+              style={{
+                background: weightType === 'corporal' ? 'var(--text)' : 'var(--card-hi)',
+                color: weightType === 'corporal' ? 'var(--bg)' : 'var(--text-3)',
+                border: '1px solid var(--rule)', fontFamily: 'var(--font-mono)',
+              }}>
+              {weightType === 'corporal' ? `✓ ${t('workouts.bodyweight')}` : t('workouts.bodyweight')}
+            </button>
+          )}
+        </div>
+
+        {/* Reps card */}
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
+              reps
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>
+              obj. {repsMin}–{repsMax}
+            </span>
+          </div>
+          <div className="relative rounded-[18px] p-4" style={{ background: 'var(--input-big)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}>
+            <div className="flex items-center gap-3">
+              <button type="button"
+                onClick={() => { const n = parseInt(reps) || 0; if (n > 0) setReps(String(n - 1)) }}
+                className="w-11 h-11 flex items-center justify-center text-xl flex-shrink-0 rounded-[14px] transition-all active:scale-95"
+                style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>−</button>
+              <div className="flex-1 text-center relative" onClick={() => setActiveInput('reps')}>
+                <div key={reps} className="cursor-pointer select-none leading-none"
+                  style={{
+                    fontFamily: 'var(--font-mono)', fontWeight: 400, fontSize: 44,
+                    color: reps ? (inRange ? 'var(--accent)' : 'var(--text)') : 'var(--text-3)',
+                    fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+                    animation: reps ? 'dopFlip 280ms cubic-bezier(.34,1.56,.64,1) both' : 'none',
+                    transition: 'color 200ms',
+                  }}>
+                  {reps || 0}
+                </div>
+                {inRange && rNum > 0 && (
+                  <span className="absolute -top-1 right-2 dop-scale-pop"
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 9, padding: '2px 6px', background: 'var(--accent-tint)', color: 'var(--accent)', borderRadius: 9999, letterSpacing: '0.06em', fontWeight: 500 }}>
+                    OBJECTIU ✓
+                  </span>
+                )}
+              </div>
+              <button type="button"
+                onClick={() => setReps(String((parseInt(reps) || 0) + 1))}
+                className="w-11 h-11 flex items-center justify-center text-xl flex-shrink-0 rounded-[14px] transition-all active:scale-95"
+                style={{ background: 'var(--card)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>+</button>
+            </div>
+          </div>
+          {/* Quick-rep pills */}
+          <div className="flex gap-1.5 mt-2">
+            {repPills.map(n => {
+              const sel = reps === String(n)
+              const highlighted = n >= repsMin && n <= repsMax
+              return (
+                <button key={n} type="button" onClick={() => setReps(String(n))}
+                  className="flex-1 py-2 rounded-full relative transition-all active:scale-95"
+                  style={{
+                    background: sel ? 'var(--accent)' : 'transparent',
+                    color: sel ? '#fff' : 'var(--text-2)',
+                    border: `1px solid ${sel ? 'var(--accent)' : highlighted ? 'var(--accent-soft)' : 'var(--rule)'}`,
+                    fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500,
+                    boxShadow: sel ? '0 4px 12px rgba(177,78,44,0.35)' : 'none',
+                  }}>
+                  {n}
+                  {highlighted && !sel && (
+                    <span className="absolute top-1 right-1.5 w-1 h-1 rounded-full" style={{ background: 'var(--accent)' }} />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* RIR row */}
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', fontWeight: 500 }}>
+              RIR
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>repeticions en reserva</span>
+          </div>
+          <div className="flex gap-1.5">
+            {['0','1','2','3','4'].map(n => (
+              <button key={n} type="button" onClick={() => setRir(n)}
+                className="flex-1 py-3 rounded-[14px] flex flex-col items-center gap-0.5 transition-all"
+                style={{
+                  background: rir === n ? 'var(--card-hi)' : 'transparent',
+                  border: `1px solid ${rir === n ? 'var(--accent)' : 'var(--rule)'}`,
+                  boxShadow: rir === n ? `0 0 0 3px var(--accent-tint)` : 'none',
+                  color: rir === n ? 'var(--text)' : 'var(--text-2)',
+                }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 500, color: rir === n ? 'var(--accent)' : 'var(--text-2)', lineHeight: 1 }}>{n}</span>
+                <span style={{ fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em', fontFamily: 'var(--font-mono)' }}>{rirLabels[n]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 1RM cards */}
+        {(displayedOneRM > 0 || bestPerExercise[exercise]) && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-[14px] p-3" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>1RM estimat</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 500, color: displayedOneRM > (bestPerExercise[exercise] || 0) ? 'var(--accent)' : 'var(--text)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {displayedOneRM || '—'}<span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 2 }}>{unit}</span>
+              </div>
+            </div>
+            <div className="rounded-[14px] p-3" style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>millor 1RM</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 500, color: 'var(--text-2)', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {bestPerExercise[exercise] || '—'}<span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 2 }}>{unit}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notes collapsible */}
+        {!notesOpen ? (
+          <button type="button" onClick={() => setNotesOpen(true)}
+            className="flex items-center gap-2 transition-colors"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-3)', fontFamily: 'var(--font-sans)', fontSize: 12, cursor: 'pointer', padding: '4px 0' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14 }}>+</span> afegir nota
+          </button>
+        ) : (
+          <div className="animate-slide-up">
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>nota</div>
+            <textarea value={note} onChange={e => setNote(e.target.value)}
+              placeholder="Sensació, tècnica, dolor..."
+              className="w-full rounded-[14px] px-4 py-3 text-sm resize-none outline-none"
+              style={{ background: 'var(--card-hi)', border: '1px solid var(--rule)', color: 'var(--text)', fontFamily: 'var(--font-sans)', minHeight: 64 }} />
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="relative pb-2">
+          <button type="submit" disabled={formLoading || !ctaEnabled}
+            className="w-full py-4 rounded-2xl font-medium disabled:opacity-40 transition-all"
+            style={{
+              background: ctaEnabled ? 'var(--accent)' : 'var(--card-hi)',
+              color: ctaEnabled ? '#fff' : 'var(--text-3)',
+              border: 'none',
+              fontSize: 15,
+              boxShadow: ctaEnabled ? '0 8px 22px rgba(177,78,44,0.35), 0 2px 4px rgba(177,78,44,0.2)' : 'none',
+              animation: ctaEnabled ? 'dopBreathe 2400ms ease-in-out infinite' : 'none',
+            }}>
+            {formLoading ? t('common.saving') : ctaEnabled
+              ? <span className="flex items-center justify-center gap-2">
+                  <span>Anotar sèrie</span>
+                  <span style={{ opacity: 0.75, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
+                    · {weight || 0}<span style={{ opacity: 0.6 }}>{unit}</span> × {reps}
+                  </span>
+                  {isPRweight && <span>🏆</span>}
+                </span>
+              : <span>Posa les reps per anotar</span>
+            }
+          </button>
+        </div>
+
+        {/* Recent sets */}
+        {savedSets.length > 0 && (
+          <div className="pt-2">
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
+              {t('home.recent')}
+            </div>
+            <div className="space-y-0">
+              {savedSets.map((set) => {
+                const isPr = set.one_rm > 0 && bestPerExercise[set.exercise] === set.one_rm
+                return (
+                  <div key={set.id} className="flex justify-between items-start py-3" style={{ borderBottom: '1px solid var(--rule-soft)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm flex items-center gap-1.5 truncate" style={{ color: 'var(--text)' }}>
+                        {isPr && <span>🏆</span>}
+                        <span className="truncate">{tEx(set.exercise)}</span>
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+                        {new Date(set.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+                      </p>
+                      {set.note && <p className="text-xs italic mt-1 truncate" style={{ color: 'var(--text-3)' }}>"{set.note}"</p>}
+                    </div>
+                    <div className="text-right ml-3 flex-shrink-0">
+                      <p className="tabular-nums" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text)' }}>{format(set.weight)}{unit} × {set.reps}</p>
+                      {set.rir != null && <p className="text-xs" style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>RIR {set.rir}</p>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </form>
+
+      {/* Numeric keyboards */}
       {activeInput === 'weight' && (
         <NumericKeyboard value={weight} onChange={setWeight} onClose={() => setActiveInput(null)} allowDecimal label={`${t('workouts.weight')} (${unit})`} maxLength={5} />
       )}
@@ -1206,12 +1413,17 @@ export default function HomePage() {
         <NumericKeyboard value={reps} onChange={setReps} onClose={() => setActiveInput(null)} allowDecimal={false} label={t('workouts.reps')} maxLength={3} />
       )}
 
+      {/* Add exercise modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in" onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in" style={{ boxShadow: 'var(--shadow-soft)' }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-light text-[var(--color-text-primary)] mb-4">{t('common.newExercise')}</h3>
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm fade-in"
+          onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}>
+          <div className="rounded-t-3xl sm:rounded-3xl px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] w-full max-w-sm animate-scale-in"
+            style={{ background: 'var(--card)', border: '1px solid var(--rule)', boxShadow: 'var(--shadow)' }}
+            onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg mb-4" style={{ color: 'var(--text)', fontWeight: 600, letterSpacing: '-0.02em' }}>{t('common.newExercise')}</h3>
             <input type="text" value={newExerciseName} onChange={e => setNewExerciseName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddExercise()} placeholder={t('common.exerciseName')}
-              className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-2xl px-4 py-3 mb-3 border border-transparent focus:outline-none focus:border-[var(--border)]" autoFocus />
+              className="w-full rounded-[14px] px-4 py-3 mb-3 outline-none"
+              style={{ background: 'var(--card-hi)', color: 'var(--text)', border: '1px solid var(--rule)' }} autoFocus />
             <div className="space-y-2 mb-3">
               {(() => {
                 const muscleOptions = [
@@ -1225,7 +1437,8 @@ export default function HomePage() {
                     <div>
                       <label className="section-label block mb-1.5">{t('exercise.primaryMuscle')}</label>
                       <select value={newExercisePrimary} onChange={e => setNewExercisePrimary(e.target.value)}
-                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]">
+                        className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                        style={{ background: 'var(--card-hi)', color: 'var(--text)', border: '1px solid var(--rule)' }}>
                         <option value="">—</option>
                         {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
                       </select>
@@ -1233,7 +1446,8 @@ export default function HomePage() {
                     <div>
                       <label className="section-label block mb-1.5">{t('exercise.secondaryMuscle')}</label>
                       <select value={newExerciseSecondary} onChange={e => setNewExerciseSecondary(e.target.value)}
-                        className="w-full bg-[var(--surface-strong)] text-[var(--color-text-primary)] rounded-xl px-4 py-2.5 text-sm border border-transparent focus:outline-none focus:border-[var(--border)]">
+                        className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                        style={{ background: 'var(--card-hi)', color: 'var(--text)', border: '1px solid var(--rule)' }}>
                         <option value="">{t('exercise.noSecondary')}</option>
                         {muscleOptions.map(o => <option key={o.value} value={o.value}>{t(o.key)}</option>)}
                       </select>
@@ -1242,18 +1456,18 @@ export default function HomePage() {
                 )
               })()}
             </div>
-            {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--accent-danger)' }}>{errorMsg}</p>}
+            {errorMsg && <p className="text-sm mb-3" style={{ color: 'var(--danger)' }}>{errorMsg}</p>}
             <div className="flex gap-3">
               <button onClick={() => { setShowModal(false); setNewExerciseName(''); setNewExercisePrimary(''); setNewExerciseSecondary(''); setErrorMsg(null) }}
-                className="flex-1 py-3 rounded-2xl bg-[var(--surface-strong)] text-[var(--color-text-secondary)] font-light hover:bg-[var(--surface-hover)] transition-colors">{t('common.cancel')}</button>
+                className="flex-1 py-3 rounded-2xl transition-colors"
+                style={{ background: 'var(--card-hi)', color: 'var(--text-2)', border: '1px solid var(--rule)' }}>{t('common.cancel')}</button>
               <button onClick={handleAddExercise}
-                className="flex-1 py-3 rounded-2xl bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] font-medium hover:opacity-90 transition-opacity">{t('common.add')}</button>
+                className="flex-1 py-3 rounded-2xl font-medium transition-opacity hover:opacity-90"
+                style={{ background: 'var(--accent)', color: '#fff' }}>{t('common.add')}</button>
             </div>
           </div>
         </div>
       )}
-
-      <div className="h-20" />
     </div>
   )
 }

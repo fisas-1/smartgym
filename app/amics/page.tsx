@@ -5,19 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useTranslation } from '../contexts/LanguageContext'
 
-// ── Paleta d'elit ────────────────────────────────────────────
-const C = {
-  bg:      '#090707',
-  surface: '#141111',
-  border:  '#262020',
-  text:    '#F5F5F3',
-  muted:   '#5C5757',
-  faint:   '#1E1A1A',
-  accent:  '#ffff3f',
-  danger:  '#FF4444',
-  warn:    '#FF6B00',
-} as const
-
 type FriendStats = {
   id: string
   username: string
@@ -152,14 +139,16 @@ export default function AmicsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6"
-           style={{ backgroundColor: C.bg, color: C.text }}>
+      <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
         <div className="text-center max-w-sm space-y-6">
-          <h1 className="text-3xl font-black" style={{ color: C.accent }}>amics.</h1>
-          <p className="text-sm" style={{ color: C.muted }}>{t('friends.searchToSeeRanking')}</p>
-          <a href="/login"
-             className="inline-block py-4 px-8 rounded-2xl font-black text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-             style={{ backgroundColor: C.accent, color: C.bg }}>
+          <p className="section-label mb-1">feed de competició</p>
+          <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">Amics.</h1>
+          <p className="text-sm text-[var(--text-3)]">{t('friends.searchToSeeRanking')}</p>
+          <a
+            href="/login"
+            className="inline-block py-3.5 px-8 rounded-full font-medium text-[13px] text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent)' }}
+          >
             {t('common.login')}
           </a>
         </div>
@@ -171,57 +160,61 @@ export default function AmicsPage() {
   const sorted = [...allUsers].sort((a, b) => b.consistency - a.consistency)
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: C.bg, color: C.text }}>
-
-      {/* ── Header ── */}
-      <div className="px-6 pt-10 pb-6 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-black tracking-tight" style={{ color: C.text }}>
-          {t('friends.title')}<span style={{ color: C.accent }}>.</span>
+    <div className="min-h-screen bg-[var(--bg)]">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-0 max-w-2xl mx-auto">
+        <p className="section-label mb-1">feed de competició</p>
+        <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
+          Amics.
         </h1>
-        <p className="text-xs uppercase tracking-widest mt-0.5 font-black" style={{ color: C.muted }}>
-          {t('friends.feedSubtitle')}
-        </p>
       </div>
 
-      <div className="px-6 space-y-5 max-w-2xl mx-auto">
-
-        {/* ── Cerca ── */}
-        <div className="flex gap-2">
+      <div className="px-5 pt-5 pb-6 space-y-4 max-w-2xl mx-auto">
+        {/* Search */}
+        <div
+          className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border"
+          style={{ backgroundColor: 'var(--card)', borderColor: 'var(--rule)' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M21 21l-4.3-4.3"/>
+          </svg>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={t('friends.searchUser')}
-            className="flex-1 text-sm rounded-2xl px-4 py-3 outline-none transition-all"
-            style={{ backgroundColor: C.surface, color: C.text, border: `1px solid ${C.border}` }}
-            onFocus={e => (e.target.style.borderColor = C.accent + '66')}
-            onBlur={e => (e.target.style.borderColor = C.border)}
+            className="flex-1 text-[13px] bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-3)]"
           />
           <button
             onClick={handleSearch}
             disabled={searching || !searchQuery.trim()}
-            className="px-5 py-3 rounded-2xl text-sm font-black transition-all hover:opacity-90 disabled:opacity-30 active:scale-95"
-            style={{ backgroundColor: C.accent, color: C.bg }}
-            aria-label="Search"
+            className="px-3.5 py-1.5 rounded-full text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-30"
+            style={{ backgroundColor: 'var(--accent)' }}
           >
-            {searching ? '…' : '🔍'}
+            {searching ? '…' : t('friends.search') || 'Cercar'}
           </button>
         </div>
 
-        {/* ── Rànquing ── */}
+        {/* Ranking */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest mb-3 px-1 font-black" style={{ color: C.muted }}>
-            {t('friends.ranking')}
-          </p>
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="section-label">{t('friends.ranking')} · 30 dies</p>
+            {sorted.length > 0 && (
+              <span className="font-mono text-[10px] text-[var(--text-3)]">{sorted.length} usuaris</span>
+            )}
+          </div>
 
           {sorted.length === 0 ? (
-            <div className="py-10 rounded-2xl text-center"
-                 style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
-              <p className="text-sm" style={{ color: C.muted }}>{t('friends.searchToSeeRanking')}</p>
+            <div
+              className="py-10 rounded-2xl text-center"
+              style={{ backgroundColor: 'var(--card)', border: '1px solid var(--rule)' }}
+            >
+              <p className="text-sm text-[var(--text-3)]">{t('friends.searchToSeeRanking')}</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {sorted.map((u, idx) => {
                 const isMe = myStats && u.id === myStats.id
                 const days = daysSince(u.lastWorkout)
@@ -229,168 +222,198 @@ export default function AmicsPage() {
                 const isHot = !isMe && u.consistency >= 60 && days <= 3
                 const medal = MEDAL[idx] ?? null
 
-                const cardBorder = isMe
-                  ? C.accent + '44'
-                  : isDanger
-                    ? C.warn + '44'
-                    : C.border
-
-                const cardBg = isMe
-                  ? C.accent + '08'
-                  : isDanger
-                    ? C.warn + '06'
-                    : C.surface
-
                 const consistencyColor = u.consistency >= 70
-                  ? C.accent
+                  ? 'var(--good)'
                   : u.consistency >= 40
-                    ? C.text
-                    : C.muted
+                    ? 'var(--text)'
+                    : 'var(--text-3)'
+
+                const barColor = u.consistency === 0
+                  ? 'var(--text-3)'
+                  : isMe
+                    ? 'var(--accent)'
+                    : u.consistency >= 70
+                      ? 'var(--good)'
+                      : 'var(--text-2)'
 
                 return (
                   <div
                     key={u.id}
-                    className="rounded-2xl px-4 pt-4 pb-3 relative overflow-hidden"
+                    className="card-surface px-4 pt-3.5 pb-3 relative overflow-hidden"
                     style={{
-                      backgroundColor: cardBg,
-                      border: `1px solid ${cardBorder}`,
-                      boxShadow: isDanger && !isMe
-                        ? `0 4px 24px ${C.warn}12`
-                        : isMe
-                          ? `0 4px 24px ${C.accent}10`
-                          : 'none',
+                      ...(isMe ? { borderColor: 'color-mix(in srgb, var(--accent) 40%, transparent)' } : {}),
+                      animation: `dopSlideUp 500ms ${idx * 60 + 100}ms cubic-bezier(.22,1,.36,1) both`,
                     }}
                   >
-                    {/* Línia superior per a "jo" */}
+                    {/* Accent top line for "me" */}
                     {isMe && (
-                      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                           style={{ background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
+                      <div
+                        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                        style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }}
+                      />
                     )}
 
-                    {/* Línia superior perill */}
-                    {isDanger && !isMe && (
-                      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                           style={{ background: `linear-gradient(90deg, transparent, ${C.warn}, transparent)` }} />
-                    )}
-
-                    {/* Fila principal */}
-                    <div className="flex items-start gap-3">
-
-                      {/* Rang */}
-                      <span className="text-sm tabular-nums font-black w-6 text-center flex-shrink-0 mt-1"
-                            style={{ color: C.muted }}>
-                        {medal ?? idx + 1}
+                    {/* Main row */}
+                    <div className="flex items-center gap-2.5">
+                      {/* Rank */}
+                      <span className="font-mono text-[13px] tabular-nums w-5 text-center flex-shrink-0" style={{ color: 'var(--text-3)' }}>
+                        {medal ?? `${idx + 1}.`}
                       </span>
 
                       {/* Avatar */}
-                      <div className="w-9 h-9 rounded-xl flex-shrink-0 select-none overflow-hidden flex items-center justify-center text-sm font-black"
-                           style={{
-                             backgroundColor: isMe ? C.accent + '20' : C.faint,
-                             color: isMe ? C.accent : C.muted,
-                             border: `1px solid ${isMe ? C.accent + '44' : C.border}`,
-                           }}>
+                      <div
+                        className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-semibold overflow-hidden"
+                        style={{
+                          backgroundColor: isMe ? 'color-mix(in srgb, var(--accent) 20%, transparent)' : 'var(--card-hi)',
+                          color: isMe ? 'var(--accent)' : 'var(--text-2)',
+                          border: `1px solid ${isMe ? 'color-mix(in srgb, var(--accent) 40%, transparent)' : 'var(--rule)'}`,
+                        }}
+                      >
                         {u.avatarUrl
                           ? <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
                           : u.username[0]?.toUpperCase()
                         }
                       </div>
 
-                      {/* Nom + badges */}
+                      {/* Name + meta */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-black truncate" style={{ color: C.text }}>{u.username}</p>
-                          <span className="text-[9px] tabular-nums" style={{ color: C.muted }}>
-                            {`#${u.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`}
-                          </span>
-
+                          <p className="font-medium text-[15px] tracking-tight text-[var(--text)] truncate">{u.username}</p>
                           {isMe && (
-                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                                  style={{ backgroundColor: C.accent + '20', color: C.accent }}>
+                            <span
+                              className="font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)',
+                                color: 'var(--accent)',
+                              }}
+                            >
                               {t('friends.youLabel')}
                             </span>
                           )}
                           {isHot && (
-                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                                  style={{ backgroundColor: C.accent + '15', color: C.accent, border: `1px solid ${C.accent}30` }}>
-                              ⚡ {t('friends.onStreak')}
+                            <span
+                              className="font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--good) 15%, transparent)',
+                                color: 'var(--good)',
+                              }}
+                            >
+                              🔥 {t('friends.onStreak')}
                             </span>
                           )}
                           {isDanger && (
-                            <span className="text-[9px] uppercase tracking-widest font-black px-1.5 py-0.5 rounded-md"
-                                  style={{ backgroundColor: C.warn + '20', color: C.warn, border: `1px solid ${C.warn}40` }}>
+                            <span
+                              className="font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--danger) 12%, transparent)',
+                                color: 'var(--danger)',
+                              }}
+                            >
                               ⚠️ {days === 999 ? t('friends.noActivity') : t('friends.daysInactive', { days: String(days) })}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+                        <p className="font-mono text-[11px] mt-0.5 tabular-nums" style={{ color: 'var(--text-3)' }}>
                           {u.lastWorkout
                             ? new Date(u.lastWorkout).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
                             : t('friends.noActivity')}
                         </p>
                       </div>
 
-                      {/* Consistència */}
+                      {/* Consistency */}
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xl font-black tabular-nums" style={{ color: consistencyColor }}>
-                          {u.consistency}<span className="text-sm font-bold">%</span>
+                        <p
+                          className="font-mono text-[22px] font-medium leading-none tabular-nums tracking-[-0.02em]"
+                          style={{ color: consistencyColor }}
+                        >
+                          {u.consistency}<span className="text-[11px]" style={{ color: 'var(--text-3)' }}>%</span>
                         </p>
-                        <p className="text-[9px] uppercase tracking-wider" style={{ color: C.muted }}>
+                        <p className="font-mono text-[9px] uppercase tracking-widest mt-0.5" style={{ color: 'var(--text-3)' }}>
                           {t('friends.consistency')}
                         </p>
                       </div>
                     </div>
 
-                    {/* Barra de consistència */}
-                    <div className="mt-3" style={{ paddingLeft: '3.75rem' }}>
-                      <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: C.border }}>
-                        <div className="h-full rounded-full transition-all duration-700"
-                             style={{
-                               width: `${u.consistency}%`,
-                               backgroundColor: u.consistency >= 70
-                                 ? C.accent
-                                 : u.consistency >= 40
-                                   ? '#a855f7'
-                                   : C.muted,
-                             }} />
+                    {/* Consistency bar */}
+                    <div className="mt-3 pl-[3.75rem]">
+                      <div className="h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: 'var(--rule-soft)' }}>
+                        <div
+                          className="h-full rounded-full progress-fill transition-all duration-700"
+                          style={{ width: `${u.consistency}%`, backgroundColor: barColor }}
+                        />
                       </div>
                     </div>
 
-                    {/* Feedback reacció */}
+                    {/* Reaction feedback */}
                     {reactions[u.id] && (
-                      <p className="mt-2 text-xs font-black text-center reaction-pop" style={{ color: C.accent }}>
+                      <p className="mt-2 text-xs font-medium text-center reaction-pop" style={{ color: 'var(--accent)' }}>
                         {reactions[u.id]}
                       </p>
                     )}
 
-                    {/* ── Botons d'acció ── */}
+                    {/* Reaction buttons */}
                     {!isMe && (
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-3 flex gap-1.5 flex-wrap pl-[3.75rem]">
                         {isDanger ? (
                           <>
-                            <ActionButton
-                              label={t('friends.mootivate')}
-                              baseColor={C.warn}
+                            <button
                               onClick={() => handleReaction(u.id, 'motivar')}
-                            />
-                            <ActionButton
-                              label={t('friends.pushThem')}
-                              baseColor={C.danger}
+                              className="flex-1 py-2 rounded-full text-[11px] font-medium border transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--accent) 10%, transparent)',
+                                color: 'var(--accent)',
+                                borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
+                              }}
+                            >
+                              {t('friends.mootivate')}
+                            </button>
+                            <button
                               onClick={() => handleReaction(u.id, 'empenyer')}
-                            />
+                              className="flex-1 py-2 rounded-full text-[11px] font-medium border transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
+                                color: 'var(--danger)',
+                                borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)',
+                              }}
+                            >
+                              {t('friends.pushThem')}
+                            </button>
                           </>
                         ) : (
                           <>
-                            <ActionButton
-                              label={t('friends.giveVolt')}
-                              baseColor={C.accent}
-                              darkText
+                            <button
                               onClick={() => handleReaction(u.id, 'volt')}
-                            />
-                            <ActionButton
-                              label={t('friends.injectEnergy')}
-                              baseColor="#a855f7"
+                              className="flex-1 py-2 rounded-full text-[11px] font-medium border transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: 'var(--text-2)',
+                                borderColor: 'var(--rule)',
+                              }}
+                            >
+                              {t('friends.giveVolt')}
+                            </button>
+                            <button
+                              onClick={() => handleReaction(u.id, 'motivar')}
+                              className="flex-1 py-2 rounded-full text-[11px] font-medium border transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: 'var(--text-2)',
+                                borderColor: 'var(--rule)',
+                              }}
+                            >
+                              {t('friends.mootivate')}
+                            </button>
+                            <button
                               onClick={() => handleReaction(u.id, 'energia')}
-                            />
+                              className="flex-1 py-2 rounded-full text-[11px] font-medium border transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: 'transparent',
+                                color: 'var(--text-2)',
+                                borderColor: 'var(--rule)',
+                              }}
+                            >
+                              {t('friends.injectEnergy')}
+                            </button>
                           </>
                         )}
                       </div>
@@ -403,48 +426,7 @@ export default function AmicsPage() {
         </div>
       </div>
 
-      <div className="h-20" />
+      <div className="h-24" />
     </div>
-  )
-}
-
-// ── Component botó d'acció reutilitzable ────────────────────
-function ActionButton({
-  label,
-  baseColor,
-  darkText = false,
-  onClick,
-}: {
-  label: string
-  baseColor: string
-  darkText?: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-150 hover:scale-[1.03] active:scale-95"
-      style={{
-        backgroundColor: baseColor + '15',
-        color: baseColor,
-        border: `1px solid ${baseColor}33`,
-      }}
-      onMouseEnter={e => {
-        const el = e.currentTarget
-        el.style.backgroundColor = baseColor
-        el.style.color = darkText ? '#090707' : '#F5F5F3'
-        el.style.borderColor = baseColor
-        el.style.boxShadow = `0 0 18px ${baseColor}45`
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget
-        el.style.backgroundColor = baseColor + '15'
-        el.style.color = baseColor
-        el.style.borderColor = baseColor + '33'
-        el.style.boxShadow = 'none'
-      }}
-    >
-      {label}
-    </button>
   )
 }

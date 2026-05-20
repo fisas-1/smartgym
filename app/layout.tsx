@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/Navigation";
 import CookiesBanner from "./components/CookiesBanner";
 import Providers from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "gym.",
+  title: "gymmoo.",
   description: "Seguiment d'entrenaments personal",
   manifest: "/manifest.json",
 };
@@ -35,7 +36,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
       </head>
-      <body className={`${inter.className} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
+      <body className={`${geist.variable} ${geistMono.variable} antialiased bg-[var(--bg)] text-[var(--text)]`}>
         <Providers>
           <CookiesBanner />
           {children}
